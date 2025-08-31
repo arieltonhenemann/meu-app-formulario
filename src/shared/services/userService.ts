@@ -50,20 +50,51 @@ class UserService {
     }
 
     try {
+      // Primeiro, verificar se é admin
+      const ehAdmin = await this.verificarSeEhAdmin(uid);
+      
       const docRef = doc(db, this.COLLECTION_USERS, uid);
       const docSnap = await getDoc(docRef);
 
       if (!docSnap.exists()) {
+        // Se é admin mas não tem status, criar e aprovar automaticamente
+        if (ehAdmin) {
+          console.log('👑 Admin detectado sem status - criando e aprovando automaticamente');
+          await this.criarUsuarioStatus(uid, 'admin@sistema.com', 'Administrador');
+          await this.aprovarUsuario(uid, 'sistema-auto');
+          
+          return {
+            uid,
+            email: 'admin@sistema.com',
+            displayName: 'Administrador',
+            status: 'aprovado',
+            dataCriacao: new Date(),
+            dataAprovacao: new Date(),
+            aprovadoPor: 'sistema-auto'
+          };
+        }
+        
         console.warn('Usuário não encontrado no Firestore');
         return null;
       }
 
       const data = docSnap.data();
-      return {
+      const statusUsuario = {
         ...data,
         dataCriacao: data.dataCriacao?.toDate() || new Date(),
         dataAprovacao: data.dataAprovacao?.toDate()
       } as UsuarioStatus;
+      
+      // Se é admin mas ainda não aprovado, aprovar automaticamente
+      if (ehAdmin && statusUsuario.status !== 'aprovado') {
+        console.log('👑 Admin detectado pendente - aprovando automaticamente');
+        await this.aprovarUsuario(uid, 'sistema-auto');
+        statusUsuario.status = 'aprovado';
+        statusUsuario.dataAprovacao = new Date();
+        statusUsuario.aprovadoPor = 'sistema-auto';
+      }
+      
+      return statusUsuario;
     } catch (error) {
       console.error('❌ Erro ao verificar status:', error);
       return null;

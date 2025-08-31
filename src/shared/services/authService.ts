@@ -39,7 +39,7 @@ class AuthService {
           uid: user.uid,
           email: user.email,
           displayName: user.displayName,
-          isApproved: statusInfo?.status === 'aprovado' || !statusInfo, // Se não tem status, assume aprovado (para compatibilidade)
+          isApproved: statusInfo?.status === 'aprovado', // Só aprovados podem acessar
           statusInfo: statusInfo || undefined
         };
       } else {
@@ -103,7 +103,7 @@ class AuthService {
         uid: user.uid,
         email: user.email,
         displayName: user.displayName,
-        isApproved: statusInfo?.status === 'aprovado' || !statusInfo,
+        isApproved: statusInfo?.status === 'aprovado',
         statusInfo: statusInfo || undefined
       };
       
