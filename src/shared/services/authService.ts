@@ -53,16 +53,25 @@ class AuthService {
 
   // Registrar novo usuário
   async registrar(email: string, password: string): Promise<AuthUser> {
+    console.log('🚀 INICIANDO REGISTRO:', { email });
+    
     if (!isFirebaseConfigured() || !auth) {
+      console.error('❌ Firebase não configurado');
       throw new Error('Firebase Authentication não configurado');
     }
 
     try {
+      console.log('📝 Criando usuário no Firebase Auth...');
       const userCredential: UserCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
       
+      console.log('✅ Usuário criado no Firebase Auth:', { uid: user.uid, email: user.email });
+      console.log('📋 Agora criando status no Firestore...');
+      
       // Criar registro no Firestore com status pendente
       await userService.criarUsuarioStatus(user.uid, user.email || '', user.displayName || undefined);
+      
+      console.log('✅ Status criado no Firestore com sucesso!');
       
       const authUser: AuthUser = {
         uid: user.uid,
