@@ -75,6 +75,11 @@ const AppContent: React.FC = () => {
     }
 
     if (telaAtiva === 'RELATORIOS') {
+      if (!isAdmin) {
+        // Redirecionar não-admins para gerenciar
+        setTelaAtiva('GERENCIAR');
+        return null;
+      }
       return <RelatoriosPage />;
     }
 

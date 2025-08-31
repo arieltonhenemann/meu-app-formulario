@@ -194,6 +194,18 @@ export const RelatoriosPage: React.FC = () => {
         <p style={{ margin: '5px 0 0 0', color: '#666' }}>
           Filtros, visualização e exportação de dados
         </p>
+        <div style={{
+          display: 'inline-block',
+          marginTop: '10px',
+          padding: '6px 12px',
+          backgroundColor: '#fd7e14',
+          color: 'white',
+          borderRadius: '20px',
+          fontSize: '12px',
+          fontWeight: 'bold'
+        }}>
+          🛡️ Acesso Restrito - Apenas Administradores
+        </div>
       </div>
 
       {/* Filtros */}
