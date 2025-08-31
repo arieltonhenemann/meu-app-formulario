@@ -25,14 +25,31 @@ class UserService {
     }
 
     try {
+      console.log('🔄 Iniciando criação de status para usuário:', { uid, email, displayName });
       const usuarioStatus = criarUsuarioStatus(uid, email, displayName);
       
-      await setDoc(doc(db, this.COLLECTION_USERS, uid), {
+      console.log('📝 Dados a serem salvos no Firestore:', usuarioStatus);
+      
+      const docData = {
         ...usuarioStatus,
         dataCriacao: Timestamp.fromDate(usuarioStatus.dataCriacao)
-      });
+      };
+      
+      await setDoc(doc(db, this.COLLECTION_USERS, uid), docData);
 
-      console.log('✅ Status do usuário criado no Firestore');
+      console.log('✅ Status do usuário criado no Firestore com sucesso!');
+      console.log('📍 Coleção:', this.COLLECTION_USERS, 'Documento:', uid);
+
+      // Verificar se foi salvo corretamente
+      const docRef = doc(db, this.COLLECTION_USERS, uid);
+      const docSnap = await getDoc(docRef);
+      
+      if (docSnap.exists()) {
+        console.log('✅ Confirmado: Documento existe no Firestore');
+        console.log('📄 Dados salvos:', docSnap.data());
+      } else {
+        console.error('❌ ERRO: Documento não foi salvo no Firestore!');
+      }
 
       // Enviar notificação para admin
       await this.enviarNotificacaoNovoUsuario(usuarioStatus);
@@ -104,10 +121,28 @@ class UserService {
   // Listar usuários pendentes (para admin)
   async listarUsuariosPendentes(): Promise<UsuarioStatus[]> {
     if (!isFirebaseConfigured() || !db) {
+      console.warn('Firebase não configurado - retornando lista vazia');
       return [];
     }
 
     try {
+      console.log('🔍 Buscando usuários pendentes na coleção:', this.COLLECTION_USERS);
+      
+      // Primeiro, listar todos os documentos para debug
+      const allDocsQuery = query(collection(db, this.COLLECTION_USERS));
+      const allDocsSnapshot = await getDocs(allDocsQuery);
+      
+      console.log('📊 Total de documentos na coleção:', allDocsSnapshot.size);
+      
+      if (allDocsSnapshot.size > 0) {
+        console.log('📋 Todos os usuários na base:');
+        allDocsSnapshot.docs.forEach(doc => {
+          const data = doc.data();
+          console.log(`  - ${doc.id}: ${data.email} [${data.status}]`);
+        });
+      }
+      
+      // Agora buscar apenas os pendentes
       const q = query(
         collection(db, this.COLLECTION_USERS),
         where('status', '==', 'pendente'),
@@ -115,14 +150,19 @@ class UserService {
       );
 
       const querySnapshot = await getDocs(q);
-      return querySnapshot.docs.map(doc => {
+      console.log('👥 Usuários pendentes encontrados:', querySnapshot.size);
+      
+      const usuarios = querySnapshot.docs.map(doc => {
         const data = doc.data();
+        console.log('📝 Usuário pendente:', { id: doc.id, email: data.email, status: data.status });
         return {
           ...data,
           dataCriacao: data.dataCriacao?.toDate() || new Date(),
           dataAprovacao: data.dataAprovacao?.toDate()
         } as UsuarioStatus;
       });
+      
+      return usuarios;
     } catch (error) {
       console.error('❌ Erro ao listar usuários pendentes:', error);
       return [];
