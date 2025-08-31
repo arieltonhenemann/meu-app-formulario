@@ -10,6 +10,7 @@ import { Header } from './components/Header';
 import { AdminPanel } from './components/AdminPanel';
 import { AdminSetup } from './components/AdminSetup';
 import { DebugFirestore } from './components/DebugFirestore';
+import { RelatoriosPage } from './components/RelatoriosPage';
 import { AuthProvider, useAuth } from './shared/contexts/AuthContext';
 import { userService } from './shared/services/userService';
 import { OrdemServico } from './shared/types/os';
@@ -71,6 +72,10 @@ const AppContent: React.FC = () => {
           onNovoFormulario={novoFormulario}
         />
       );
+    }
+
+    if (telaAtiva === 'RELATORIOS') {
+      return <RelatoriosPage />;
     }
 
     // Telas administrativas - só admins podem acessar

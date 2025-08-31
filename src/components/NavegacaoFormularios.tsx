@@ -3,7 +3,7 @@ import { useAuth } from '../shared/contexts/AuthContext';
 import { userService } from '../shared/services/userService';
 
 export type TipoFormulario = 'CTO' | 'PON' | 'LINK';
-export type TelaAtiva = TipoFormulario | 'GERENCIAR' | 'ADMIN' | 'SETUP' | 'DEBUG';
+export type TelaAtiva = TipoFormulario | 'GERENCIAR' | 'RELATORIOS' | 'ADMIN' | 'SETUP' | 'DEBUG';
 
 interface NavegacaoFormulariosProps {
   telaAtiva: TelaAtiva;
@@ -37,7 +37,8 @@ export const NavegacaoFormularios: React.FC<NavegacaoFormulariosProps> = ({
     { tipo: 'GERENCIAR' as TelaAtiva, label: '📋 Gerenciar', cor: '#6f42c1' },
     { tipo: 'CTO' as TipoFormulario, label: '🏢 CTO', cor: '#007bff' },
     { tipo: 'PON' as TipoFormulario, label: '📡 PON', cor: '#28a745' },
-    { tipo: 'LINK' as TipoFormulario, label: '🔗 LINK', cor: '#dc3545' }
+    { tipo: 'LINK' as TipoFormulario, label: '🔗 LINK', cor: '#dc3545' },
+    { tipo: 'RELATORIOS' as TelaAtiva, label: '📊 Relatórios', cor: '#20c997' }
   ];
 
   // Botões administrativos que só admins vêem
