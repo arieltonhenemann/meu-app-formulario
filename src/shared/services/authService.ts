@@ -7,11 +7,15 @@ import {
   UserCredential 
 } from 'firebase/auth';
 import { auth, isFirebaseConfigured } from '../config/firebase';
+import { userService } from './userService';
+import { UsuarioStatus } from '../types/usuario';
 
 export interface AuthUser {
   uid: string;
   email: string | null;
   displayName: string | null;
+  isApproved?: boolean;
+  statusInfo?: UsuarioStatus;
 }
 
 class AuthService {
@@ -26,12 +30,17 @@ class AuthService {
   }
 
   private initializeAuthListener() {
-    onAuthStateChanged(auth!, (user: User | null) => {
+    onAuthStateChanged(auth!, async (user: User | null) => {
       if (user) {
+        // Verificar status de aprovação do usuário
+        const statusInfo = await userService.verificarStatusUsuario(user.uid);
+        
         this.currentUser = {
           uid: user.uid,
           email: user.email,
-          displayName: user.displayName
+          displayName: user.displayName,
+          isApproved: statusInfo?.status === 'aprovado' || !statusInfo, // Se não tem status, assume aprovado (para compatibilidade)
+          statusInfo: statusInfo || undefined
         };
       } else {
         this.currentUser = null;
@@ -52,13 +61,24 @@ class AuthService {
       const userCredential: UserCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
       
+      // Criar registro no Firestore com status pendente
+      await userService.criarUsuarioStatus(user.uid, user.email || '', user.displayName || undefined);
+      
       const authUser: AuthUser = {
         uid: user.uid,
         email: user.email,
-        displayName: user.displayName
+        displayName: user.displayName,
+        isApproved: false, // Novo usuário sempre pendente
+        statusInfo: {
+          uid: user.uid,
+          email: user.email || '',
+          displayName: user.displayName || undefined,
+          status: 'pendente',
+          dataCriacao: new Date()
+        }
       };
       
-      console.log('✅ Usuário registrado com sucesso:', authUser.email);
+      console.log('✅ Usuário registrado com sucesso (pendente aprovação):', authUser.email);
       return authUser;
     } catch (error: any) {
       console.error('❌ Erro ao registrar usuário:', error);
@@ -76,13 +96,19 @@ class AuthService {
       const userCredential: UserCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
       
+      // Verificar status de aprovação
+      const statusInfo = await userService.verificarStatusUsuario(user.uid);
+      
       const authUser: AuthUser = {
         uid: user.uid,
         email: user.email,
-        displayName: user.displayName
+        displayName: user.displayName,
+        isApproved: statusInfo?.status === 'aprovado' || !statusInfo,
+        statusInfo: statusInfo || undefined
       };
       
       console.log('✅ Login realizado com sucesso:', authUser.email);
+      console.log('📋 Status de aprovação:', statusInfo?.status || 'não encontrado');
       return authUser;
     } catch (error: any) {
       console.error('❌ Erro ao fazer login:', error);

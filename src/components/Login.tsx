@@ -44,7 +44,14 @@ export const Login: React.FC = () => {
       if (isLoginMode) {
         await login(formData.email, formData.password);
       } else {
-        await registrar(formData.email, formData.password);
+        const user = await registrar(formData.email, formData.password);
+        // Mostrar mensagem de sucesso após registro
+        alert(
+          `✅ Conta criada com sucesso!\n\n` +
+          `📧 Email: ${user.email}\n` +
+          `⏳ Status: Aguardando aprovação\n\n` +
+          `O administrador foi notificado e você receberá acesso em breve.`
+        );
       }
     } catch (error: any) {
       setError(error.message || 'Erro inesperado. Tente novamente.');

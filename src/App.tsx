@@ -7,6 +7,7 @@ import { GerenciarFormularios } from './components/GerenciarFormularios';
 import { NavegacaoFormularios, TelaAtiva } from './components/NavegacaoFormularios';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { Header } from './components/Header';
+import { AdminPanel } from './components/AdminPanel';
 import { AuthProvider } from './shared/contexts/AuthContext';
 import { OrdemServico } from './shared/types/os';
 import { OrdemServicoPON } from './shared/types/pon';
@@ -53,6 +54,10 @@ function App() {
           onNovoFormulario={novoFormulario}
         />
       );
+    }
+
+    if (telaAtiva === 'ADMIN') {
+      return <AdminPanel />;
     }
 
     const dadosIniciais = formularioEditando?.dados;
