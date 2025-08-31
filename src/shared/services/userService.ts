@@ -142,11 +142,10 @@ class UserService {
         });
       }
       
-      // Agora buscar apenas os pendentes
+      // Agora buscar apenas os pendentes (sem orderBy para evitar erro de índice)
       const q = query(
         collection(db, this.COLLECTION_USERS),
-        where('status', '==', 'pendente'),
-        orderBy('dataCriacao', 'desc')
+        where('status', '==', 'pendente')
       );
 
       const querySnapshot = await getDocs(q);
