@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './App.css';
 import { FormularioOS } from './components/FormularioOS';
 import { FormularioPON } from './components/FormularioPON';
@@ -10,16 +10,31 @@ import { Header } from './components/Header';
 import { AdminPanel } from './components/AdminPanel';
 import { AdminSetup } from './components/AdminSetup';
 import { DebugFirestore } from './components/DebugFirestore';
-import { AuthProvider } from './shared/contexts/AuthContext';
+import { AuthProvider, useAuth } from './shared/contexts/AuthContext';
+import { userService } from './shared/services/userService';
 import { OrdemServico } from './shared/types/os';
 import { OrdemServicoPON } from './shared/types/pon';
 import { OrdemServicoLINK } from './shared/types/link';
 import { FormularioSalvo } from './shared/types/formularioSalvo';
 import { formatarData } from './shared';
 
-function App() {
+// Componente interno que usa useAuth
+const AppContent: React.FC = () => {
+  const { user } = useAuth();
   const [telaAtiva, setTelaAtiva] = useState<TelaAtiva>('GERENCIAR');
   const [formularioEditando, setFormularioEditando] = useState<FormularioSalvo | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+  
+  // Verificar se é admin
+  useEffect(() => {
+    const verificarAdmin = async () => {
+      if (user?.uid) {
+        const ehAdmin = await userService.verificarSeEhAdmin(user.uid);
+        setIsAdmin(ehAdmin);
+      }
+    };
+    verificarAdmin();
+  }, [user]);
 
   const editarFormulario = (formulario: FormularioSalvo) => {
     setFormularioEditando(formulario);
@@ -58,15 +73,29 @@ function App() {
       );
     }
 
+    // Telas administrativas - só admins podem acessar
     if (telaAtiva === 'ADMIN') {
+      if (!isAdmin) {
+        // Redirecionar não-admins para gerenciar
+        setTelaAtiva('GERENCIAR');
+        return null;
+      }
       return <AdminPanel />;
     }
 
     if (telaAtiva === 'SETUP') {
+      if (!isAdmin) {
+        setTelaAtiva('GERENCIAR');
+        return null;
+      }
       return <AdminSetup />;
     }
 
     if (telaAtiva === 'DEBUG') {
+      if (!isAdmin) {
+        setTelaAtiva('GERENCIAR');
+        return null;
+      }
       return <DebugFirestore />;
     }
 
@@ -85,9 +114,8 @@ function App() {
   };
 
   return (
-    <AuthProvider>
-      <div className="App">
-        <ProtectedRoute>
+    <div className="App">
+      <ProtectedRoute>
           <div style={{ 
             backgroundColor: '#f8f9fa', 
             minHeight: '100vh'
@@ -155,8 +183,16 @@ function App() {
               </p>
             </footer>
           </div>
-        </ProtectedRoute>
-      </div>
+      </ProtectedRoute>
+    </div>
+  );
+};
+
+// Componente principal com AuthProvider
+function App() {
+  return (
+    <AuthProvider>
+      <AppContent />
     </AuthProvider>
   );
 }
