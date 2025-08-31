@@ -1,7 +1,7 @@
 import React from 'react';
 
 export type TipoFormulario = 'CTO' | 'PON' | 'LINK';
-export type TelaAtiva = TipoFormulario | 'GERENCIAR' | 'ADMIN' | 'SETUP';
+export type TelaAtiva = TipoFormulario | 'GERENCIAR' | 'ADMIN' | 'SETUP' | 'DEBUG';
 
 interface NavegacaoFormulariosProps {
   telaAtiva: TelaAtiva;
@@ -22,7 +22,8 @@ export const NavegacaoFormularios: React.FC<NavegacaoFormulariosProps> = ({
     { tipo: 'PON' as TipoFormulario, label: '📡 PON', cor: '#28a745' },
     { tipo: 'LINK' as TipoFormulario, label: '🔗 LINK', cor: '#dc3545' },
     { tipo: 'ADMIN' as TelaAtiva, label: '🛡️ Admin', cor: '#fd7e14' },
-    { tipo: 'SETUP' as TelaAtiva, label: '⚙️ Configurar Admin', cor: '#17a2b8' }
+    { tipo: 'SETUP' as TelaAtiva, label: '⚙️ Configurar Admin', cor: '#17a2b8' },
+    { tipo: 'DEBUG' as TelaAtiva, label: '🧪 Debug', cor: '#e83e8c' }
   ];
 
   return (

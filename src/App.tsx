@@ -9,6 +9,7 @@ import { ProtectedRoute } from './components/ProtectedRoute';
 import { Header } from './components/Header';
 import { AdminPanel } from './components/AdminPanel';
 import { AdminSetup } from './components/AdminSetup';
+import { DebugFirestore } from './components/DebugFirestore';
 import { AuthProvider } from './shared/contexts/AuthContext';
 import { OrdemServico } from './shared/types/os';
 import { OrdemServicoPON } from './shared/types/pon';
@@ -63,6 +64,10 @@ function App() {
 
     if (telaAtiva === 'SETUP') {
       return <AdminSetup />;
+    }
+
+    if (telaAtiva === 'DEBUG') {
+      return <DebugFirestore />;
     }
 
     const dadosIniciais = formularioEditando?.dados;
