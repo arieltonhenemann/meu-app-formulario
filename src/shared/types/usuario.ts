@@ -1,7 +1,7 @@
 export interface UsuarioStatus {
   uid: string;
   email: string;
-  displayName?: string;
+  displayName?: string | null;
   status: 'pendente' | 'aprovado' | 'rejeitado';
   dataCriacao: Date;
   dataAprovacao?: Date;
@@ -26,7 +26,7 @@ export const criarUsuarioStatus = (
   return {
     uid,
     email,
-    displayName,
+    displayName: displayName || null, // Garantir que seja null em vez de undefined
     status: 'pendente',
     dataCriacao: new Date()
   };

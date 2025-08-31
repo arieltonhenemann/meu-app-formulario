@@ -32,7 +32,9 @@ class UserService {
       
       const docData = {
         ...usuarioStatus,
-        dataCriacao: Timestamp.fromDate(usuarioStatus.dataCriacao)
+        dataCriacao: Timestamp.fromDate(usuarioStatus.dataCriacao),
+        // Garantir que campos undefined virem null (Firestore não aceita undefined)
+        displayName: usuarioStatus.displayName || null
       };
       
       await setDoc(doc(db, this.COLLECTION_USERS, uid), docData);
