@@ -8,6 +8,7 @@ import { NavegacaoFormularios, TelaAtiva } from './components/NavegacaoFormulari
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { Header } from './components/Header';
 import { AdminPanel } from './components/AdminPanel';
+import { AdminSetup } from './components/AdminSetup';
 import { AuthProvider } from './shared/contexts/AuthContext';
 import { OrdemServico } from './shared/types/os';
 import { OrdemServicoPON } from './shared/types/pon';
@@ -58,6 +59,10 @@ function App() {
 
     if (telaAtiva === 'ADMIN') {
       return <AdminPanel />;
+    }
+
+    if (telaAtiva === 'SETUP') {
+      return <AdminSetup />;
     }
 
     const dadosIniciais = formularioEditando?.dados;
