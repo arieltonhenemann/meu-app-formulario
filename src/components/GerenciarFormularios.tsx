@@ -14,7 +14,7 @@ export const GerenciarFormularios: React.FC<GerenciarFormulariosProps> = ({
   onNovoFormulario
 }) => {
   const [formularios, setFormularios] = useState<FormularioSalvo[]>([]);
-  const [filtroStatus, setFiltroStatus] = useState<StatusFormulario | 'todos'>('todos');
+  const [filtroStatus, setFiltroStatus] = useState<StatusFormulario | 'todos'>('pendente');
   const [filtroTipo, setFiltroTipo] = useState<TipoFormulario | 'todos'>('todos');
   const [busca, setBusca] = useState('');
   const [estatisticas, setEstatisticas] = useState({ total: 0, pendentes: 0, finalizados: 0, porTipo: { CTO: 0, PON: 0, LINK: 0 } });
