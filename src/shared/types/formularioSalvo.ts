@@ -13,6 +13,11 @@ export interface FormularioSalvoBase {
   dataCriacao: string;
   dataModificacao: string;
   codigoOS: string;
+  criadoPor?: {
+    uid: string;
+    email: string;
+    displayName?: string | null;
+  };
 }
 
 export interface FormularioSalvoCTO extends FormularioSalvoBase {
@@ -35,7 +40,12 @@ export type FormularioSalvo = FormularioSalvoCTO | FormularioSalvoPON | Formular
 // Funções auxiliares
 export const criarFormularioSalvo = <T extends OrdemServico | OrdemServicoPON | OrdemServicoLINK>(
   tipo: TipoFormulario,
-  dados: T
+  dados: T,
+  criadoPor?: {
+    uid: string;
+    email: string;
+    displayName?: string | null;
+  }
 ): FormularioSalvo => {
   const agora = new Date().toISOString();
   const id = Math.random().toString(36).substring(2) + Date.now().toString(36);
@@ -47,6 +57,7 @@ export const criarFormularioSalvo = <T extends OrdemServico | OrdemServicoPON | 
     dataCriacao: agora,
     dataModificacao: agora,
     codigoOS: dados.codigoOS || `Sem código - ${id.slice(0, 6)}`,
+    criadoPor,
     dados
   } as FormularioSalvo;
 };

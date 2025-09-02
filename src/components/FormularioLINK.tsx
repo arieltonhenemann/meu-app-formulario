@@ -3,6 +3,7 @@ import { OrdemServicoLINK, criarLINKVazia, LinkInfo, criarLinkVazio } from '../s
 import { gerarArquivoLINK } from '../shared/utils/gerarArquivoTxt';
 // import { compatibilityStorage } from '../shared/services/compatibilityStorage';
 import { firebaseFormularioStorage } from '../shared/services/firebaseFormularioStorage';
+import { useAuth } from '../shared/contexts/AuthContext';
 
 interface FormularioLINKProps {
   onSubmit?: (dados: OrdemServicoLINK) => void;
@@ -10,6 +11,7 @@ interface FormularioLINKProps {
 }
 
 export const FormularioLINK: React.FC<FormularioLINKProps> = ({ onSubmit, dadosIniciais }) => {
+  const { user } = useAuth();
   const [formData, setFormData] = useState<OrdemServicoLINK>(() => {
     if (dadosIniciais) {
       return { ...criarLINKVazia(), ...dadosIniciais };
@@ -63,7 +65,12 @@ export const FormularioLINK: React.FC<FormularioLINKProps> = ({ onSubmit, dadosI
       onSubmit?.(formData);
       
       // Salvar no Firebase/localStorage
-      await firebaseFormularioStorage.salvar('LINK', formData);
+      const criadoPor = user ? {
+        uid: user.uid,
+        email: user.email || '',
+        displayName: user.displayName
+      } : undefined;
+      await firebaseFormularioStorage.salvar('LINK', formData, criadoPor);
       
       // Gerar arquivo TXT
       gerarArquivoLINK(formData);

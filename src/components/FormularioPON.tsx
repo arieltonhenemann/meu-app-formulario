@@ -3,6 +3,7 @@ import { OrdemServicoPON, criarPONVazia } from '../shared/types/pon';
 import { gerarArquivoPON } from '../shared/utils/gerarArquivoTxt';
 // import { compatibilityStorage } from '../shared/services/compatibilityStorage';
 import { firebaseFormularioStorage } from '../shared/services/firebaseFormularioStorage';
+import { useAuth } from '../shared/contexts/AuthContext';
 
 interface FormularioPONProps {
   onSubmit?: (dados: OrdemServicoPON) => void;
@@ -10,6 +11,7 @@ interface FormularioPONProps {
 }
 
 export const FormularioPON: React.FC<FormularioPONProps> = ({ onSubmit, dadosIniciais }) => {
+  const { user } = useAuth();
   const [formData, setFormData] = useState<OrdemServicoPON>(() => {
     if (dadosIniciais) {
       return { ...criarPONVazia(), ...dadosIniciais };
@@ -38,7 +40,12 @@ export const FormularioPON: React.FC<FormularioPONProps> = ({ onSubmit, dadosIni
       onSubmit?.(formData);
       
       // Salvar no Firebase/localStorage
-      await firebaseFormularioStorage.salvar('PON', formData);
+      const criadoPor = user ? {
+        uid: user.uid,
+        email: user.email || '',
+        displayName: user.displayName
+      } : undefined;
+      await firebaseFormularioStorage.salvar('PON', formData, criadoPor);
       
       // Gerar arquivo TXT
       gerarArquivoPON(formData);

@@ -3,6 +3,7 @@ import { OrdemServico, criarOSVazia } from '../shared/types/os';
 import { gerarArquivoCTO } from '../shared/utils/gerarArquivoTxt';
 // import { compatibilityStorage } from '../shared/services/compatibilityStorage';
 import { firebaseFormularioStorage } from '../shared/services/firebaseFormularioStorage';
+import { useAuth } from '../shared/contexts/AuthContext';
 
 interface FormularioOSProps {
   onSubmit?: (dados: OrdemServico) => void;
@@ -10,6 +11,7 @@ interface FormularioOSProps {
 }
 
 export const FormularioOS: React.FC<FormularioOSProps> = ({ onSubmit, dadosIniciais }) => {
+  const { user } = useAuth();
   const [formData, setFormData] = useState<OrdemServico>(() => {
     if (dadosIniciais) {
       return { ...criarOSVazia(), ...dadosIniciais };
@@ -53,7 +55,12 @@ export const FormularioOS: React.FC<FormularioOSProps> = ({ onSubmit, dadosInici
         onSubmit?.(formData);
         
         // Salvar no Firebase/localStorage
-        await firebaseFormularioStorage.salvar('CTO', formData);
+        const criadoPor = user ? {
+          uid: user.uid,
+          email: user.email || '',
+          displayName: user.displayName
+        } : undefined;
+        await firebaseFormularioStorage.salvar('CTO', formData, criadoPor);
         
         // Gerar arquivo TXT
         gerarArquivoCTO(formData);

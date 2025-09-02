@@ -334,6 +334,17 @@ export const GerenciarFormularios: React.FC<GerenciarFormulariosProps> = ({
                     <div>ID: {formulario.id}</div>
                     <div>Criado: {formatarData(new Date(formulario.dataCriacao))}</div>
                     <div>Modificado: {formatarData(new Date(formulario.dataModificacao))}</div>
+                    {formulario.criadoPor && (
+                      <div style={{ marginTop: '5px', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                        <span>👤 Criado por:</span>
+                        <span style={{ fontWeight: 'bold', color: '#495057' }}>
+                          {formulario.criadoPor.displayName || formulario.criadoPor.email}
+                        </span>
+                        {formulario.criadoPor.displayName && (
+                          <span style={{ fontSize: '0.8rem', color: '#6c757d' }}>({formulario.criadoPor.email})</span>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
 

@@ -87,9 +87,14 @@ class FirebaseFormularioStorageService {
   // Salvar formulário
   async salvar<T extends OrdemServico | OrdemServicoPON | OrdemServicoLINK>(
     tipo: TipoFormulario,
-    dados: T
+    dados: T,
+    criadoPor?: {
+      uid: string;
+      email: string;
+      displayName?: string | null;
+    }
   ): Promise<FormularioSalvo> {
-    const formulario = criarFormularioSalvo(tipo, dados);
+    const formulario = criarFormularioSalvo(tipo, dados, criadoPor);
     
     if (this.isOnline && this.isFirebaseConfigured()) {
       try {
