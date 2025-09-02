@@ -8,8 +8,6 @@ import { NavegacaoFormularios, TelaAtiva } from './components/NavegacaoFormulari
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { Header } from './components/Header';
 import { AdminPanel } from './components/AdminPanel';
-import { AdminSetup } from './components/AdminSetup';
-import { DebugFirestore } from './components/DebugFirestore';
 import { RelatoriosPage } from './components/RelatoriosPage';
 import { AuthProvider, useAuth } from './shared/contexts/AuthContext';
 import { userService } from './shared/services/userService';
@@ -93,21 +91,6 @@ const AppContent: React.FC = () => {
       return <AdminPanel />;
     }
 
-    if (telaAtiva === 'SETUP') {
-      if (!isAdmin) {
-        setTelaAtiva('GERENCIAR');
-        return null;
-      }
-      return <AdminSetup />;
-    }
-
-    if (telaAtiva === 'DEBUG') {
-      if (!isAdmin) {
-        setTelaAtiva('GERENCIAR');
-        return null;
-      }
-      return <DebugFirestore />;
-    }
 
     const dadosIniciais = formularioEditando?.dados;
     

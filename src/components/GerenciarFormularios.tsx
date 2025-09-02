@@ -18,7 +18,6 @@ export const GerenciarFormularios: React.FC<GerenciarFormulariosProps> = ({
   const [filtroTipo, setFiltroTipo] = useState<TipoFormulario | 'todos'>('todos');
   const [busca, setBusca] = useState('');
   const [estatisticas, setEstatisticas] = useState({ total: 0, pendentes: 0, finalizados: 0, porTipo: { CTO: 0, PON: 0, LINK: 0 } });
-  const [isLoading, setIsLoading] = useState(true);
   const [isOnline, setIsOnline] = useState(firebaseFormularioStorage.estaOnline());
   const [temDadosPendentes, setTemDadosPendentes] = useState(false);
 
@@ -46,7 +45,6 @@ export const GerenciarFormularios: React.FC<GerenciarFormulariosProps> = ({
 
   const carregarFormularios = async () => {
     try {
-      setIsLoading(true);
       const formulariosCarregados = await firebaseFormularioStorage.obterTodos();
       const estatisticasCarregadas = await firebaseFormularioStorage.obterEstatisticas();
       
@@ -56,8 +54,6 @@ export const GerenciarFormularios: React.FC<GerenciarFormulariosProps> = ({
       setTemDadosPendentes(firebaseFormularioStorage.temDadosPendentes());
     } catch (error) {
       console.error('Erro ao carregar formulários:', error);
-    } finally {
-      setIsLoading(false);
     }
   };
 
