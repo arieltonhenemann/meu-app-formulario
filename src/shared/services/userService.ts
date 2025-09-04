@@ -235,6 +235,29 @@ class UserService {
     }
   }
 
+  // Verificar se há algum administrador no sistema
+  async verificarSeHaAdministradores(): Promise<boolean> {
+    if (!isFirebaseConfigured() || !db) {
+      return false;
+    }
+
+    try {
+      const docRef = doc(db, this.COLLECTION_ADMIN, 'admins');
+      const docSnap = await getDoc(docRef);
+
+      if (!docSnap.exists()) {
+        return false;
+      }
+
+      const data = docSnap.data();
+      const listaAdmins = data.lista || [];
+      return Array.isArray(listaAdmins) && listaAdmins.length > 0;
+    } catch (error) {
+      console.error('❌ Erro ao verificar se há administradores:', error);
+      return false;
+    }
+  }
+
   // Enviar notificação de novo usuário (simulação - você pode integrar com serviço real)
   private async enviarNotificacaoNovoUsuario(usuario: UsuarioStatus): Promise<void> {
     try {

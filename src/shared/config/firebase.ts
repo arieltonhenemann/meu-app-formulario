@@ -10,12 +10,12 @@ import { getAuth } from 'firebase/auth';
 // 3. Adicione um app web
 // 4. Copie a configuração aqui
 const firebaseConfig = {
-  apiKey: "AIzaSyB7CDMu5L9AycmtY5MkCWjaEdwgXobJePQ",
-  authDomain: "formulario-os-2025.firebaseapp.com",
-  projectId: "formulario-os-2025",
-  storageBucket: "formulario-os-2025.firebasestorage.app",
-  messagingSenderId: "944901924832",
-  appId: "1:944901924832:web:a1081ad0c52bd9ec53ad85"
+  apiKey: "AIzaSyCnH1IiM1dYHTEWvv3N-tks9zjvta0dpxY",
+  authDomain: "cadastros-equipamentos.firebaseapp.com",
+  projectId: "cadastros-equipamentos",
+  storageBucket: "cadastros-equipamentos.firebasestorage.app",
+  messagingSenderId: "989457399548",
+  appId: "1:989457399548:web:ec6475bd02aa1eabb8e179"
 };
 
 // Verificar se Firebase está configurado

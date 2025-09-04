@@ -4,13 +4,15 @@ import { gerarArquivoLINK } from '../shared/utils/gerarArquivoTxt';
 // import { compatibilityStorage } from '../shared/services/compatibilityStorage';
 import { firebaseFormularioStorage } from '../shared/services/firebaseFormularioStorage';
 import { useAuth } from '../shared/contexts/AuthContext';
+import { auditoriaService } from '../shared/services/auditoriaService';
 
 interface FormularioLINKProps {
   onSubmit?: (dados: OrdemServicoLINK) => void;
   dadosIniciais?: any;
+  formularioId?: string;
 }
 
-export const FormularioLINK: React.FC<FormularioLINKProps> = ({ onSubmit, dadosIniciais }) => {
+export const FormularioLINK: React.FC<FormularioLINKProps> = ({ onSubmit, dadosIniciais, formularioId }) => {
   const { user } = useAuth();
   const [formData, setFormData] = useState<OrdemServicoLINK>(() => {
     if (dadosIniciais) {
@@ -64,21 +66,54 @@ export const FormularioLINK: React.FC<FormularioLINKProps> = ({ onSubmit, dadosI
       console.log('Dados da O.S LINK:', formData);
       onSubmit?.(formData);
       
-      // Salvar no Firebase/localStorage
-      const criadoPor = user ? {
-        uid: user.uid,
-        email: user.email || '',
-        displayName: user.displayName
-      } : undefined;
-      await firebaseFormularioStorage.salvar('LINK', formData, criadoPor);
-      
-      // Gerar arquivo TXT
-      gerarArquivoLINK(formData);
-      
-      alert('Ordem de Serviço LINK salva e arquivo TXT gerado com sucesso!');
-      
-      // Se não está editando, limpar formulário
-      if (!dadosIniciais) {
+      // Verificar se está editando um formulário existente ou criando um novo
+      if (formularioId) {
+        // Modo edição - atualizar formulário existente
+        await firebaseFormularioStorage.atualizar(formularioId, formData);
+        
+        // Registrar log de auditoria
+        if (user) {
+          await auditoriaService.registrarAcao('EDITAR_FORMULARIO', {
+            uid: user.uid,
+            email: user.email || '',
+            displayName: user.displayName
+          }, {
+            formularioId,
+            codigoOS: formData.codigoOS,
+            tipoFormulario: 'LINK',
+            dadosAlterados: formData
+          });
+        }
+        
+        alert('Ordem de Serviço LINK atualizada com sucesso!');
+      } else {
+        // Modo criação - criar novo formulário
+        const criadoPor = user ? {
+          uid: user.uid,
+          email: user.email || '',
+          displayName: user.displayName
+        } : undefined;
+        const formularioSalvo = await firebaseFormularioStorage.salvar('LINK', formData, criadoPor);
+        
+        // Registrar log de auditoria
+        if (user) {
+          await auditoriaService.registrarAcao('CRIAR_FORMULARIO', {
+            uid: user.uid,
+            email: user.email || '',
+            displayName: user.displayName
+          }, {
+            formularioId: formularioSalvo.id,
+            codigoOS: formData.codigoOS,
+            tipoFormulario: 'LINK'
+          });
+        }
+        
+        // Gerar arquivo TXT apenas na criação
+        gerarArquivoLINK(formData);
+        
+        alert('Ordem de Serviço LINK salva e arquivo TXT gerado com sucesso!');
+        
+        // Se não está editando, limpar formulário
         limparFormulario();
       }
     } catch (error) {

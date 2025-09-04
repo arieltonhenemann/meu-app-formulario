@@ -3,6 +3,8 @@ import { FormularioSalvo, StatusFormulario, TipoFormulario, obterCorStatus, obte
 // import { compatibilityStorage } from '../shared/services/compatibilityStorage';
 import { firebaseFormularioStorage } from '../shared/services/firebaseFormularioStorage';
 import { formatarData } from '../shared';
+import { auditoriaService } from '../shared/services/auditoriaService';
+import { useAuth } from '../shared/contexts/AuthContext';
 
 interface GerenciarFormulariosProps {
   onEditarFormulario: (formulario: FormularioSalvo) => void;
@@ -13,6 +15,7 @@ export const GerenciarFormularios: React.FC<GerenciarFormulariosProps> = ({
   onEditarFormulario,
   onNovoFormulario
 }) => {
+  const { user } = useAuth();
   const [formularios, setFormularios] = useState<FormularioSalvo[]>([]);
   const [filtroStatus, setFiltroStatus] = useState<StatusFormulario | 'todos'>('pendente');
   const [filtroTipo, setFiltroTipo] = useState<TipoFormulario | 'todos'>('todos');
@@ -69,8 +72,26 @@ export const GerenciarFormularios: React.FC<GerenciarFormulariosProps> = ({
 
   const finalizarFormulario = async (id: string) => {
     try {
+      // Obter dados do formulário antes de finalizar
+      const formulario = formularios.find(f => f.id === id);
+      
       const sucesso = await firebaseFormularioStorage.atualizarStatus(id, 'finalizado');
       if (sucesso) {
+        // Registrar log de auditoria
+        if (user && formulario) {
+          await auditoriaService.registrarAcao('FINALIZAR_FORMULARIO', {
+            uid: user.uid,
+            email: user.email || '',
+            displayName: user.displayName
+          }, {
+            formularioId: id,
+            codigoOS: formulario.codigoOS,
+            tipoFormulario: formulario.tipo as 'CTO' | 'PON' | 'LINK',
+            statusAnterior: 'pendente',
+            statusNovo: 'finalizado'
+          });
+        }
+        
         carregarFormularios();
         alert('Formulário finalizado com sucesso!');
       }
@@ -82,8 +103,26 @@ export const GerenciarFormularios: React.FC<GerenciarFormulariosProps> = ({
 
   const reabrirFormulario = async (id: string) => {
     try {
+      // Obter dados do formulário antes de reabrir
+      const formulario = formularios.find(f => f.id === id);
+      
       const sucesso = await firebaseFormularioStorage.atualizarStatus(id, 'pendente');
       if (sucesso) {
+        // Registrar log de auditoria
+        if (user && formulario) {
+          await auditoriaService.registrarAcao('REABRIR_FORMULARIO', {
+            uid: user.uid,
+            email: user.email || '',
+            displayName: user.displayName
+          }, {
+            formularioId: id,
+            codigoOS: formulario.codigoOS,
+            tipoFormulario: formulario.tipo as 'CTO' | 'PON' | 'LINK',
+            statusAnterior: 'finalizado',
+            statusNovo: 'pendente'
+          });
+        }
+        
         carregarFormularios();
         alert('Formulário reaberto com sucesso!');
       }
@@ -97,8 +136,25 @@ export const GerenciarFormularios: React.FC<GerenciarFormulariosProps> = ({
     const confirmacao = window.confirm(`Tem certeza que deseja excluir o formulário "${codigoOS}"?`);
     if (confirmacao) {
       try {
+        // Obter dados do formulário antes de excluir
+        const formulario = formularios.find(f => f.id === id);
+        
         const sucesso = await firebaseFormularioStorage.excluir(id);
         if (sucesso) {
+          // Registrar log de auditoria
+          if (user && formulario) {
+            await auditoriaService.registrarAcao('EXCLUIR_FORMULARIO', {
+              uid: user.uid,
+              email: user.email || '',
+              displayName: user.displayName
+            }, {
+              formularioId: id,
+              codigoOS: formulario.codigoOS,
+              tipoFormulario: formulario.tipo as 'CTO' | 'PON' | 'LINK',
+              observacoes: `Formulário excluído permanentemente`
+            });
+          }
+          
           carregarFormularios();
           alert('Formulário excluído com sucesso!');
         }

@@ -4,13 +4,15 @@ import { gerarArquivoPON } from '../shared/utils/gerarArquivoTxt';
 // import { compatibilityStorage } from '../shared/services/compatibilityStorage';
 import { firebaseFormularioStorage } from '../shared/services/firebaseFormularioStorage';
 import { useAuth } from '../shared/contexts/AuthContext';
+import { auditoriaService } from '../shared/services/auditoriaService';
 
 interface FormularioPONProps {
   onSubmit?: (dados: OrdemServicoPON) => void;
   dadosIniciais?: any;
+  formularioId?: string;
 }
 
-export const FormularioPON: React.FC<FormularioPONProps> = ({ onSubmit, dadosIniciais }) => {
+export const FormularioPON: React.FC<FormularioPONProps> = ({ onSubmit, dadosIniciais, formularioId }) => {
   const { user } = useAuth();
   const [formData, setFormData] = useState<OrdemServicoPON>(() => {
     if (dadosIniciais) {
@@ -39,21 +41,54 @@ export const FormularioPON: React.FC<FormularioPONProps> = ({ onSubmit, dadosIni
       console.log('Dados da O.S PON:', formData);
       onSubmit?.(formData);
       
-      // Salvar no Firebase/localStorage
-      const criadoPor = user ? {
-        uid: user.uid,
-        email: user.email || '',
-        displayName: user.displayName
-      } : undefined;
-      await firebaseFormularioStorage.salvar('PON', formData, criadoPor);
-      
-      // Gerar arquivo TXT
-      gerarArquivoPON(formData);
-      
-      alert('Ordem de Serviço PON salva e arquivo TXT gerado com sucesso!');
-      
-      // Se não está editando, limpar formulário
-      if (!dadosIniciais) {
+      // Verificar se está editando um formulário existente ou criando um novo
+      if (formularioId) {
+        // Modo edição - atualizar formulário existente
+        await firebaseFormularioStorage.atualizar(formularioId, formData);
+        
+        // Registrar log de auditoria
+        if (user) {
+          await auditoriaService.registrarAcao('EDITAR_FORMULARIO', {
+            uid: user.uid,
+            email: user.email || '',
+            displayName: user.displayName
+          }, {
+            formularioId,
+            codigoOS: formData.codigoOS,
+            tipoFormulario: 'PON',
+            dadosAlterados: formData
+          });
+        }
+        
+        alert('Ordem de Serviço PON atualizada com sucesso!');
+      } else {
+        // Modo criação - criar novo formulário
+        const criadoPor = user ? {
+          uid: user.uid,
+          email: user.email || '',
+          displayName: user.displayName
+        } : undefined;
+        const formularioSalvo = await firebaseFormularioStorage.salvar('PON', formData, criadoPor);
+        
+        // Registrar log de auditoria
+        if (user) {
+          await auditoriaService.registrarAcao('CRIAR_FORMULARIO', {
+            uid: user.uid,
+            email: user.email || '',
+            displayName: user.displayName
+          }, {
+            formularioId: formularioSalvo.id,
+            codigoOS: formData.codigoOS,
+            tipoFormulario: 'PON'
+          });
+        }
+        
+        // Gerar arquivo TXT apenas na criação
+        gerarArquivoPON(formData);
+        
+        alert('Ordem de Serviço PON salva e arquivo TXT gerado com sucesso!');
+        
+        // Se não está editando, limpar formulário
         limparFormulario();
       }
     } catch (error) {

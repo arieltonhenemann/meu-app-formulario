@@ -3,7 +3,13 @@ import { useAuth } from '../shared/contexts/AuthContext';
 import { userService } from '../shared/services/userService';
 import { UsuarioStatus } from '../shared/types/usuario';
 
-export const AdminPanel: React.FC = () => {
+interface AdminPanelProps {
+  onVoltarTelaSelecionarSistema?: () => void;
+}
+
+export const AdminPanel: React.FC<AdminPanelProps> = ({
+  onVoltarTelaSelecionarSistema
+}) => {
   const { user } = useAuth();
   const [usuariosPendentes, setUsuariosPendentes] = useState<UsuarioStatus[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -116,15 +122,41 @@ export const AdminPanel: React.FC = () => {
         borderRadius: '10px',
         boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
       }}>
-        <h2 style={{
-          textAlign: 'center',
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
           marginBottom: '30px',
-          color: '#333',
           borderBottom: '2px solid #dc3545',
           paddingBottom: '10px'
         }}>
-          🛡️ Painel de Administração
-        </h2>
+          <h2 style={{
+            color: '#333',
+            margin: 0
+          }}>
+            🛡️ Painel de Administração
+          </h2>
+          {onVoltarTelaSelecionarSistema && (
+            <button 
+              onClick={onVoltarTelaSelecionarSistema}
+              style={{
+                fontSize: '0.9rem',
+                padding: '8px 16px',
+                backgroundColor: '#6c757d',
+                color: 'white',
+                border: 'none',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px'
+              }}
+              title="Voltar à tela de seleção de sistema"
+            >
+              ↩️ Trocar Sistema
+            </button>
+          )}
+        </div>
 
         <div style={{ marginBottom: '30px' }}>
           <h3 style={{ color: '#495057', marginBottom: '20px' }}>

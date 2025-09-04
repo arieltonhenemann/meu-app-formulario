@@ -4,13 +4,15 @@ import { gerarArquivoCTO } from '../shared/utils/gerarArquivoTxt';
 // import { compatibilityStorage } from '../shared/services/compatibilityStorage';
 import { firebaseFormularioStorage } from '../shared/services/firebaseFormularioStorage';
 import { useAuth } from '../shared/contexts/AuthContext';
+import { auditoriaService } from '../shared/services/auditoriaService';
 
 interface FormularioOSProps {
   onSubmit?: (dados: OrdemServico) => void;
   dadosIniciais?: any;
+  formularioId?: string;
 }
 
-export const FormularioOS: React.FC<FormularioOSProps> = ({ onSubmit, dadosIniciais }) => {
+export const FormularioOS: React.FC<FormularioOSProps> = ({ onSubmit, dadosIniciais, formularioId }) => {
   const { user } = useAuth();
   const [formData, setFormData] = useState<OrdemServico>(() => {
     if (dadosIniciais) {
@@ -54,21 +56,54 @@ export const FormularioOS: React.FC<FormularioOSProps> = ({ onSubmit, dadosInici
         console.log('Dados da O.S:', formData);
         onSubmit?.(formData);
         
-        // Salvar no Firebase/localStorage
-        const criadoPor = user ? {
-          uid: user.uid,
-          email: user.email || '',
-          displayName: user.displayName
-        } : undefined;
-        await firebaseFormularioStorage.salvar('CTO', formData, criadoPor);
-        
-        // Gerar arquivo TXT
-        gerarArquivoCTO(formData);
-        
-        alert('Ordem de Serviço CTO salva e arquivo TXT gerado com sucesso!');
-        
-        // Se não está editando, limpar formulário
-        if (!dadosIniciais) {
+        // Verificar se está editando um formulário existente ou criando um novo
+        if (formularioId) {
+          // Modo edição - atualizar formulário existente
+          await firebaseFormularioStorage.atualizar(formularioId, formData);
+          
+          // Registrar log de auditoria
+          if (user) {
+            await auditoriaService.registrarAcao('EDITAR_FORMULARIO', {
+              uid: user.uid,
+              email: user.email || '',
+              displayName: user.displayName
+            }, {
+              formularioId,
+              codigoOS: formData.codigoOS,
+              tipoFormulario: 'CTO',
+              dadosAlterados: formData
+            });
+          }
+          
+          alert('Ordem de Serviço CTO atualizada com sucesso!');
+        } else {
+          // Modo criação - criar novo formulário
+          const criadoPor = user ? {
+            uid: user.uid,
+            email: user.email || '',
+            displayName: user.displayName
+          } : undefined;
+          const formularioSalvo = await firebaseFormularioStorage.salvar('CTO', formData, criadoPor);
+          
+          // Registrar log de auditoria
+          if (user) {
+            await auditoriaService.registrarAcao('CRIAR_FORMULARIO', {
+              uid: user.uid,
+              email: user.email || '',
+              displayName: user.displayName
+            }, {
+              formularioId: formularioSalvo.id,
+              codigoOS: formData.codigoOS,
+              tipoFormulario: 'CTO'
+            });
+          }
+          
+          // Gerar arquivo TXT apenas na criação
+          gerarArquivoCTO(formData);
+          
+          alert('Ordem de Serviço CTO salva e arquivo TXT gerado com sucesso!');
+          
+          // Se não está editando, limpar formulário
           limparFormulario();
         }
       } catch (error) {

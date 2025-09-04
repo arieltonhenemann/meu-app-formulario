@@ -125,6 +125,7 @@ class FirebaseFormularioStorageService {
         const docRef = doc(db, COLLECTION_NAME, id);
         await updateDoc(docRef, {
           dados: novosDados,
+          codigoOS: novosDados.codigoOS || `Sem código - ${id.slice(0, 6)}`,
           dataModificacao: new Date().toISOString()
         });
         
@@ -336,6 +337,7 @@ class FirebaseFormularioStorageService {
     formularios[index] = {
       ...formularios[index],
       dados: novosDados,
+      codigoOS: novosDados.codigoOS || `Sem código - ${id.slice(0, 6)}`,
       dataModificacao: new Date().toISOString()
     };
     
@@ -388,7 +390,11 @@ class FirebaseFormularioStorageService {
     pendentes.push({
       tipo: 'atualizar',
       id,
-      dados: { dados, dataModificacao: new Date().toISOString() },
+      dados: { 
+        dados, 
+        codigoOS: dados.codigoOS || `Sem código - ${id.slice(0, 6)}`,
+        dataModificacao: new Date().toISOString() 
+      },
       timestamp: Date.now()
     });
     localStorage.setItem(SYNC_KEY, JSON.stringify(pendentes));
