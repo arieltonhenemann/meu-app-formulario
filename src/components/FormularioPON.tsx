@@ -266,7 +266,34 @@ export const FormularioPON: React.FC<FormularioPONProps> = ({ onSubmit, dadosIni
             {modoGerenciamento ? (
               <button
                 type="button"
-                onClick={() => onFinalizar && formularioId && onFinalizar(formularioId)}
+                onClick={async () => {
+                  if (!formularioId) return;
+                  
+                  try {
+                    // Primeiro salvar as alterações
+                    await firebaseFormularioStorage.atualizar(formularioId, formData);
+                    
+                    // Registrar log de auditoria da edição
+                    if (user) {
+                      await auditoriaService.registrarAcao('EDITAR_FORMULARIO', {
+                        uid: user.uid,
+                        email: user.email || '',
+                        displayName: user.displayName
+                      }, {
+                        formularioId,
+                        codigoOS: formData.codigoOS,
+                        tipoFormulario: 'PON',
+                        dadosAlterados: formData
+                      });
+                    }
+                    
+                    // Depois finalizar
+                    onFinalizar && onFinalizar(formularioId);
+                  } catch (error) {
+                    console.error('Erro ao salvar antes de finalizar:', error);
+                    alert('Erro ao salvar alterações. Tente novamente.');
+                  }
+                }}
                 disabled={!formularioId}
                 style={{
                   ...buttonStyle,
