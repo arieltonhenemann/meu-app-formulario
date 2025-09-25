@@ -105,6 +105,43 @@ export const SystemController: React.FC = () => {
     }
   };
 
+  // Nova função para finalizar formulários
+  const handleFinalizar = async (formularioId: string) => {
+    try {
+      const { firebaseFormularioStorage } = await import('../shared/services/firebaseFormularioStorage');
+      const { auditoriaService } = await import('../shared/services/auditoriaService');
+      
+      // Obter dados do formulário antes de finalizar
+      const formulario = formularioEditando;
+      
+      const sucesso = await firebaseFormularioStorage.atualizarStatus(formularioId, 'finalizado');
+      if (sucesso) {
+        // Registrar log de auditoria
+        if (user && formulario) {
+          await auditoriaService.registrarAcao('FINALIZAR_FORMULARIO', {
+            uid: user.uid,
+            email: user.email || '',
+            displayName: user.displayName
+          }, {
+            formularioId,
+            codigoOS: formulario.codigoOS,
+            tipoFormulario: formulario.tipo as 'CTO' | 'PON' | 'LINK',
+            statusAnterior: 'pendente',
+            statusNovo: 'finalizado'
+          });
+        }
+        
+        alert('Ordem de serviço finalizada com sucesso!');
+        
+        // Voltar para a tela de gerenciamento após finalizar
+        setTimeout(() => voltarParaGerenciar(), 1000);
+      }
+    } catch (error) {
+      console.error('Erro ao finalizar formulário:', error);
+      alert('Erro ao finalizar. Tente novamente.');
+    }
+  };
+
   const renderTelaAtiva = () => {
     if (telaAtiva === 'GERENCIAR') {
       return (
@@ -145,16 +182,49 @@ export const SystemController: React.FC = () => {
 
     const dadosIniciais = formularioEditando?.dados;
     const formularioId = formularioEditando?.id;
+    const modoGerenciamento = !!formularioEditando; // Estamos no modo gerenciamento se está editando
     
     switch (telaAtiva) {
       case 'CTO':
-        return <FormularioOS onSubmit={handleSubmitCTO} dadosIniciais={dadosIniciais} formularioId={formularioId} />;
+        return (
+          <FormularioOS 
+            onSubmit={handleSubmitCTO} 
+            dadosIniciais={dadosIniciais} 
+            formularioId={formularioId}
+            modoGerenciamento={modoGerenciamento}
+            onFinalizar={handleFinalizar}
+          />
+        );
       case 'PON':
-        return <FormularioPON onSubmit={handleSubmitPON} dadosIniciais={dadosIniciais} formularioId={formularioId} />;
+        return (
+          <FormularioPON 
+            onSubmit={handleSubmitPON} 
+            dadosIniciais={dadosIniciais} 
+            formularioId={formularioId}
+            modoGerenciamento={modoGerenciamento}
+            onFinalizar={handleFinalizar}
+          />
+        );
       case 'LINK':
-        return <FormularioLINK onSubmit={handleSubmitLINK} dadosIniciais={dadosIniciais} formularioId={formularioId} />;
+        return (
+          <FormularioLINK 
+            onSubmit={handleSubmitLINK} 
+            dadosIniciais={dadosIniciais} 
+            formularioId={formularioId}
+            modoGerenciamento={modoGerenciamento}
+            onFinalizar={handleFinalizar}
+          />
+        );
       default:
-        return <FormularioOS onSubmit={handleSubmitCTO} dadosIniciais={dadosIniciais} formularioId={formularioId} />;
+        return (
+          <FormularioOS 
+            onSubmit={handleSubmitCTO} 
+            dadosIniciais={dadosIniciais} 
+            formularioId={formularioId}
+            modoGerenciamento={modoGerenciamento}
+            onFinalizar={handleFinalizar}
+          />
+        );
     }
   };
 

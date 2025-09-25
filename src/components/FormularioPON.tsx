@@ -10,9 +10,11 @@ interface FormularioPONProps {
   onSubmit?: (dados: OrdemServicoPON) => void;
   dadosIniciais?: any;
   formularioId?: string;
+  modoGerenciamento?: boolean; // Nova prop para identificar se está no gerenciamento
+  onFinalizar?: (formularioId: string) => void; // Callback para finalizar
 }
 
-export const FormularioPON: React.FC<FormularioPONProps> = ({ onSubmit, dadosIniciais, formularioId }) => {
+export const FormularioPON: React.FC<FormularioPONProps> = ({ onSubmit, dadosIniciais, formularioId, modoGerenciamento, onFinalizar }) => {
   const { user } = useAuth();
   const [formData, setFormData] = useState<OrdemServicoPON>(() => {
     if (dadosIniciais) {
@@ -260,17 +262,34 @@ export const FormularioPON: React.FC<FormularioPONProps> = ({ onSubmit, dadosIni
             gap: '15px',
             marginTop: '30px' 
           }}>
-            <button
-              type="button"
-              onClick={limparFormulario}
-              style={{
-                ...buttonStyle,
-                backgroundColor: '#6c757d',
-                flex: '1'
-              }}
-            >
-              🗑️ Limpar Formulário
-            </button>
+            {/* Botão esquerdo - condicional baseado no modo */}
+            {modoGerenciamento ? (
+              <button
+                type="button"
+                onClick={() => onFinalizar && formularioId && onFinalizar(formularioId)}
+                disabled={!formularioId}
+                style={{
+                  ...buttonStyle,
+                  backgroundColor: '#ffc107',
+                  color: '#212529',
+                  flex: '1'
+                }}
+              >
+                ✅ Finalizar Ordem
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={limparFormulario}
+                style={{
+                  ...buttonStyle,
+                  backgroundColor: '#6c757d',
+                  flex: '1'
+                }}
+              >
+                🗑️ Limpar Formulário
+              </button>
+            )}
             
             <button
               type="submit"
@@ -280,7 +299,7 @@ export const FormularioPON: React.FC<FormularioPONProps> = ({ onSubmit, dadosIni
                 flex: '2'
               }}
             >
-              💾 Salvar e Gerar TXT
+              💾 {modoGerenciamento ? 'Salvar Alterações' : 'Salvar e Gerar TXT'}
             </button>
           </div>
         </form>
