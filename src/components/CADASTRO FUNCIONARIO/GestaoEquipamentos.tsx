@@ -4,18 +4,18 @@ import { CadastroFuncionario } from './CadastroFuncionario';
 import { CadastroNotebook } from './CadastroNotebook';
 import { CadastroCelular } from './CadastroCelular';
 import { CadastroNumeroTelefone } from './CadastroNumeroTelefone';
-import { VinculacaoEquipamentos } from './VinculacaoEquipamentos';
+import { VinculacaoEquipamentos } from '../VinculacaoEquipamentos';
 import { ListaFuncionarios } from './ListaFuncionarios';
 import { ListaNotebooks } from './ListaNotebooks';
 import { ListaCelulares } from './ListaCelulares';
 import { ListaNumerosTelefone } from './ListaNumerosTelefone';
 
-type SectionType = 
-  | 'dashboard' 
-  | 'cadastro-funcionario' 
-  | 'cadastro-notebook' 
-  | 'cadastro-celular' 
-  | 'cadastro-numero' 
+type SectionType =
+  | 'dashboard'
+  | 'cadastro-funcionario'
+  | 'cadastro-notebook'
+  | 'cadastro-celular'
+  | 'cadastro-numero'
   | 'vinculacao'
   | 'lista-funcionarios'
   | 'lista-notebooks'
@@ -103,7 +103,7 @@ export const GestaoEquipamentos: React.FC<GestaoEquipamentosProps> = ({
           </h1>
           <nav className="main-nav">
             {isAdmin && onVoltarTelaSelecionarSistema && (
-              <button 
+              <button
                 className="nav-btn"
                 onClick={onVoltarTelaSelecionarSistema}
                 title="Voltar à tela de seleção de sistema"
@@ -111,16 +111,16 @@ export const GestaoEquipamentos: React.FC<GestaoEquipamentosProps> = ({
                 ↩️ Trocar Sistema
               </button>
             )}
-            <button 
+            <button
               className={`nav-btn ${currentSection === 'dashboard' ? 'active' : ''}`}
               onClick={() => handleNavigate('dashboard')}
             >
               Dashboard
             </button>
-            
+
             {/* Dropdown Cadastros */}
             <div className="nav-dropdown" ref={cadastrosDropdownRef}>
-              <button 
+              <button
                 className="nav-btn dropdown-toggle"
                 onClick={() => {
                   setCadastrosDropdownOpen(!cadastrosDropdownOpen);
@@ -144,10 +144,10 @@ export const GestaoEquipamentos: React.FC<GestaoEquipamentosProps> = ({
                 </button>
               </div>
             </div>
-            
+
             {/* Dropdown Listagens */}
             <div className="nav-dropdown" ref={listagensDropdownRef}>
-              <button 
+              <button
                 className="nav-btn dropdown-toggle"
                 onClick={() => {
                   setListagensDropdownOpen(!listagensDropdownOpen);
@@ -171,8 +171,8 @@ export const GestaoEquipamentos: React.FC<GestaoEquipamentosProps> = ({
                 </button>
               </div>
             </div>
-            
-            <button 
+
+            <button
               className={`nav-btn ${currentSection === 'vinculacao' ? 'active' : ''}`}
               onClick={() => handleNavigate('vinculacao')}
             >
@@ -186,7 +186,7 @@ export const GestaoEquipamentos: React.FC<GestaoEquipamentosProps> = ({
         <div className="content-header">
           <h2>{getSectionTitle()}</h2>
           {currentSection !== 'dashboard' && (
-            <button 
+            <button
               className="btn btn-outline"
               onClick={handleBackToDashboard}
             >
@@ -201,35 +201,35 @@ export const GestaoEquipamentos: React.FC<GestaoEquipamentosProps> = ({
           )}
 
           {currentSection === 'cadastro-funcionario' && (
-            <CadastroFuncionario 
+            <CadastroFuncionario
               onSuccess={handleBackToDashboard}
               onCancel={handleBackToDashboard}
             />
           )}
 
           {currentSection === 'cadastro-notebook' && (
-            <CadastroNotebook 
+            <CadastroNotebook
               onSuccess={handleBackToDashboard}
               onCancel={handleBackToDashboard}
             />
           )}
 
           {currentSection === 'cadastro-celular' && (
-            <CadastroCelular 
+            <CadastroCelular
               onSuccess={handleBackToDashboard}
               onCancel={handleBackToDashboard}
             />
           )}
 
           {currentSection === 'cadastro-numero' && (
-            <CadastroNumeroTelefone 
+            <CadastroNumeroTelefone
               onSuccess={handleBackToDashboard}
               onCancel={handleBackToDashboard}
             />
           )}
 
           {currentSection === 'vinculacao' && (
-            <VinculacaoEquipamentos 
+            <VinculacaoEquipamentos
               onSuccess={handleBackToDashboard}
               onCancel={handleBackToDashboard}
             />

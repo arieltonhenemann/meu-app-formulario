@@ -41,19 +41,19 @@ export const RelatoriosPage: React.FC = () => {
 
   const carregarFormularios = async () => {
     console.log('📊 [RelatoriosPage] Carregando formulários para relatórios');
-    
+
     try {
       setEstado(prev => ({ ...prev, carregando: true }));
-      
+
       const formularios = await firebaseFormularioStorage.obterTodos();
       console.log('📊 Formulários carregados:', formularios.length);
-      
+
       setEstado(prev => ({
         ...prev,
         formularios,
         carregando: false
       }));
-      
+
     } catch (error) {
       console.error('❌ Erro ao carregar formulários:', error);
       setEstado(prev => ({ ...prev, carregando: false }));
@@ -106,19 +106,19 @@ export const RelatoriosPage: React.FC = () => {
 
   const exportarPDF = async () => {
     console.log('📄 [RelatoriosPage] Iniciando exportação PDF');
-    
+
     try {
       setExportando(prev => ({ ...prev, pdf: true }));
-      
+
       const dataInicioTexto = estado.dataInicio || 'início';
       const dataFimTexto = estado.dataFim || 'hoje';
-      
+
       await exportadorRelatorios.exportarParaPDF(
         estado.formulariosFiltrados,
         dataInicioTexto,
         dataFimTexto
       );
-      
+
       alert('✅ Relatório PDF gerado com sucesso!');
     } catch (error) {
       console.error('❌ Erro ao exportar PDF:', error);
@@ -130,19 +130,19 @@ export const RelatoriosPage: React.FC = () => {
 
   const exportarExcel = async () => {
     console.log('📊 [RelatoriosPage] Iniciando exportação Excel');
-    
+
     try {
       setExportando(prev => ({ ...prev, excel: true }));
-      
+
       const dataInicioTexto = estado.dataInicio || 'início';
       const dataFimTexto = estado.dataFim || 'hoje';
-      
+
       await exportadorRelatorios.exportarParaExcel(
         estado.formulariosFiltrados,
         dataInicioTexto,
         dataFimTexto
       );
-      
+
       alert('✅ Planilha Excel gerada com sucesso!');
     } catch (error) {
       console.error('❌ Erro ao exportar Excel:', error);
@@ -182,8 +182,8 @@ export const RelatoriosPage: React.FC = () => {
   return (
     <div style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto' }}>
       {/* Cabeçalho */}
-      <div style={{ 
-        marginBottom: '30px', 
+      <div style={{
+        marginBottom: '30px',
         textAlign: 'center',
         borderBottom: '2px solid #428bca',
         paddingBottom: '15px'
@@ -219,8 +219,8 @@ export const RelatoriosPage: React.FC = () => {
         <h3 style={{ margin: '0 0 15px 0', color: '#495057' }}>
           🔍 Filtros
         </h3>
-        
-        <div style={{ 
+
+        <div style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
           gap: '15px',
@@ -281,6 +281,7 @@ export const RelatoriosPage: React.FC = () => {
               <option value="CTO">CTO</option>
               <option value="PON">PON</option>
               <option value="LINK">LINK</option>
+              <option value="ADEQUACAO">ADEQUAÇÃO</option>
             </select>
           </div>
 
@@ -330,8 +331,10 @@ export const RelatoriosPage: React.FC = () => {
               borderRadius: '8px',
               textAlign: 'center'
             }}>
-              <div style={{ fontSize: '24px', fontWeight: 'bold', 
-                color: tipo === 'CTO' ? '#388e3c' : tipo === 'PON' ? '#f57c00' : '#7b1fa2' }}>
+              <div style={{
+                fontSize: '24px', fontWeight: 'bold',
+                color: tipo === 'CTO' ? '#388e3c' : tipo === 'PON' ? '#f57c00' : '#7b1fa2'
+              }}>
                 {quantidade as number}
               </div>
               <div style={{ color: '#424242' }}>Formulários {tipo}</div>
@@ -442,10 +445,10 @@ export const RelatoriosPage: React.FC = () => {
                           borderRadius: '4px',
                           fontSize: '12px',
                           fontWeight: 'bold',
-                          backgroundColor: formulario.tipo === 'CTO' ? '#d4edda' : 
-                                         formulario.tipo === 'PON' ? '#fff3cd' : '#e2e3e5',
-                          color: formulario.tipo === 'CTO' ? '#155724' : 
-                                 formulario.tipo === 'PON' ? '#856404' : '#383d41'
+                          backgroundColor: formulario.tipo === 'CTO' ? '#d4edda' :
+                            formulario.tipo === 'PON' ? '#fff3cd' : '#e2e3e5',
+                          color: formulario.tipo === 'CTO' ? '#155724' :
+                            formulario.tipo === 'PON' ? '#856404' : '#383d41'
                         }}>
                           {formulario.tipo}
                         </span>
@@ -463,10 +466,10 @@ export const RelatoriosPage: React.FC = () => {
                         {(dados as any).cto || (dados as any).pon || 'Links'}
                       </td>
                       <td style={{ padding: '12px', borderBottom: '1px solid #dee2e6', maxWidth: '200px' }}>
-                        <div 
-                          style={{ 
-                            overflow: 'hidden', 
-                            textOverflow: 'ellipsis', 
+                        <div
+                          style={{
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
                             whiteSpace: 'nowrap'
                           }}
                           title={(dados as any).problema || 'N/A'}
@@ -475,10 +478,10 @@ export const RelatoriosPage: React.FC = () => {
                         </div>
                       </td>
                       <td style={{ padding: '12px', borderBottom: '1px solid #dee2e6', maxWidth: '200px' }}>
-                        <div 
-                          style={{ 
-                            overflow: 'hidden', 
-                            textOverflow: 'ellipsis', 
+                        <div
+                          style={{
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
                             whiteSpace: 'nowrap'
                           }}
                           title={(dados as any).endereco || 'N/A'}

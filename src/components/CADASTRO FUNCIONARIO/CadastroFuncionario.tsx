@@ -1,15 +1,15 @@
 import React, { useState } from 'react';
-import { FuncionarioForm, SetorFuncionario } from '../types/equipment';
-import { FuncionarioService } from '../services/funcionarioService';
+import { FuncionarioForm, SetorFuncionario } from '../../types/equipment';
+import { FuncionarioService } from '../../services/funcionarioService';
 
 interface CadastroFuncionarioProps {
   onSuccess?: () => void;
   onCancel?: () => void;
 }
 
-export const CadastroFuncionario: React.FC<CadastroFuncionarioProps> = ({ 
-  onSuccess, 
-  onCancel 
+export const CadastroFuncionario: React.FC<CadastroFuncionarioProps> = ({
+  onSuccess,
+  onCancel
 }) => {
   const [formData, setFormData] = useState<FuncionarioForm>({
     nome: '',
@@ -42,7 +42,7 @@ export const CadastroFuncionario: React.FC<CadastroFuncionarioProps> = ({
       }
 
       await FuncionarioService.criarFuncionario(formData);
-      
+
       // Limpar formulário
       setFormData({
         nome: '',
@@ -66,7 +66,7 @@ export const CadastroFuncionario: React.FC<CadastroFuncionarioProps> = ({
   return (
     <div className="cadastro-funcionario">
       <h2>Cadastrar Funcionário</h2>
-      
+
       {erro && (
         <div className="alert alert-error">
           {erro}
@@ -123,17 +123,17 @@ export const CadastroFuncionario: React.FC<CadastroFuncionarioProps> = ({
         </div>
 
         <div className="form-actions">
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             className="btn btn-primary"
             disabled={loading}
           >
             {loading ? 'Cadastrando...' : 'Cadastrar Funcionário'}
           </button>
-          
+
           {onCancel && (
-            <button 
-              type="button" 
+            <button
+              type="button"
               className="btn btn-secondary"
               onClick={onCancel}
               disabled={loading}

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Notebook } from '../types/equipment';
+import { Notebook } from '../../types/equipment';
 
 interface ModalEditarNotebookProps {
   notebook: Notebook | null;
@@ -128,7 +128,7 @@ export const ModalEditarNotebook: React.FC<ModalEditarNotebookProps> = ({
       <div className="modal-content" onClick={e => e.stopPropagation()}>
         <div className="modal-header">
           <h3>💻 Editar Notebook</h3>
-          <button 
+          <button
             className="modal-close-btn"
             onClick={handleClose}
             disabled={loading}
@@ -158,7 +158,7 @@ export const ModalEditarNotebook: React.FC<ModalEditarNotebookProps> = ({
                   required
                 />
               </div>
-              
+
               <div className="form-group">
                 <label htmlFor="modelo">Modelo</label>
                 <input

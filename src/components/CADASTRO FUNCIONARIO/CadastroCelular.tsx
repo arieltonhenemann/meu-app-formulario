@@ -1,15 +1,15 @@
 import React, { useState } from 'react';
-import { CelularForm } from '../types/equipment';
-import { CelularService } from '../services/celularService';
+import { CelularForm } from '../../types/equipment';
+import { CelularService } from '../../services/celularService';
 
 interface CadastroCelularProps {
   onSuccess?: () => void;
   onCancel?: () => void;
 }
 
-export const CadastroCelular: React.FC<CadastroCelularProps> = ({ 
-  onSuccess, 
-  onCancel 
+export const CadastroCelular: React.FC<CadastroCelularProps> = ({
+  onSuccess,
+  onCancel
 }) => {
   const [formData, setFormData] = useState<CelularForm>({
     marca: '',
@@ -60,7 +60,7 @@ export const CadastroCelular: React.FC<CadastroCelularProps> = ({
       }
 
       await CelularService.criarCelular(formData);
-      
+
       // Limpar formulário
       setFormData({
         marca: '',
@@ -88,7 +88,7 @@ export const CadastroCelular: React.FC<CadastroCelularProps> = ({
   return (
     <div className="cadastro-celular">
       <h2>Cadastrar Celular</h2>
-      
+
       {erro && (
         <div className="alert alert-error">
           {erro}
@@ -211,17 +211,17 @@ export const CadastroCelular: React.FC<CadastroCelularProps> = ({
         </div>
 
         <div className="form-actions">
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             className="btn btn-primary"
             disabled={loading}
           >
             {loading ? 'Cadastrando...' : 'Cadastrar Celular'}
           </button>
-          
+
           {onCancel && (
-            <button 
-              type="button" 
+            <button
+              type="button"
               className="btn btn-secondary"
               onClick={onCancel}
               disabled={loading}

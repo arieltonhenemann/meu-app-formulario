@@ -7,7 +7,7 @@ export type TipoAcaoAuditoria =
   | 'FINALIZAR_FORMULARIO'
   | 'REABRIR_FORMULARIO';
 
-export type TipoFormularioAuditoria = 'CTO' | 'PON' | 'LINK';
+export type TipoFormularioAuditoria = 'CTO' | 'PON' | 'LINK' | 'ADEQUACAO';
 
 export interface UsuarioAuditoria {
   uid: string;

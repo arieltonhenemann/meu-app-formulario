@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { CelularService } from '../services/celularService';
-import { FuncionarioService } from '../services/funcionarioService';
-import { Celular, Funcionario, StatusEquipamento } from '../types/equipment';
+import { CelularService } from '../../services/celularService';
+import { FuncionarioService } from '../../services/funcionarioService';
+import { Celular, Funcionario, StatusEquipamento } from '../../types/equipment';
 import { ModalEditarCelular } from './ModalEditarCelular';
 import { ModalConfirmarExclusao } from './ModalConfirmarExclusao';
 
@@ -41,7 +41,7 @@ export const ListaCelulares: React.FC<ListaCelularesProps> = ({ onBack }) => {
     carregarDados();
   }, []);
 
-  const celularesFiltrados = filtroStatus 
+  const celularesFiltrados = filtroStatus
     ? celulares.filter(celular => celular.status === filtroStatus)
     : celulares;
 
@@ -92,28 +92,28 @@ export const ListaCelulares: React.FC<ListaCelularesProps> = ({ onBack }) => {
     observacoes: string;
   }) => {
     if (!celularEditando) return;
-    
+
     try {
       setCarregandoAcao('editando');
       await CelularService.atualizarCelularCompleto(celularEditando.id, dadosAtualizados);
-      
+
       // Atualizar lista local
-      setCelulares(prev => prev.map(celular => 
-        celular.id === celularEditando.id 
-          ? { 
-              ...celular, 
-              marca: dadosAtualizados.marca,
-              modelo: dadosAtualizados.modelo,
-              imei: dadosAtualizados.imei,
-              numeroSerie: dadosAtualizados.numeroSerie || '',
-              valorCompra: dadosAtualizados.valorCompra,
-              dataCompra: new Date(dadosAtualizados.dataCompra),
-              observacoes: dadosAtualizados.observacoes,
-              updatedAt: new Date()
-            }
+      setCelulares(prev => prev.map(celular =>
+        celular.id === celularEditando.id
+          ? {
+            ...celular,
+            marca: dadosAtualizados.marca,
+            modelo: dadosAtualizados.modelo,
+            imei: dadosAtualizados.imei,
+            numeroSerie: dadosAtualizados.numeroSerie || '',
+            valorCompra: dadosAtualizados.valorCompra,
+            dataCompra: new Date(dadosAtualizados.dataCompra),
+            observacoes: dadosAtualizados.observacoes,
+            updatedAt: new Date()
+          }
           : celular
       ));
-      
+
       setCelularEditando(null);
     } catch (error: any) {
       console.error('Erro ao editar celular:', error);
@@ -127,14 +127,14 @@ export const ListaCelulares: React.FC<ListaCelularesProps> = ({ onBack }) => {
     try {
       setCarregandoAcao(celular.id);
       await CelularService.desvincularCelular(celular.id);
-      
+
       // Atualizar lista local
-      setCelulares(prev => prev.map(cel => 
-        cel.id === celular.id 
+      setCelulares(prev => prev.map(cel =>
+        cel.id === celular.id
           ? { ...cel, funcionarioId: undefined, status: StatusEquipamento.DISPONIVEL, updatedAt: new Date() }
           : cel
       ));
-      
+
     } catch (error: any) {
       console.error('Erro ao desvincular celular:', error);
       setErro(error.message || 'Erro ao desvincular celular');
@@ -145,14 +145,14 @@ export const ListaCelulares: React.FC<ListaCelularesProps> = ({ onBack }) => {
 
   const handleExcluirCelular = async () => {
     if (!celularExcluindo) return;
-    
+
     try {
       setCarregandoAcao('excluindo');
       await CelularService.excluirCelular(celularExcluindo.id);
-      
+
       // Remover da lista local
       setCelulares(prev => prev.filter(cel => cel.id !== celularExcluindo.id));
-      
+
       setCelularExcluindo(null);
     } catch (error: any) {
       console.error('Erro ao excluir celular:', error);
@@ -172,7 +172,7 @@ export const ListaCelulares: React.FC<ListaCelularesProps> = ({ onBack }) => {
 
   return (
     <>
-      <ModalEditarCelular 
+      <ModalEditarCelular
         celular={celularEditando}
         isOpen={!!celularEditando}
         onClose={() => setCelularEditando(null)}
@@ -180,7 +180,7 @@ export const ListaCelulares: React.FC<ListaCelularesProps> = ({ onBack }) => {
         loading={carregandoAcao === 'editando'}
       />
 
-      <ModalConfirmarExclusao 
+      <ModalConfirmarExclusao
         isOpen={!!celularExcluindo}
         titulo="Excluir Celular"
         mensagem={`Tem certeza de que deseja excluir o celular ${celularExcluindo?.marca} ${celularExcluindo?.modelo}? Esta ação não pode ser desfeita.`}
@@ -188,119 +188,119 @@ export const ListaCelulares: React.FC<ListaCelularesProps> = ({ onBack }) => {
         onCancelar={() => setCelularExcluindo(null)}
         loading={carregandoAcao === 'excluindo'}
       />
-      
+
       <div className="lista-funcionarios">
-      <div className="lista-header">
-        <div>
-          <h3>📱 Celulares Cadastrados</h3>
-          <p className="text-muted">Total: {celulares.length} celulares</p>
-        </div>
-        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-          <select 
-            value={filtroStatus} 
-            onChange={(e) => setFiltroStatus(e.target.value)}
-            className="select-filtro"
-          >
-            <option value="">Todos os Status</option>
-            <option value={StatusEquipamento.DISPONIVEL}>🟢 Disponível</option>
-            <option value={StatusEquipamento.EM_USO}>🟡 Em Uso</option>
-            <option value={StatusEquipamento.MANUTENCAO}>🔴 Manutenção</option>
-            <option value={StatusEquipamento.INDISPONIVEL}>⚫ Indisponível</option>
-          </select>
-          <button 
-            className="btn btn-primary btn-small"
-            onClick={carregarDados}
-          >
-            🔄 Atualizar
-          </button>
-          {onBack && (
-            <button 
-              className="btn btn-outline btn-small"
-              onClick={onBack}
+        <div className="lista-header">
+          <div>
+            <h3>📱 Celulares Cadastrados</h3>
+            <p className="text-muted">Total: {celulares.length} celulares</p>
+          </div>
+          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+            <select
+              value={filtroStatus}
+              onChange={(e) => setFiltroStatus(e.target.value)}
+              className="select-filtro"
             >
-              ← Voltar
+              <option value="">Todos os Status</option>
+              <option value={StatusEquipamento.DISPONIVEL}>🟢 Disponível</option>
+              <option value={StatusEquipamento.EM_USO}>🟡 Em Uso</option>
+              <option value={StatusEquipamento.MANUTENCAO}>🔴 Manutenção</option>
+              <option value={StatusEquipamento.INDISPONIVEL}>⚫ Indisponível</option>
+            </select>
+            <button
+              className="btn btn-primary btn-small"
+              onClick={carregarDados}
+            >
+              🔄 Atualizar
             </button>
-          )}
-        </div>
-      </div>
-
-      {erro && (
-        <div className="alert alert-error">
-          ❌ {erro}
-        </div>
-      )}
-
-      <div className="funcionarios-grid">
-        {celularesFiltrados.length === 0 ? (
-          <div className="sem-resultados">
-            <p>📄 Nenhum celular encontrado</p>
-            {filtroStatus && (
-              <p>Tente alterar o filtro de status ou remover o filtro.</p>
+            {onBack && (
+              <button
+                className="btn btn-outline btn-small"
+                onClick={onBack}
+              >
+                ← Voltar
+              </button>
             )}
           </div>
-        ) : (
-          celularesFiltrados.map(celular => (
-            <div key={celular.id} className="funcionario-card">
-              <div className="funcionario-info">
-                <h4>📱 {celular.marca} {celular.modelo}</h4>
-                <p><strong>IMEI:</strong> {mascaraIMEI(celular.imei)}</p>
-                {celular.numeroSerie && (
-                  <p><strong>Número de Série:</strong> {celular.numeroSerie}</p>
-                )}
-                <p><strong>Status:</strong> 
-                  <span className={`status ${getStatusDisplay(celular.status).className}`}>
-                    {getStatusDisplay(celular.status).text}
-                  </span>
-                </p>
-                <p><strong>Funcionário:</strong> {getFuncionarioNome(celular.funcionarioId)}</p>
-                
-                <p><strong>Valor:</strong> R$ {celular.valorCompra.toFixed(2)}</p>
-                <p className="data-admissao">
-                  📅 Comprado em: {formatarData(celular.dataCompra)}
-                </p>
-                <p className="data-admissao">
-                  📝 Cadastrado em: {formatarData(celular.createdAt)}
-                </p>
-                
-                {celular.observacoes && (
-                  <p style={{ fontSize: '0.8rem', color: '#666', marginTop: '0.5rem' }}>
-                    <strong>Observações:</strong> {celular.observacoes}
-                  </p>
-                )}
-              </div>
-              
-              <div className="acoes-funcionario">
-                <button 
-                  className="btn btn-warning btn-small"
-                  onClick={() => handleEditarCelular(celular)}
-                  disabled={carregandoAcao === 'editando'}
-                >
-                  ✏️ Editar
-                </button>
-                <button 
-                  className="btn btn-danger btn-small"
-                  onClick={() => setCelularExcluindo(celular)}
-                  disabled={carregandoAcao === 'excluindo'}
-                >
-                  🗑️ Excluir
-                </button>
-                {celular.funcionarioId && (
-                  <button 
-                    className="btn btn-secondary btn-small"
-                    onClick={() => handleDesvincularCelular(celular)}
-                    disabled={carregandoAcao === celular.id}
-                  >
-                    {carregandoAcao === celular.id 
-                      ? '🔄...' 
-                      : '🔗 Desvincular'
-                    }
-                  </button>
-                )}
-              </div>
-            </div>
-          ))
+        </div>
+
+        {erro && (
+          <div className="alert alert-error">
+            ❌ {erro}
+          </div>
         )}
-      </div>
+
+        <div className="funcionarios-grid">
+          {celularesFiltrados.length === 0 ? (
+            <div className="sem-resultados">
+              <p>📄 Nenhum celular encontrado</p>
+              {filtroStatus && (
+                <p>Tente alterar o filtro de status ou remover o filtro.</p>
+              )}
+            </div>
+          ) : (
+            celularesFiltrados.map(celular => (
+              <div key={celular.id} className="funcionario-card">
+                <div className="funcionario-info">
+                  <h4>📱 {celular.marca} {celular.modelo}</h4>
+                  <p><strong>IMEI:</strong> {mascaraIMEI(celular.imei)}</p>
+                  {celular.numeroSerie && (
+                    <p><strong>Número de Série:</strong> {celular.numeroSerie}</p>
+                  )}
+                  <p><strong>Status:</strong>
+                    <span className={`status ${getStatusDisplay(celular.status).className}`}>
+                      {getStatusDisplay(celular.status).text}
+                    </span>
+                  </p>
+                  <p><strong>Funcionário:</strong> {getFuncionarioNome(celular.funcionarioId)}</p>
+
+                  <p><strong>Valor:</strong> R$ {celular.valorCompra.toFixed(2)}</p>
+                  <p className="data-admissao">
+                    📅 Comprado em: {formatarData(celular.dataCompra)}
+                  </p>
+                  <p className="data-admissao">
+                    📝 Cadastrado em: {formatarData(celular.createdAt)}
+                  </p>
+
+                  {celular.observacoes && (
+                    <p style={{ fontSize: '0.8rem', color: '#666', marginTop: '0.5rem' }}>
+                      <strong>Observações:</strong> {celular.observacoes}
+                    </p>
+                  )}
+                </div>
+
+                <div className="acoes-funcionario">
+                  <button
+                    className="btn btn-warning btn-small"
+                    onClick={() => handleEditarCelular(celular)}
+                    disabled={carregandoAcao === 'editando'}
+                  >
+                    ✏️ Editar
+                  </button>
+                  <button
+                    className="btn btn-danger btn-small"
+                    onClick={() => setCelularExcluindo(celular)}
+                    disabled={carregandoAcao === 'excluindo'}
+                  >
+                    🗑️ Excluir
+                  </button>
+                  {celular.funcionarioId && (
+                    <button
+                      className="btn btn-secondary btn-small"
+                      onClick={() => handleDesvincularCelular(celular)}
+                      disabled={carregandoAcao === celular.id}
+                    >
+                      {carregandoAcao === celular.id
+                        ? '🔄...'
+                        : '🔗 Desvincular'
+                      }
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))
+          )}
+        </div>
       </div>
     </>
   );

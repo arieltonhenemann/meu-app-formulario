@@ -1,15 +1,15 @@
 import React, { useState } from 'react';
-import { NotebookForm } from '../types/equipment';
-import { NotebookService } from '../services/notebookService';
+import { NotebookForm } from '../../types/equipment';
+import { NotebookService } from '../../services/notebookService';
 
 interface CadastroNotebookProps {
   onSuccess?: () => void;
   onCancel?: () => void;
 }
 
-export const CadastroNotebook: React.FC<CadastroNotebookProps> = ({ 
-  onSuccess, 
-  onCancel 
+export const CadastroNotebook: React.FC<CadastroNotebookProps> = ({
+  onSuccess,
+  onCancel
 }) => {
   const [formData, setFormData] = useState<NotebookForm>({
     marca: '',
@@ -68,7 +68,7 @@ export const CadastroNotebook: React.FC<CadastroNotebookProps> = ({
       }
 
       await NotebookService.criarNotebook(formData);
-      
+
       // Limpar formulário
       setFormData({
         marca: '',
@@ -99,7 +99,7 @@ export const CadastroNotebook: React.FC<CadastroNotebookProps> = ({
   return (
     <div className="cadastro-notebook">
       <h2>Cadastrar Notebook</h2>
-      
+
       {erro && (
         <div className="alert alert-error">
           {erro}
@@ -289,17 +289,17 @@ export const CadastroNotebook: React.FC<CadastroNotebookProps> = ({
         </div>
 
         <div className="form-actions">
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             className="btn btn-primary"
             disabled={loading}
           >
             {loading ? 'Cadastrando...' : 'Cadastrar Notebook'}
           </button>
-          
+
           {onCancel && (
-            <button 
-              type="button" 
+            <button
+              type="button"
               className="btn btn-secondary"
               onClick={onCancel}
               disabled={loading}

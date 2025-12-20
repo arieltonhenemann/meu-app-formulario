@@ -1,6 +1,6 @@
 // Componente React que usa código compartilhado
 import React from 'react';
-import { Produto, formatarMoeda } from '../shared';
+import { Produto, formatarMoeda } from '../../shared';
 
 interface ProdutoCardProps {
   produto: Produto;
@@ -29,28 +29,28 @@ export const ProdutoCard: React.FC<ProdutoCardProps> = ({ produto }) => {
           }}
         />
       )}
-      
+
       <h3 style={{ margin: '0 0 8px 0', color: '#333' }}>
         {produto.nome}
       </h3>
-      
-      <p style={{ 
-        fontSize: '24px', 
-        fontWeight: 'bold', 
+
+      <p style={{
+        fontSize: '24px',
+        fontWeight: 'bold',
         color: '#2196F3',
         margin: '8px 0'
       }}>
         {formatarMoeda(produto.preco)}
       </p>
-      
-      <p style={{ 
-        color: '#666', 
+
+      <p style={{
+        color: '#666',
         fontSize: '14px',
         margin: '8px 0'
       }}>
         {produto.descricao}
       </p>
-      
+
       <button style={{
         backgroundColor: '#4CAF50',
         color: 'white',

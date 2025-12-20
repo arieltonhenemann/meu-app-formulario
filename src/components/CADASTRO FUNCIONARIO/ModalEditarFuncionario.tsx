@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Funcionario, SetorFuncionario } from '../types/equipment';
+import { Funcionario, SetorFuncionario } from '../../types/equipment';
 
 interface ModalEditarFuncionarioProps {
   funcionario: Funcionario | null;
@@ -61,7 +61,7 @@ export const ModalEditarFuncionario: React.FC<ModalEditarFuncionarioProps> = ({
       <div className="modal-content" onClick={e => e.stopPropagation()}>
         <div className="modal-header">
           <h3>✏️ Editar Funcionário</h3>
-          <button 
+          <button
             className="modal-close-btn"
             onClick={handleClose}
             disabled={loading}

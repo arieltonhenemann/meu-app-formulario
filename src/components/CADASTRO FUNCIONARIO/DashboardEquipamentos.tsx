@@ -1,26 +1,26 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  FuncionarioCompleto, 
+import {
+  FuncionarioCompleto,
   RelatorioEquipamento,
   StatusEquipamento,
-  SetorFuncionario 
-} from '../types/equipment';
-import { VinculacaoService } from '../services/vinculacaoService';
+  SetorFuncionario
+} from '../../types/equipment';
+import { VinculacaoService } from '../../services/vinculacaoService';
 
-type SectionType = 
-  | 'dashboard' 
-  | 'cadastro-funcionario' 
-  | 'cadastro-notebook' 
-  | 'cadastro-celular' 
-  | 'cadastro-numero' 
+type SectionType =
+  | 'dashboard'
+  | 'cadastro-funcionario'
+  | 'cadastro-notebook'
+  | 'cadastro-celular'
+  | 'cadastro-numero'
   | 'vinculacao';
 
 interface DashboardEquipamentosProps {
   onNavigate?: (section: SectionType) => void;
 }
 
-export const DashboardEquipamentos: React.FC<DashboardEquipamentosProps> = ({ 
-  onNavigate 
+export const DashboardEquipamentos: React.FC<DashboardEquipamentosProps> = ({
+  onNavigate
 }) => {
   const [funcionarios, setFuncionarios] = useState<FuncionarioCompleto[]>([]);
   const [relatorio, setRelatorio] = useState<RelatorioEquipamento | null>(null);
@@ -61,7 +61,7 @@ export const DashboardEquipamentos: React.FC<DashboardEquipamentosProps> = ({
     try {
       const motivo = prompt('Motivo da desvinculação (opcional):');
       await VinculacaoService.desvincularTodosEquipamentos(funcionarioId, motivo || undefined);
-      
+
       alert('Equipamentos desvinculados com sucesso!');
       await carregarDados();
     } catch (error: any) {
@@ -70,7 +70,7 @@ export const DashboardEquipamentos: React.FC<DashboardEquipamentosProps> = ({
   };
 
   const handleDesvincularEquipamento = async (
-    equipamentoId: string, 
+    equipamentoId: string,
     tipoEquipamento: 'notebook' | 'celular' | 'numero',
     nomeEquipamento: string
   ) => {
@@ -81,7 +81,7 @@ export const DashboardEquipamentos: React.FC<DashboardEquipamentosProps> = ({
     try {
       const motivo = prompt('Motivo da desvinculação (opcional):');
       await VinculacaoService.desvincularEquipamento(equipamentoId, tipoEquipamento, motivo || undefined);
-      
+
       alert('Equipamento desvinculado com sucesso!');
       await carregarDados();
     } catch (error: any) {
@@ -195,31 +195,31 @@ export const DashboardEquipamentos: React.FC<DashboardEquipamentosProps> = ({
       <div className="ações-rapidas">
         <h3>Ações Rápidas</h3>
         <div className="botoes-acoes">
-          <button 
+          <button
             className="btn btn-primary"
             onClick={() => onNavigate && onNavigate('cadastro-funcionario')}
           >
             Cadastrar Funcionário
           </button>
-          <button 
+          <button
             className="btn btn-primary"
             onClick={() => onNavigate && onNavigate('cadastro-notebook')}
           >
             Cadastrar Notebook
           </button>
-          <button 
+          <button
             className="btn btn-primary"
             onClick={() => onNavigate && onNavigate('cadastro-celular')}
           >
             Cadastrar Celular
           </button>
-          <button 
+          <button
             className="btn btn-primary"
             onClick={() => onNavigate && onNavigate('cadastro-numero')}
           >
             Cadastrar Número
           </button>
-          <button 
+          <button
             className="btn btn-success"
             onClick={() => onNavigate && onNavigate('vinculacao')}
           >
@@ -232,8 +232,8 @@ export const DashboardEquipamentos: React.FC<DashboardEquipamentosProps> = ({
         <div className="lista-header">
           <h3>Funcionários e Equipamentos</h3>
           <div className="filtros" style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-            <select 
-              value={filtro} 
+            <select
+              value={filtro}
               onChange={(e) => setFiltro(e.target.value as any)}
               className="select-filtro"
             >
@@ -241,9 +241,9 @@ export const DashboardEquipamentos: React.FC<DashboardEquipamentosProps> = ({
               <option value="com_equipamentos">Com equipamentos</option>
               <option value="sem_equipamentos">Sem equipamentos</option>
             </select>
-            
-            <select 
-              value={filtroSetor} 
+
+            <select
+              value={filtroSetor}
               onChange={(e) => setFiltroSetor(e.target.value)}
               className="select-filtro"
             >
@@ -252,7 +252,7 @@ export const DashboardEquipamentos: React.FC<DashboardEquipamentosProps> = ({
                 <option key={setor} value={setor}>{setor}</option>
               ))}
             </select>
-            
+
             {(filtro !== 'todos' || filtroSetor) && (
               <button
                 onClick={() => {
@@ -274,7 +274,7 @@ export const DashboardEquipamentos: React.FC<DashboardEquipamentosProps> = ({
               <div className="funcionario-info">
                 <h4>{funcionario.nome}</h4>
                 <p><strong>Setor:</strong> {funcionario.setor}</p>
-                <p><strong>Status:</strong> <span style={{color: funcionario.ativo ? '#28a745' : '#dc3545'}}>{funcionario.ativo ? 'Ativo' : 'Inativo'}</span></p>
+                <p><strong>Status:</strong> <span style={{ color: funcionario.ativo ? '#28a745' : '#dc3545' }}>{funcionario.ativo ? 'Ativo' : 'Inativo'}</span></p>
                 <p className="data-cadastro">
                   Cadastrado em: {formatarData(funcionario.createdAt)}
                 </p>

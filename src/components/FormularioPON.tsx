@@ -38,16 +38,16 @@ export const FormularioPON: React.FC<FormularioPONProps> = ({ onSubmit, dadosIni
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     try {
       console.log('Dados da O.S PON:', formData);
       onSubmit?.(formData);
-      
+
       // Verificar se está editando um formulário existente ou criando um novo
       if (formularioId) {
         // Modo edição - atualizar formulário existente
         await firebaseFormularioStorage.atualizar(formularioId, formData);
-        
+
         // Registrar log de auditoria
         if (user) {
           await auditoriaService.registrarAcao('EDITAR_FORMULARIO', {
@@ -61,7 +61,7 @@ export const FormularioPON: React.FC<FormularioPONProps> = ({ onSubmit, dadosIni
             dadosAlterados: formData
           });
         }
-        
+
         alert('Ordem de Serviço PON atualizada com sucesso!');
       } else {
         // Modo criação - criar novo formulário
@@ -71,7 +71,7 @@ export const FormularioPON: React.FC<FormularioPONProps> = ({ onSubmit, dadosIni
           displayName: user.displayName
         } : undefined;
         const formularioSalvo = await firebaseFormularioStorage.salvar('PON', formData, criadoPor);
-        
+
         // Registrar log de auditoria
         if (user) {
           await auditoriaService.registrarAcao('CRIAR_FORMULARIO', {
@@ -84,12 +84,12 @@ export const FormularioPON: React.FC<FormularioPONProps> = ({ onSubmit, dadosIni
             tipoFormulario: 'PON'
           });
         }
-        
+
         // Gerar arquivo TXT apenas na criação
         gerarArquivoPON(formData);
-        
+
         alert('Ordem de Serviço PON salva e arquivo TXT gerado com sucesso!');
-        
+
         // Se não está editando, limpar formulário
         limparFormulario();
       }
@@ -99,21 +99,31 @@ export const FormularioPON: React.FC<FormularioPONProps> = ({ onSubmit, dadosIni
     }
   };
 
+  const handleGerarTxt = () => {
+    try {
+      gerarArquivoPON(formData);
+      alert('Arquivo TXT gerado com sucesso!');
+    } catch (err) {
+      console.error('Erro ao gerar TXT:', err);
+      alert('Erro ao gerar arquivo TXT.');
+    }
+  };
+
   const limparFormulario = () => {
     setFormData(criarPONVazia());
   };
 
   return (
     <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
-      <div style={{ 
-        backgroundColor: '#fff', 
-        padding: '30px', 
-        borderRadius: '10px', 
-        boxShadow: '0 4px 6px rgba(0,0,0,0.1)' 
+      <div style={{
+        backgroundColor: '#fff',
+        padding: '30px',
+        borderRadius: '10px',
+        boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
       }}>
-        <h2 style={{ 
-          textAlign: 'center', 
-          marginBottom: '30px', 
+        <h2 style={{
+          textAlign: 'center',
+          marginBottom: '30px',
           color: '#333',
           borderBottom: '2px solid #28a745',
           paddingBottom: '10px'
@@ -256,11 +266,11 @@ export const FormularioPON: React.FC<FormularioPONProps> = ({ onSubmit, dadosIni
           </div>
 
           {/* Botões */}
-          <div style={{ 
-            display: 'flex', 
-            justifyContent: 'space-between', 
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
             gap: '15px',
-            marginTop: '30px' 
+            marginTop: '30px'
           }}>
             {/* Botão esquerdo - condicional baseado no modo */}
             {modoGerenciamento ? (
@@ -268,11 +278,11 @@ export const FormularioPON: React.FC<FormularioPONProps> = ({ onSubmit, dadosIni
                 type="button"
                 onClick={async () => {
                   if (!formularioId) return;
-                  
+
                   try {
                     // Primeiro salvar as alterações
                     await firebaseFormularioStorage.atualizar(formularioId, formData);
-                    
+
                     // Registrar log de auditoria da edição
                     if (user) {
                       await auditoriaService.registrarAcao('EDITAR_FORMULARIO', {
@@ -286,7 +296,7 @@ export const FormularioPON: React.FC<FormularioPONProps> = ({ onSubmit, dadosIni
                         dadosAlterados: formData
                       });
                     }
-                    
+
                     // Depois finalizar
                     onFinalizar && onFinalizar(formularioId);
                   } catch (error) {
@@ -317,17 +327,33 @@ export const FormularioPON: React.FC<FormularioPONProps> = ({ onSubmit, dadosIni
                 🗑️ Limpar Formulário
               </button>
             )}
-            
-            <button
-              type="submit"
-              style={{
-                ...buttonStyle,
-                backgroundColor: '#28a745',
-                flex: '2'
-              }}
-            >
-              💾 {modoGerenciamento ? 'Salvar Alterações' : 'Salvar e Gerar TXT'}
-            </button>
+
+            {/* Grupo de ação (Gerar TXT + Salvar) */}
+            <div style={{ display: 'flex', gap: '10px', flex: '2' }}>
+              <button
+                type="button"
+                onClick={handleGerarTxt}
+                aria-label="Gerar arquivo TXT"
+                style={{
+                  ...buttonStyle,
+                  backgroundColor: '#17a2b8',
+                  flex: '0 0 auto'
+                }}
+              >
+                📄 Gerar TXT
+              </button>
+
+              <button
+                type="submit"
+                style={{
+                  ...buttonStyle,
+                  backgroundColor: '#28a745',
+                  flex: 1
+                }}
+              >
+                💾 {modoGerenciamento ? 'Salvar Alterações' : 'Salvar'}
+              </button>
+            </div>
           </div>
         </form>
       </div>

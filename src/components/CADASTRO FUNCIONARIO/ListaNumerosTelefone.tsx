@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { NumeroTelefoneService } from '../services/numeroTelefoneService';
-import { FuncionarioService } from '../services/funcionarioService';
-import { CelularService } from '../services/celularService';
-import { NumeroTelefone, Funcionario, Celular, StatusEquipamento } from '../types/equipment';
+import { NumeroTelefoneService } from '../../services/numeroTelefoneService';
+import { FuncionarioService } from '../../services/funcionarioService';
+import { CelularService } from '../../services/celularService';
+import { NumeroTelefone, Funcionario, Celular, StatusEquipamento } from '../../types/equipment';
 
 interface ListaNumerosTelefoneProps {
   onBack?: () => void;
@@ -106,8 +106,8 @@ export const ListaNumerosTelefone: React.FC<ListaNumerosTelefoneProps> = ({ onBa
           <p className="text-muted">Total: {numeros.length} números</p>
         </div>
         <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-          <select 
-            value={filtroOperadora} 
+          <select
+            value={filtroOperadora}
             onChange={(e) => setFiltroOperadora(e.target.value)}
             className="select-filtro"
           >
@@ -116,8 +116,8 @@ export const ListaNumerosTelefone: React.FC<ListaNumerosTelefoneProps> = ({ onBa
               <option key={operadora} value={operadora}>{operadora}</option>
             ))}
           </select>
-          <select 
-            value={filtroStatus} 
+          <select
+            value={filtroStatus}
             onChange={(e) => setFiltroStatus(e.target.value)}
             className="select-filtro"
           >
@@ -127,14 +127,14 @@ export const ListaNumerosTelefone: React.FC<ListaNumerosTelefoneProps> = ({ onBa
             <option value={StatusEquipamento.MANUTENCAO}>🔴 Manutenção</option>
             <option value={StatusEquipamento.INDISPONIVEL}>⚫ Indisponível</option>
           </select>
-          <button 
+          <button
             className="btn btn-primary btn-small"
             onClick={carregarDados}
           >
             🔄 Atualizar
           </button>
           {onBack && (
-            <button 
+            <button
               className="btn btn-outline btn-small"
               onClick={onBack}
             >
@@ -165,14 +165,14 @@ export const ListaNumerosTelefone: React.FC<ListaNumerosTelefoneProps> = ({ onBa
                 <h4>📞 {formatarNumero(numero.numero)}</h4>
                 <p><strong>Operadora:</strong> {numero.operadora}</p>
                 <p><strong>Plano:</strong> {numero.plano}</p>
-                <p><strong>Status:</strong> 
+                <p><strong>Status:</strong>
                   <span className={`status ${getStatusDisplay(numero.status).className}`}>
                     {getStatusDisplay(numero.status).text}
                   </span>
                 </p>
                 <p><strong>Funcionário:</strong> {getFuncionarioNome(numero.funcionarioId)}</p>
                 <p><strong>Celular:</strong> {getCelularInfo(numero.celularId)}</p>
-                
+
                 <p><strong>Valor Mensal:</strong> R$ {numero.valorMensal.toFixed(2)}</p>
                 <p className="data-admissao">
                   📅 Ativado em: {formatarData(numero.dataAtivacao)}
@@ -180,16 +180,16 @@ export const ListaNumerosTelefone: React.FC<ListaNumerosTelefoneProps> = ({ onBa
                 <p className="data-admissao">
                   📝 Cadastrado em: {formatarData(numero.createdAt)}
                 </p>
-                
+
                 {numero.observacoes && (
                   <p style={{ fontSize: '0.8rem', color: '#666', marginTop: '0.5rem' }}>
                     <strong>Observações:</strong> {numero.observacoes}
                   </p>
                 )}
               </div>
-              
+
               <div className="acoes-funcionario">
-                <button 
+                <button
                   className="btn btn-warning btn-small"
                   onClick={() => {
                     // TODO: Implementar edição
@@ -198,7 +198,7 @@ export const ListaNumerosTelefone: React.FC<ListaNumerosTelefoneProps> = ({ onBa
                 >
                   ✏️ Editar
                 </button>
-                <button 
+                <button
                   className="btn btn-secondary btn-small"
                   onClick={() => {
                     // TODO: Implementar alteração de status
@@ -208,7 +208,7 @@ export const ListaNumerosTelefone: React.FC<ListaNumerosTelefoneProps> = ({ onBa
                   🔄 Status
                 </button>
                 {(numero.funcionarioId || numero.celularId) && (
-                  <button 
+                  <button
                     className="btn btn-danger btn-small"
                     onClick={() => {
                       // TODO: Implementar desvinculação

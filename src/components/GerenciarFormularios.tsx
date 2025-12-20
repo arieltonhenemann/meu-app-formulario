@@ -5,6 +5,7 @@ import { firebaseFormularioStorage } from '../shared/services/firebaseFormulario
 import { formatarData } from '../shared';
 import { auditoriaService } from '../shared/services/auditoriaService';
 import { useAuth } from '../shared/contexts/AuthContext';
+import type { TipoFormularioAuditoria } from '../shared/types/auditoria';
 
 interface GerenciarFormulariosProps {
   onEditarFormulario: (formulario: FormularioSalvo) => void;
@@ -20,26 +21,26 @@ export const GerenciarFormularios: React.FC<GerenciarFormulariosProps> = ({
   const [filtroStatus, setFiltroStatus] = useState<StatusFormulario | 'todos'>('pendente');
   const [filtroTipo, setFiltroTipo] = useState<TipoFormulario | 'todos'>('todos');
   const [busca, setBusca] = useState('');
-  const [estatisticas, setEstatisticas] = useState({ total: 0, pendentes: 0, finalizados: 0, porTipo: { CTO: 0, PON: 0, LINK: 0 } });
+  const [estatisticas, setEstatisticas] = useState({ total: 0, pendentes: 0, finalizados: 0, porTipo: { CTO: 0, PON: 0, LINK: 0, ADEQUACAO: 0 } });
   const [isOnline, setIsOnline] = useState(firebaseFormularioStorage.estaOnline());
   const [temDadosPendentes, setTemDadosPendentes] = useState(false);
 
   useEffect(() => {
     carregarFormularios();
-    
+
     // Monitorar status de conexão
     const handleOnline = () => {
       setIsOnline(true);
       carregarFormularios(); // Recarregar quando voltar online
     };
-    
+
     const handleOffline = () => {
       setIsOnline(false);
     };
-    
+
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
-    
+
     return () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
@@ -50,7 +51,7 @@ export const GerenciarFormularios: React.FC<GerenciarFormulariosProps> = ({
     try {
       const formulariosCarregados = await firebaseFormularioStorage.obterTodos();
       const estatisticasCarregadas = await firebaseFormularioStorage.obterEstatisticas();
-      
+
       setFormularios(formulariosCarregados);
       setEstatisticas(estatisticasCarregadas);
       setIsOnline(firebaseFormularioStorage.estaOnline());
@@ -63,10 +64,10 @@ export const GerenciarFormularios: React.FC<GerenciarFormulariosProps> = ({
   const formulariosFiltrados = formularios.filter(formulario => {
     const passaStatus = filtroStatus === 'todos' || formulario.status === filtroStatus;
     const passaTipo = filtroTipo === 'todos' || formulario.tipo === filtroTipo;
-    const passaBusca = busca === '' || 
+    const passaBusca = busca === '' ||
       formulario.codigoOS.toLowerCase().includes(busca.toLowerCase()) ||
       formulario.id.toLowerCase().includes(busca.toLowerCase());
-    
+
     return passaStatus && passaTipo && passaBusca;
   });
 
@@ -74,7 +75,7 @@ export const GerenciarFormularios: React.FC<GerenciarFormulariosProps> = ({
     try {
       // Obter dados do formulário antes de finalizar
       const formulario = formularios.find(f => f.id === id);
-      
+
       const sucesso = await firebaseFormularioStorage.atualizarStatus(id, 'finalizado');
       if (sucesso) {
         // Registrar log de auditoria
@@ -86,12 +87,12 @@ export const GerenciarFormularios: React.FC<GerenciarFormulariosProps> = ({
           }, {
             formularioId: id,
             codigoOS: formulario.codigoOS,
-            tipoFormulario: formulario.tipo as 'CTO' | 'PON' | 'LINK',
+            tipoFormulario: formulario.tipo as TipoFormularioAuditoria,
             statusAnterior: 'pendente',
             statusNovo: 'finalizado'
           });
         }
-        
+
         carregarFormularios();
         alert('Formulário finalizado com sucesso!');
       }
@@ -105,7 +106,7 @@ export const GerenciarFormularios: React.FC<GerenciarFormulariosProps> = ({
     try {
       // Obter dados do formulário antes de reabrir
       const formulario = formularios.find(f => f.id === id);
-      
+
       const sucesso = await firebaseFormularioStorage.atualizarStatus(id, 'pendente');
       if (sucesso) {
         // Registrar log de auditoria
@@ -117,12 +118,12 @@ export const GerenciarFormularios: React.FC<GerenciarFormulariosProps> = ({
           }, {
             formularioId: id,
             codigoOS: formulario.codigoOS,
-            tipoFormulario: formulario.tipo as 'CTO' | 'PON' | 'LINK',
+            tipoFormulario: formulario.tipo as TipoFormularioAuditoria,
             statusAnterior: 'finalizado',
             statusNovo: 'pendente'
           });
         }
-        
+
         carregarFormularios();
         alert('Formulário reaberto com sucesso!');
       }
@@ -138,7 +139,7 @@ export const GerenciarFormularios: React.FC<GerenciarFormulariosProps> = ({
       try {
         // Obter dados do formulário antes de excluir
         const formulario = formularios.find(f => f.id === id);
-        
+
         const sucesso = await firebaseFormularioStorage.excluir(id);
         if (sucesso) {
           // Registrar log de auditoria
@@ -150,11 +151,11 @@ export const GerenciarFormularios: React.FC<GerenciarFormulariosProps> = ({
             }, {
               formularioId: id,
               codigoOS: formulario.codigoOS,
-              tipoFormulario: formulario.tipo as 'CTO' | 'PON' | 'LINK',
+              tipoFormulario: formulario.tipo as TipoFormularioAuditoria,
               observacoes: `Formulário excluído permanentemente`
             });
           }
-          
+
           carregarFormularios();
           alert('Formulário excluído com sucesso!');
         }
@@ -181,6 +182,7 @@ export const GerenciarFormularios: React.FC<GerenciarFormulariosProps> = ({
       case 'CTO': return '🏢';
       case 'PON': return '📡';
       case 'LINK': return '🔗';
+      case 'ADEQUACAO': return '🛠️';
     }
   };
 
@@ -194,10 +196,10 @@ export const GerenciarFormularios: React.FC<GerenciarFormulariosProps> = ({
   return (
     <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '20px' }}>
       {/* Cabeçalho */}
-      <div style={{ 
-        backgroundColor: '#fff', 
-        padding: '30px', 
-        borderRadius: '10px', 
+      <div style={{
+        backgroundColor: '#fff',
+        padding: '30px',
+        borderRadius: '10px',
         boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
         marginBottom: '20px'
       }}>
@@ -223,7 +225,7 @@ export const GerenciarFormularios: React.FC<GerenciarFormulariosProps> = ({
                   {isOnline ? '🟢 Online' : '🔴 Offline'}
                 </span>
               </div>
-              
+
               {/* Indicador de dados pendentes */}
               {temDadosPendentes && (
                 <div style={{
@@ -243,7 +245,7 @@ export const GerenciarFormularios: React.FC<GerenciarFormulariosProps> = ({
               )}
             </div>
           </div>
-          
+
           <div style={{ display: 'flex', gap: '10px' }}>
             {/* Botão de sincronização */}
             {temDadosPendentes && isOnline && (
@@ -259,7 +261,7 @@ export const GerenciarFormularios: React.FC<GerenciarFormulariosProps> = ({
                 🔄 Sincronizar
               </button>
             )}
-            
+
             <button
               onClick={onNovoFormulario}
               style={{
@@ -274,9 +276,9 @@ export const GerenciarFormularios: React.FC<GerenciarFormulariosProps> = ({
         </div>
 
         {/* Estatísticas */}
-        <div style={{ 
-          display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', 
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
           gap: '15px',
           marginBottom: '20px'
         }}>
@@ -295,10 +297,10 @@ export const GerenciarFormularios: React.FC<GerenciarFormulariosProps> = ({
         </div>
 
         {/* Filtros */}
-        <div style={{ 
-          display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
-          gap: '15px' 
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+          gap: '15px'
         }}>
           <div>
             <label style={labelStyle}>Buscar:</label>
@@ -310,7 +312,7 @@ export const GerenciarFormularios: React.FC<GerenciarFormulariosProps> = ({
               placeholder="Código da O.S ou ID..."
             />
           </div>
-          
+
           <div>
             <label style={labelStyle}>Status:</label>
             <select
@@ -335,6 +337,7 @@ export const GerenciarFormularios: React.FC<GerenciarFormulariosProps> = ({
               <option value="CTO">CTO</option>
               <option value="PON">PON</option>
               <option value="LINK">LINK</option>
+              <option value="ADEQUACAO">ADEQUAÇÃO</option>
             </select>
           </div>
         </div>

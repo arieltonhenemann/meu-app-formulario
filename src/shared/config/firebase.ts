@@ -1,7 +1,7 @@
 // Configuração do Firebase
-import { initializeApp } from 'firebase/app';
-import { getFirestore } from 'firebase/firestore';
-import { getAuth } from 'firebase/auth';
+import { initializeApp } from "firebase/app";
+import { getFirestore } from "firebase/firestore";
+import { getAuth } from "firebase/auth";
 
 // IMPORTANTE: Substitua pelas suas credenciais do Firebase
 // Para obter essas informações:
@@ -15,13 +15,15 @@ const firebaseConfig = {
   projectId: "cadastros-equipamentos",
   storageBucket: "cadastros-equipamentos.firebasestorage.app",
   messagingSenderId: "989457399548",
-  appId: "1:989457399548:web:ec6475bd02aa1eabb8e179"
+  appId: "1:989457399548:web:ec6475bd02aa1eabb8e179",
 };
 
 // Verificar se Firebase está configurado
 const isFirebaseConfigured = () => {
-  return firebaseConfig.apiKey !== "sua-api-key-aqui" && 
-         firebaseConfig.projectId !== "seu-projeto-id";
+  return (
+    firebaseConfig.apiKey !== "sua-api-key-aqui" &&
+    firebaseConfig.projectId !== "seu-projeto-id"
+  );
 };
 
 // Inicializar Firebase apenas se configurado
@@ -34,12 +36,12 @@ if (isFirebaseConfigured()) {
     app = initializeApp(firebaseConfig);
     db = getFirestore(app);
     auth = getAuth(app);
-    console.log('✅ Firebase configurado e inicializado com sucesso!');
+    console.log("✅ Firebase configurado e inicializado com sucesso!");
   } catch (error) {
-    console.warn('⚠️ Erro ao inicializar Firebase:', error);
+    console.warn("⚠️ Erro ao inicializar Firebase:", error);
   }
 } else {
-  console.log('📝 Firebase não configurado - usando apenas localStorage');
+  console.log("📝 Firebase não configurado - usando apenas localStorage");
 }
 
 export { db, auth, isFirebaseConfigured };

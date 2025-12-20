@@ -1,15 +1,15 @@
 import React, { useState } from 'react';
-import { NumeroTelefoneForm } from '../types/equipment';
-import { NumeroTelefoneService } from '../services/numeroTelefoneService';
+import { NumeroTelefoneForm } from '../../types/equipment';
+import { NumeroTelefoneService } from '../../services/numeroTelefoneService';
 
 interface CadastroNumeroTelefoneProps {
   onSuccess?: () => void;
   onCancel?: () => void;
 }
 
-export const CadastroNumeroTelefone: React.FC<CadastroNumeroTelefoneProps> = ({ 
-  onSuccess, 
-  onCancel 
+export const CadastroNumeroTelefone: React.FC<CadastroNumeroTelefoneProps> = ({
+  onSuccess,
+  onCancel
 }) => {
   const [formData, setFormData] = useState<NumeroTelefoneForm>({
     numero: '',
@@ -33,7 +33,7 @@ export const CadastroNumeroTelefone: React.FC<CadastroNumeroTelefoneProps> = ({
   const formatarNumero = (numero: string) => {
     // Remove tudo que não é dígito
     const digitos = numero.replace(/\D/g, '');
-    
+
     // Formatar como (XX) XXXXX-XXXX
     if (digitos.length <= 2) {
       return `(${digitos}`;
@@ -82,7 +82,7 @@ export const CadastroNumeroTelefone: React.FC<CadastroNumeroTelefoneProps> = ({
       }
 
       await NumeroTelefoneService.criarNumeroTelefone(formData);
-      
+
       // Limpar formulário
       setFormData({
         numero: '',
@@ -109,7 +109,7 @@ export const CadastroNumeroTelefone: React.FC<CadastroNumeroTelefoneProps> = ({
   return (
     <div className="cadastro-numero-telefone">
       <h2>Cadastrar Número de Telefone</h2>
-      
+
       {erro && (
         <div className="alert alert-error">
           {erro}
@@ -217,17 +217,17 @@ export const CadastroNumeroTelefone: React.FC<CadastroNumeroTelefoneProps> = ({
         </div>
 
         <div className="form-actions">
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             className="btn btn-primary"
             disabled={loading}
           >
             {loading ? 'Cadastrando...' : 'Cadastrar Número'}
           </button>
-          
+
           {onCancel && (
-            <button 
-              type="button" 
+            <button
+              type="button"
               className="btn btn-secondary"
               onClick={onCancel}
               disabled={loading}

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Celular } from '../types/equipment';
+import { Celular } from '../../types/equipment';
 
 interface ModalEditarCelularProps {
   celular: Celular | null;
@@ -50,7 +50,7 @@ export const ModalEditarCelular: React.FC<ModalEditarCelularProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.marca || !formData.modelo || !formData.imei) {
       alert('Por favor, preencha todos os campos obrigatórios');
       return;
@@ -80,15 +80,15 @@ export const ModalEditarCelular: React.FC<ModalEditarCelularProps> = ({
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <h3>📝 Editar Celular</h3>
-          <button 
-            className="modal-close-btn" 
+          <button
+            className="modal-close-btn"
             onClick={handleClose}
             disabled={loading}
           >
             ×
           </button>
         </div>
-        
+
         <form onSubmit={handleSubmit} className="modal-form">
           <div className="form-grid">
             <div className="form-group">
@@ -179,16 +179,16 @@ export const ModalEditarCelular: React.FC<ModalEditarCelularProps> = ({
           </div>
 
           <div className="modal-actions">
-            <button 
-              type="button" 
-              className="btn btn-outline" 
+            <button
+              type="button"
+              className="btn btn-outline"
               onClick={handleClose}
               disabled={loading}
             >
               Cancelar
             </button>
-            <button 
-              type="submit" 
+            <button
+              type="submit"
               className="btn btn-primary"
               disabled={loading}
             >

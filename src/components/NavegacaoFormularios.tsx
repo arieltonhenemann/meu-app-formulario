@@ -2,7 +2,7 @@ import React from 'react';
 import { useAuth } from '../shared/contexts/AuthContext';
 import { userService } from '../shared/services/userService';
 
-export type TipoFormulario = 'CTO' | 'PON' | 'LINK';
+export type TipoFormulario = 'CTO' | 'PON' | 'LINK' | 'ADEQUACAO';
 export type TelaAtiva = TipoFormulario | 'GERENCIAR' | 'RELATORIOS' | 'LOGS' | 'ADMIN';
 
 interface NavegacaoFormulariosProps {
@@ -37,7 +37,8 @@ export const NavegacaoFormularios: React.FC<NavegacaoFormulariosProps> = ({
     { tipo: 'GERENCIAR' as TelaAtiva, label: '📋 Gerenciar', cor: '#6f42c1' },
     { tipo: 'CTO' as TipoFormulario, label: '🏢 CTO', cor: '#007bff' },
     { tipo: 'PON' as TipoFormulario, label: '📡 PON', cor: '#28a745' },
-    { tipo: 'LINK' as TipoFormulario, label: '🔗 LINK', cor: '#dc3545' }
+    { tipo: 'LINK' as TipoFormulario, label: '🔗 LINK', cor: '#dc3545' },
+    { tipo: 'ADEQUACAO' as TipoFormulario, label: '🔧 ADEQUAÇÃO', cor: '#d4a30eff' }
   ];
 
   // Botões administrativos que só admins vêem
@@ -78,7 +79,7 @@ export const NavegacaoFormularios: React.FC<NavegacaoFormulariosProps> = ({
           ← Voltar
         </button>
       )}
-      
+
       {botoes.map((botao) => (
         <button
           key={botao.tipo}
@@ -94,7 +95,7 @@ export const NavegacaoFormularios: React.FC<NavegacaoFormulariosProps> = ({
             cursor: 'pointer',
             transition: 'all 0.3s ease',
             minWidth: '120px',
-            boxShadow: telaAtiva === botao.tipo 
+            boxShadow: telaAtiva === botao.tipo
               ? `0 4px 12px ${botao.cor}40`
               : '0 2px 4px rgba(0,0,0,0.1)'
           }}
@@ -102,7 +103,7 @@ export const NavegacaoFormularios: React.FC<NavegacaoFormulariosProps> = ({
           {botao.label}
         </button>
       ))}
-      
+
       {modoEdicao && (
         <div style={{
           marginLeft: '20px',
