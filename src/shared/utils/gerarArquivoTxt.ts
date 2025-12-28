@@ -66,6 +66,8 @@ INFORMAÇÕES GERAIS:
 Código da O.S: ${dados.codigoOS || "Não informado"}
 PON: ${dados.pon || "Não informado"}
 Região: ${dados.regiao || "Não informado"}
+Placa: ${dados.placa || "Não informado"}
+Porta: ${dados.porta || "Não informado"}
 Clientes Afetados: ${dados.clientesAfetados || "Não informado"}
 Média de Nível Pos: ${dados.mediaNivelPos || "Não informado"}
 

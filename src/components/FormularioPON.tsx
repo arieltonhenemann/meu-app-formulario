@@ -140,7 +140,7 @@ export const FormularioPON: React.FC<FormularioPONProps> = ({ onSubmit, dadosIni
               value={formData.codigoOS}
               onChange={(e) => handleChange('codigoOS', e.target.value)}
               style={inputStyle}
-              placeholder="Ex: OS-PON-2024-001"
+              placeholder="Ex: 123456"
             />
           </div>
 
@@ -153,7 +153,7 @@ export const FormularioPON: React.FC<FormularioPONProps> = ({ onSubmit, dadosIni
                 value={formData.pon}
                 onChange={(e) => handleChange('pon', e.target.value)}
                 style={inputStyle}
-                placeholder="Ex: PON-001"
+                placeholder="Ex: AT 505"
               />
             </div>
 
@@ -165,7 +165,31 @@ export const FormularioPON: React.FC<FormularioPONProps> = ({ onSubmit, dadosIni
                 value={formData.regiao}
                 onChange={(e) => handleChange('regiao', e.target.value)}
                 style={inputStyle}
-                placeholder="Ex: Centro, Norte, Sul"
+                placeholder="Ex: Atuba, Palmares, etc."
+              />
+            </div>
+          </div>
+
+          {/* Novo bloco para Placa e Porta logo após PON e REGIÃO */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
+            <div>
+              <label style={labelStyle}>PLACA:</label>
+              <input
+                type="text"
+                value={formData.placa}
+                onChange={(e) => handleChange('placa', e.target.value)}
+                style={inputStyle}
+                placeholder="Ex: Placa 1"
+              />
+            </div>
+            <div>
+              <label style={labelStyle}>PORTA:</label>
+              <input
+                type="text"
+                value={formData.porta}
+                onChange={(e) => handleChange('porta', e.target.value)}
+                style={inputStyle}
+                placeholder="Ex: Porta 1"
               />
             </div>
           </div>
@@ -356,8 +380,8 @@ export const FormularioPON: React.FC<FormularioPONProps> = ({ onSubmit, dadosIni
             </div>
           </div>
         </form>
-      </div>
-    </div>
+      </div >
+    </div >
   );
 };
 
