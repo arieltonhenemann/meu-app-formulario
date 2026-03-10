@@ -5,6 +5,7 @@ import { gerarArquivoPON } from '../shared/utils/gerarArquivoTxt';
 import { firebaseFormularioStorage } from '../shared/services/firebaseFormularioStorage';
 import { useAuth } from '../shared/contexts/AuthContext';
 import { auditoriaService } from '../shared/services/auditoriaService';
+import { TxtModal } from './TxtModal';
 
 interface FormularioPONProps {
   onSubmit?: (dados: OrdemServicoPON) => void;
@@ -22,6 +23,9 @@ export const FormularioPON: React.FC<FormularioPONProps> = ({ onSubmit, dadosIni
     }
     return criarPONVazia();
   });
+
+  const [txtModalAberto, setTxtModalAberto] = useState(false);
+  const [txtConteudo, setTxtConteudo] = useState('');
 
   useEffect(() => {
     if (dadosIniciais) {
@@ -101,8 +105,9 @@ export const FormularioPON: React.FC<FormularioPONProps> = ({ onSubmit, dadosIni
 
   const handleGerarTxt = () => {
     try {
-      gerarArquivoPON(formData);
-      alert('Arquivo TXT gerado com sucesso!');
+      const conteudo = gerarArquivoPON(formData);
+      setTxtConteudo(conteudo);
+      setTxtModalAberto(true);
     } catch (err) {
       console.error('Erro ao gerar TXT:', err);
       alert('Erro ao gerar arquivo TXT.');
@@ -381,6 +386,13 @@ export const FormularioPON: React.FC<FormularioPONProps> = ({ onSubmit, dadosIni
           </div>
         </form>
       </div >
+
+      <TxtModal
+        isOpen={txtModalAberto}
+        conteudo={txtConteudo}
+        onClose={() => setTxtModalAberto(false)}
+        titulo="Visualização de Arquivo TXT - PON"
+      />
     </div >
   );
 };

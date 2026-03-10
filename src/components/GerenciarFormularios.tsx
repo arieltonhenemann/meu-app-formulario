@@ -19,7 +19,20 @@ export const GerenciarFormularios: React.FC<GerenciarFormulariosProps> = ({
   const { user } = useAuth();
   const [formularios, setFormularios] = useState<FormularioSalvo[]>([]);
   const [filtroStatus, setFiltroStatus] = useState<StatusFormulario | 'todos'>('pendente');
-  const [filtroTipo, setFiltroTipo] = useState<TipoFormulario | 'todos'>('todos');
+  const [filtrosTipo, setFiltrosTipo] = useState<TipoFormulario[]>([]);
+  const [dropdownTipoAberto, setDropdownTipoAberto] = useState(false);
+  const dropdownRef = React.useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickFora = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setDropdownTipoAberto(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickFora);
+    return () => document.removeEventListener('mousedown', handleClickFora);
+  }, []);
+
   const [busca, setBusca] = useState('');
   const [estatisticas, setEstatisticas] = useState({ total: 0, pendentes: 0, finalizados: 0, porTipo: { CTO: 0, PON: 0, LINK: 0, ADEQUACAO: 0 } });
   const [isOnline, setIsOnline] = useState(firebaseFormularioStorage.estaOnline());
@@ -63,7 +76,7 @@ export const GerenciarFormularios: React.FC<GerenciarFormulariosProps> = ({
 
   const formulariosFiltrados = formularios.filter(formulario => {
     const passaStatus = filtroStatus === 'todos' || formulario.status === filtroStatus;
-    const passaTipo = filtroTipo === 'todos' || formulario.tipo === filtroTipo;
+    const passaTipo = filtrosTipo.length === 0 || filtrosTipo.includes(formulario.tipo as TipoFormulario);
     const passaBusca = busca === '' ||
       formulario.codigoOS.toLowerCase().includes(busca.toLowerCase()) ||
       formulario.id.toLowerCase().includes(busca.toLowerCase());
@@ -193,6 +206,24 @@ export const GerenciarFormularios: React.FC<GerenciarFormulariosProps> = ({
     }
   };
 
+  // Computando as estatísticas considerando os filtros aplicados de Tipo e Busca.
+  // Note: O filtro de Status não deve afetar estes contadores individuais para que possamos ver os pendentes/finalizados daqueles tipos, 
+  // exceto se quisermos ignorar completamente na exibição. Na UI antiga, as estatísticas globais eram mostradas independentes dos filtros da tela ou então fixas.
+  // Pelo requisito, vamos calcular o total com base no que *poderia* ser visto em todos os status, mas respeitando o Filtro de Tipo e a Busca informada.
+  const formulariosParaEstatistica = formularios.filter(formulario => {
+    const passaTipo = filtrosTipo.length === 0 || filtrosTipo.includes(formulario.tipo as TipoFormulario);
+    const passaBusca = busca === '' ||
+      formulario.codigoOS.toLowerCase().includes(busca.toLowerCase()) ||
+      formulario.id.toLowerCase().includes(busca.toLowerCase());
+    return passaTipo && passaBusca;
+  });
+
+  const statsFiltradas = {
+    total: formulariosParaEstatistica.length,
+    pendentes: formulariosParaEstatistica.filter(f => f.status === 'pendente').length,
+    finalizados: formulariosParaEstatistica.filter(f => f.status === 'finalizado').length,
+  };
+
   return (
     <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '20px' }}>
       {/* Cabeçalho */}
@@ -275,7 +306,6 @@ export const GerenciarFormularios: React.FC<GerenciarFormulariosProps> = ({
           </div>
         </div>
 
-        {/* Estatísticas */}
         <div style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
@@ -283,15 +313,15 @@ export const GerenciarFormularios: React.FC<GerenciarFormulariosProps> = ({
           marginBottom: '20px'
         }}>
           <div style={{ ...statCardStyle, borderLeftColor: '#6c757d' }}>
-            <div style={statNumberStyle}>{estatisticas.total}</div>
+            <div style={statNumberStyle}>{statsFiltradas.total}</div>
             <div style={statLabelStyle}>Total</div>
           </div>
           <div style={{ ...statCardStyle, borderLeftColor: '#ffc107' }}>
-            <div style={statNumberStyle}>{estatisticas.pendentes}</div>
+            <div style={statNumberStyle}>{statsFiltradas.pendentes}</div>
             <div style={statLabelStyle}>Pendentes</div>
           </div>
           <div style={{ ...statCardStyle, borderLeftColor: '#28a745' }}>
-            <div style={statNumberStyle}>{estatisticas.finalizados}</div>
+            <div style={statNumberStyle}>{statsFiltradas.finalizados}</div>
             <div style={statLabelStyle}>Finalizados</div>
           </div>
         </div>
@@ -326,19 +356,70 @@ export const GerenciarFormularios: React.FC<GerenciarFormulariosProps> = ({
             </select>
           </div>
 
-          <div>
+          <div ref={dropdownRef} style={{ position: 'relative' }}>
             <label style={labelStyle}>Tipo:</label>
-            <select
-              value={filtroTipo}
-              onChange={(e) => setFiltroTipo(e.target.value as TipoFormulario | 'todos')}
-              style={inputStyle}
+            <div
+              style={{
+                ...inputStyle,
+                cursor: 'pointer',
+                backgroundColor: 'white',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center'
+              }}
+              onClick={() => setDropdownTipoAberto(!dropdownTipoAberto)}
             >
-              <option value="todos">Todos</option>
-              <option value="CTO">CTO</option>
-              <option value="PON">PON</option>
-              <option value="LINK">LINK</option>
-              <option value="ADEQUACAO">ADEQUAÇÃO</option>
-            </select>
+              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '85%' }}>
+                {filtrosTipo.length === 0
+                  ? 'Todos'
+                  : filtrosTipo.map(t => t === 'ADEQUACAO' ? 'ADEQUAÇÃO' : t).join(', ')}
+              </span>
+              <span style={{ fontSize: '10px', color: '#666' }}>▼</span>
+            </div>
+
+            {dropdownTipoAberto && (
+              <div style={{
+                position: 'absolute',
+                top: '100%',
+                left: 0,
+                right: 0,
+                backgroundColor: 'white',
+                border: '1px solid #ddd',
+                borderRadius: '4px',
+                marginTop: '4px',
+                boxShadow: '0 2px 5px rgba(0,0,0,0.1)',
+                zIndex: 10,
+                maxHeight: '200px',
+                overflowY: 'auto'
+              }}>
+                <label style={{ display: 'block', padding: '8px 12px', cursor: 'pointer', borderBottom: '1px solid #f0f0f0', fontSize: '14px', color: '#333' }}>
+                  <input
+                    type="checkbox"
+                    checked={filtrosTipo.length === 0}
+                    onChange={() => setFiltrosTipo([])}
+                    style={{ marginRight: '8px' }}
+                  />
+                  Todos
+                </label>
+                {(['CTO', 'PON', 'LINK', 'ADEQUACAO'] as TipoFormulario[]).map((tipo) => (
+                  <label key={tipo} style={{ display: 'block', padding: '8px 12px', cursor: 'pointer', borderBottom: '1px solid #f0f0f0', fontSize: '14px', color: '#333' }}>
+                    <input
+                      type="checkbox"
+                      checked={filtrosTipo.includes(tipo)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setFiltrosTipo([...filtrosTipo, tipo]);
+                        } else {
+                          setFiltrosTipo(filtrosTipo.filter(t => t !== tipo));
+                        }
+                      }}
+                      style={{ marginRight: '8px' }}
+                    />
+                    {tipo === 'ADEQUACAO' ? 'ADEQUAÇÃO' : tipo}
+                  </label>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>

@@ -5,6 +5,7 @@ import { gerarArquivoLINK } from '../shared/utils/gerarArquivoTxt';
 import { firebaseFormularioStorage } from '../shared/services/firebaseFormularioStorage';
 import { useAuth } from '../shared/contexts/AuthContext';
 import { auditoriaService } from '../shared/services/auditoriaService';
+import { TxtModal } from './TxtModal';
 
 interface FormularioLINKProps {
   onSubmit?: (dados: OrdemServicoLINK) => void;
@@ -22,6 +23,9 @@ export const FormularioLINK: React.FC<FormularioLINKProps> = ({ onSubmit, dadosI
     }
     return criarLINKVazia();
   });
+
+  const [txtModalAberto, setTxtModalAberto] = useState(false);
+  const [txtConteudo, setTxtConteudo] = useState('');
 
   useEffect(() => {
     if (dadosIniciais) {
@@ -125,8 +129,9 @@ export const FormularioLINK: React.FC<FormularioLINKProps> = ({ onSubmit, dadosI
   // Gerar TXT manualmente (handler do botão)
   const handleGerarTxt = () => {
     try {
-      gerarArquivoLINK(formData);
-      alert('Arquivo TXT gerado com sucesso!');
+      const conteudo = gerarArquivoLINK(formData);
+      setTxtConteudo(conteudo);
+      setTxtModalAberto(true);
     } catch (err) {
       console.error('Erro ao gerar TXT:', err);
       alert('Erro ao gerar arquivo TXT.');
@@ -436,6 +441,13 @@ export const FormularioLINK: React.FC<FormularioLINKProps> = ({ onSubmit, dadosI
           </div>
         </form>
       </div>
+
+      <TxtModal
+        isOpen={txtModalAberto}
+        conteudo={txtConteudo}
+        onClose={() => setTxtModalAberto(false)}
+        titulo="Visualização de Arquivo TXT - LINK"
+      />
     </div>
   );
 };

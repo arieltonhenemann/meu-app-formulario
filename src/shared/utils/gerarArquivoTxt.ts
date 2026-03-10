@@ -5,7 +5,7 @@ import { OrdemServicoPON } from "../types/pon";
 import { OrdemServicoLINK } from "../types/link";
 import { formatarData } from "./index";
 
-export const gerarArquivoCTO = (dados: OrdemServico): void => {
+export const gerarArquivoCTO = (dados: OrdemServico): string => {
   const conteudo = `
 ===========================================
     ORDEM DE SERVIÇO - CTO
@@ -45,13 +45,10 @@ Localização: ${dados.localizacao || "Não informado"}
 ===========================================
   `.trim();
 
-  baixarArquivo(
-    conteudo,
-    `OS_CTO_${dados.codigoOS || "SEM_CODIGO"}_${obterDataParaArquivo()}.txt`
-  );
+  return conteudo;
 };
 
-export const gerarArquivoPON = (dados: OrdemServicoPON): void => {
+export const gerarArquivoPON = (dados: OrdemServicoPON): string => {
   const conteudo = `
 ===========================================
     ORDEM DE SERVIÇO - PON
@@ -87,13 +84,10 @@ Localização: ${dados.localizacao || "Não informado"}
 ===========================================
   `.trim();
 
-  baixarArquivo(
-    conteudo,
-    `OS_PON_${dados.codigoOS || "SEM_CODIGO"}_${obterDataParaArquivo()}.txt`
-  );
+  return conteudo;
 };
 
-export const gerarArquivoLINK = (dados: OrdemServicoLINK): void => {
+export const gerarArquivoLINK = (dados: OrdemServicoLINK): string => {
   const linksTexto = dados.links
     .map(
       (link, index) => `
@@ -133,15 +127,12 @@ ${dados.materialUtilizado || "Não informado"}
 ===========================================
   `.trim();
 
-  baixarArquivo(
-    conteudo,
-    `OS_LINK_${dados.codigoOS || "SEM_CODIGO"}_${obterDataParaArquivo()}.txt`
-  );
+  return conteudo;
 };
 
 // Função para gerar arquivo TXT de Ordem de Serviço de Adequação
 
-export const gerarArquivoADEQUACAO = (dados: OrdemServicoAdequacao): void => {
+export const gerarArquivoADEQUACAO = (dados: OrdemServicoAdequacao): string => {
   const conteudo = `
 ===========================================
     ORDEM DE SERVIÇO - ADEQUAÇÃO
@@ -183,38 +174,5 @@ Região: ${dados.regiao || "Não informado"}
 ===========================================
   `.trim();
 
-  baixarArquivo(
-    conteudo,
-    `OS_ADEQUACAO_${
-      dados.codigoOS || "SEM_CODIGO"
-    }_${obterDataParaArquivo()}.txt`
-  );
-};
-
-// Função auxiliar para fazer download do arquivo
-const baixarArquivo = (conteudo: string, nomeArquivo: string): void => {
-  const blob = new Blob([conteudo], { type: "text/plain;charset=utf-8" });
-  const url = URL.createObjectURL(blob);
-
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = nomeArquivo;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-
-  // Liberar memória
-  URL.revokeObjectURL(url);
-};
-
-// Função auxiliar para obter data formatada para nome do arquivo
-const obterDataParaArquivo = (): string => {
-  const agora = new Date();
-  const ano = agora.getFullYear();
-  const mes = String(agora.getMonth() + 1).padStart(2, "0");
-  const dia = String(agora.getDate()).padStart(2, "0");
-  const hora = String(agora.getHours()).padStart(2, "0");
-  const minuto = String(agora.getMinutes()).padStart(2, "0");
-
-  return `${ano}${mes}${dia}_${hora}${minuto}`;
+  return conteudo;
 };

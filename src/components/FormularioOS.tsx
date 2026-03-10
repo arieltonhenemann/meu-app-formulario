@@ -5,6 +5,7 @@ import { gerarArquivoCTO } from '../shared/utils/gerarArquivoTxt';
 import { firebaseFormularioStorage } from '../shared/services/firebaseFormularioStorage';
 import { useAuth } from '../shared/contexts/AuthContext';
 import { auditoriaService } from '../shared/services/auditoriaService';
+import { TxtModal } from './TxtModal';
 
 interface FormularioOSProps {
   onSubmit?: (dados: OrdemServico) => void;
@@ -23,6 +24,9 @@ export const FormularioOS: React.FC<FormularioOSProps> = ({ onSubmit, dadosInici
     return criarOSVazia();
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const [txtModalAberto, setTxtModalAberto] = useState(false);
+  const [txtConteudo, setTxtConteudo] = useState('');
 
   useEffect(() => {
     if (dadosIniciais) {
@@ -123,8 +127,9 @@ export const FormularioOS: React.FC<FormularioOSProps> = ({ onSubmit, dadosInici
   // Função para gerar on-demand
   const handleGerarTxt = () => {
     try {
-      gerarArquivoCTO(formData);
-      alert('Arquivo TXT gerado com sucesso!');
+      const conteudo = gerarArquivoCTO(formData);
+      setTxtConteudo(conteudo);
+      setTxtModalAberto(true);
     } catch (err) {
       console.error('Erro ao gerar TXT:', err);
       alert('Erro ao gerar arquivo TXT.');
@@ -412,6 +417,13 @@ export const FormularioOS: React.FC<FormularioOSProps> = ({ onSubmit, dadosInici
           </div>
         </form>
       </div>
+
+      <TxtModal
+        isOpen={txtModalAberto}
+        conteudo={txtConteudo}
+        onClose={() => setTxtModalAberto(false)}
+        titulo="Visualização de Arquivo TXT - CTO"
+      />
     </div>
   );
 };

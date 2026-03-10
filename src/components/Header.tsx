@@ -53,7 +53,7 @@ export const Header: React.FC<HeaderProps> = ({
             margin: 0,
             fontWeight: 'bold'
           }}>
-            Sistema de Formulários OS
+            Vorx Solutions Tech
           </h1>
         </div>
 

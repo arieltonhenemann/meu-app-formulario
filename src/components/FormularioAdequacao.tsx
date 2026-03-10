@@ -6,6 +6,7 @@ import { firebaseFormularioStorage } from '../shared/services/firebaseFormulario
 import { useAuth } from '../shared/contexts/AuthContext';
 import { auditoriaService } from '../shared/services/auditoriaService';
 import type { TipoFormularioAuditoria } from '../shared/types/auditoria';
+import { TxtModal } from './TxtModal';
 
 interface FormularioAdequacaoProps {
     onSubmit?: (dados: OrdemServicoAdequacao) => void;
@@ -24,6 +25,9 @@ export const FormularioAdequacao: React.FC<FormularioAdequacaoProps> = ({ onSubm
         return criarAdequacaoVazia();
     });
     const [errors, setErrors] = useState<Partial<Record<keyof OrdemServicoAdequacao, string>>>({});
+
+    const [txtModalAberto, setTxtModalAberto] = useState(false);
+    const [txtConteudo, setTxtConteudo] = useState('');
 
     useEffect(() => {
         if (dadosIniciais) {
@@ -188,8 +192,9 @@ export const FormularioAdequacao: React.FC<FormularioAdequacaoProps> = ({ onSubm
     // Gerar TXT manualmente (handler do botão)
     const handleGerarTxt = () => {
         try {
-            gerarArquivoADEQUACAO(formData);
-            alert('Arquivo TXT gerado com sucesso!');
+            const conteudo = gerarArquivoADEQUACAO(formData);
+            setTxtConteudo(conteudo);
+            setTxtModalAberto(true);
         } catch (err) {
             console.error('Erro ao gerar TXT:', err);
             alert('Erro ao gerar arquivo TXT.');
@@ -421,6 +426,13 @@ export const FormularioAdequacao: React.FC<FormularioAdequacaoProps> = ({ onSubm
                     </div>
                 </form>
             </div>
+
+            <TxtModal
+                isOpen={txtModalAberto}
+                conteudo={txtConteudo}
+                onClose={() => setTxtModalAberto(false)}
+                titulo="Visualização de Arquivo TXT - ADEQUAÇÃO"
+            />
         </div>
     );
 };
