@@ -4,11 +4,7 @@ import {
   getDocs, 
   doc, 
   getDoc, 
-  updateDoc, 
-  deleteDoc, 
-  query, 
-  where, 
-  orderBy 
+  updateDoc
 } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { Funcionario, FuncionarioForm } from '../types/equipment';

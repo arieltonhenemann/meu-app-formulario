@@ -7,11 +7,10 @@ import {
   getDocs,
   query,
   where,
-  orderBy,
   Timestamp 
 } from 'firebase/firestore';
 import { db, isFirebaseConfigured } from '../config/firebase';
-import { UsuarioStatus, criarUsuarioStatus, SolicitacaoAprovacao } from '../types/usuario';
+import { UsuarioStatus, criarUsuarioStatus } from '../types/usuario';
 
 class UserService {
   private readonly COLLECTION_USERS = 'users';

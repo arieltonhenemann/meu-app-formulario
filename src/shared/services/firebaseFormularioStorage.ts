@@ -7,11 +7,8 @@ import {
   updateDoc,
   deleteDoc,
   query,
-  where,
   orderBy,
-  onSnapshot,
-  enableNetwork,
-  disableNetwork,
+  onSnapshot
 } from "firebase/firestore";
 import { db, isFirebaseConfigured } from "../config/firebase";
 import {
@@ -28,10 +25,6 @@ import { OrdemServicoAdequacao } from "../types/adequacao";
 const COLLECTION_NAME = "formularios";
 const STORAGE_KEY = "formularios_salvos";
 const SYNC_KEY = "sync_pendente";
-
-interface FormularioFirestore extends Omit<FormularioSalvo, "id"> {
-  // O id será gerado automaticamente pelo Firestore
-}
 
 class FirebaseFormularioStorageService {
   private isOnline = navigator.onLine;

@@ -6,8 +6,7 @@ import {
   updateDoc, 
   query, 
   where, 
-  orderBy,
-  writeBatch 
+  orderBy
 } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { 
@@ -27,7 +26,6 @@ export class VinculacaoService {
   // Vincular equipamentos a funcionário
   static async vincularEquipamentos(dadosVinculacao: VinculacaoForm): Promise<void> {
     try {
-      const batch = writeBatch(db);
       const agora = new Date();
 
       // Verificar se funcionário existe
