@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  LogAuditoria, 
+import {
+  LogAuditoria,
   TipoAcaoAuditoria,
   obterIconeAcao,
   obterCorAcao,
@@ -29,22 +29,24 @@ export const LogsAuditoriaPage: React.FC = () => {
       setIsOnline(true);
       carregarLogs(); // Recarregar quando voltar online
     };
-    
+
     const handleOffline = () => {
       setIsOnline(false);
     };
-    
+
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
-    
+
     return () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
     aplicarFiltros();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [logsOriginais, filtroAcao, filtroUsuario, filtroPeriodo, busca]);
 
   const carregarLogs = async () => {
@@ -79,7 +81,7 @@ export const LogsAuditoriaPage: React.FC = () => {
 
     // Filtro por usuário
     if (filtroUsuario) {
-      logsFiltrados = logsFiltrados.filter(log => 
+      logsFiltrados = logsFiltrados.filter(log =>
         log.usuario.email.toLowerCase().includes(filtroUsuario.toLowerCase()) ||
         (log.usuario.displayName && log.usuario.displayName.toLowerCase().includes(filtroUsuario.toLowerCase()))
       );
@@ -90,15 +92,15 @@ export const LogsAuditoriaPage: React.FC = () => {
       const dias = parseInt(filtroPeriodo);
       const dataLimite = new Date();
       dataLimite.setDate(dataLimite.getDate() - dias);
-      
-      logsFiltrados = logsFiltrados.filter(log => 
+
+      logsFiltrados = logsFiltrados.filter(log =>
         new Date(log.timestamp) >= dataLimite
       );
     }
 
     // Busca geral
     if (busca) {
-      logsFiltrados = logsFiltrados.filter(log => 
+      logsFiltrados = logsFiltrados.filter(log =>
         obterDescricaoAcao(log).toLowerCase().includes(busca.toLowerCase()) ||
         log.detalhes.codigoOS?.toLowerCase().includes(busca.toLowerCase()) ||
         log.id.toLowerCase().includes(busca.toLowerCase())
@@ -110,7 +112,7 @@ export const LogsAuditoriaPage: React.FC = () => {
 
   const obterUsuariosUnicos = () => {
     const usuarios = logsOriginais.map(log => log.usuario);
-    const usuariosUnicos = usuarios.filter((usuario, index, self) => 
+    const usuariosUnicos = usuarios.filter((usuario, index, self) =>
       index === self.findIndex(u => u.uid === usuario.uid)
     );
     return usuariosUnicos;
@@ -126,10 +128,10 @@ export const LogsAuditoriaPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center', 
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
         height: '400px',
         flexDirection: 'column',
         gap: '20px'
@@ -143,10 +145,10 @@ export const LogsAuditoriaPage: React.FC = () => {
   return (
     <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '20px' }}>
       {/* Cabeçalho */}
-      <div style={{ 
-        backgroundColor: '#fff', 
-        padding: '30px', 
-        borderRadius: '10px', 
+      <div style={{
+        backgroundColor: '#fff',
+        padding: '30px',
+        borderRadius: '10px',
         boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
         marginBottom: '20px'
       }}>
@@ -172,13 +174,13 @@ export const LogsAuditoriaPage: React.FC = () => {
                   {isOnline ? '🟢 Online' : '🔴 Offline (Cache Local)'}
                 </span>
               </div>
-              
+
               <div style={{ fontSize: '14px', color: '#666' }}>
                 Total de logs: <strong>{logs.length}</strong>
               </div>
             </div>
           </div>
-          
+
           <button
             onClick={carregarLogs}
             style={{
@@ -193,9 +195,9 @@ export const LogsAuditoriaPage: React.FC = () => {
 
         {/* Estatísticas */}
         {estatisticas && (
-          <div style={{ 
-            display: 'grid', 
-            gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', 
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
             gap: '15px',
             marginBottom: '20px'
           }}>
@@ -223,10 +225,10 @@ export const LogsAuditoriaPage: React.FC = () => {
         )}
 
         {/* Filtros */}
-        <div style={{ 
-          display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', 
-          gap: '15px' 
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+          gap: '15px'
         }}>
           <div>
             <label style={labelStyle}>Buscar:</label>
@@ -238,7 +240,7 @@ export const LogsAuditoriaPage: React.FC = () => {
               placeholder="Código, usuário, descrição..."
             />
           </div>
-          
+
           <div>
             <label style={labelStyle}>Ação:</label>
             <select
@@ -304,7 +306,7 @@ export const LogsAuditoriaPage: React.FC = () => {
         ) : (
           logs.map(log => {
             const { data, hora } = formatarTimestamp(log.timestamp);
-            
+
             return (
               <div key={log.id} style={cardStyle}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -324,22 +326,22 @@ export const LogsAuditoriaPage: React.FC = () => {
                     }}>
                       {obterIconeAcao(log.acao)}
                     </div>
-                    
+
                     <div style={{ flex: 1 }}>
-                      <div style={{ 
-                        display: 'flex', 
-                        alignItems: 'center', 
+                      <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
                         gap: '10px',
                         marginBottom: '5px'
                       }}>
-                        <span style={{ 
-                          fontWeight: 'bold', 
+                        <span style={{
+                          fontWeight: 'bold',
                           fontSize: '1rem',
                           color: '#333'
                         }}>
                           {obterDescricaoAcao(log)}
                         </span>
-                        
+
                         <span style={{
                           ...badgeStyle,
                           backgroundColor: obterCorAcao(log.acao),
@@ -349,7 +351,7 @@ export const LogsAuditoriaPage: React.FC = () => {
                           {log.acao.replace('_', ' ')}
                         </span>
                       </div>
-                      
+
                       <div style={{ color: '#666', fontSize: '0.85rem' }}>
                         <span style={{ marginRight: '15px' }}>
                           👤 <strong>{log.usuario.displayName || log.usuario.email}</strong>
@@ -361,23 +363,23 @@ export const LogsAuditoriaPage: React.FC = () => {
                           🕒 {hora}
                         </span>
                       </div>
-                      
+
                       {/* Detalhes adicionais */}
                       {log.detalhes.formularioId && (
-                        <div style={{ 
-                          marginTop: '8px', 
-                          fontSize: '0.8rem', 
+                        <div style={{
+                          marginTop: '8px',
+                          fontSize: '0.8rem',
                           color: '#888',
                           fontFamily: 'monospace'
                         }}>
                           ID: {log.detalhes.formularioId}
                         </div>
                       )}
-                      
+
                       {log.detalhes.statusAnterior && log.detalhes.statusNovo && (
-                        <div style={{ 
-                          marginTop: '5px', 
-                          fontSize: '0.85rem', 
+                        <div style={{
+                          marginTop: '5px',
+                          fontSize: '0.85rem',
                           color: '#495057'
                         }}>
                           Status: <span style={{ textDecoration: 'line-through', color: '#dc3545' }}>
@@ -391,15 +393,15 @@ export const LogsAuditoriaPage: React.FC = () => {
                   </div>
 
                   {/* Informações técnicas */}
-                  <div style={{ 
-                    fontSize: '0.75rem', 
+                  <div style={{
+                    fontSize: '0.75rem',
                     color: '#adb5bd',
                     textAlign: 'right',
                     minWidth: '100px'
                   }}>
                     <div>Log: {log.id.slice(0, 8)}...</div>
                     {log.detalhes.tipoFormulario && (
-                      <div style={{ 
+                      <div style={{
                         marginTop: '4px',
                         padding: '2px 6px',
                         backgroundColor: '#e9ecef',

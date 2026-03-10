@@ -18,6 +18,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
   useEffect(() => {
     verificarAdminECarregar();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   const verificarAdminECarregar = async () => {
@@ -95,8 +96,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
   if (!isAdmin) {
     return (
-      <div style={{ 
-        padding: '40px', 
+      <div style={{
+        padding: '40px',
         textAlign: 'center',
         backgroundColor: '#fff3cd',
         margin: '20px',
@@ -137,7 +138,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
             🛡️ Painel de Administração
           </h2>
           {onVoltarTelaSelecionarSistema && (
-            <button 
+            <button
               onClick={onVoltarTelaSelecionarSistema}
               style={{
                 fontSize: '0.9rem',

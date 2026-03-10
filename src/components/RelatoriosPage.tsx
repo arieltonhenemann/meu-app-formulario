@@ -32,11 +32,13 @@ export const RelatoriosPage: React.FC = () => {
   // Carregar todos os formulários ao iniciar
   useEffect(() => {
     carregarFormularios();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Aplicar filtros sempre que mudarem
   useEffect(() => {
     aplicarFiltros();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [estado.dataInicio, estado.dataFim, estado.formularios, estado.filtroTipo]);
 
   const carregarFormularios = async () => {

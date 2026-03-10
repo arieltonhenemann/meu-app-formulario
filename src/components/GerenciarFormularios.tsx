@@ -34,7 +34,6 @@ export const GerenciarFormularios: React.FC<GerenciarFormulariosProps> = ({
   }, []);
 
   const [busca, setBusca] = useState('');
-  const [estatisticas, setEstatisticas] = useState({ total: 0, pendentes: 0, finalizados: 0, porTipo: { CTO: 0, PON: 0, LINK: 0, ADEQUACAO: 0 } });
   const [isOnline, setIsOnline] = useState(firebaseFormularioStorage.estaOnline());
   const [temDadosPendentes, setTemDadosPendentes] = useState(false);
 
@@ -63,10 +62,8 @@ export const GerenciarFormularios: React.FC<GerenciarFormulariosProps> = ({
   const carregarFormularios = async () => {
     try {
       const formulariosCarregados = await firebaseFormularioStorage.obterTodos();
-      const estatisticasCarregadas = await firebaseFormularioStorage.obterEstatisticas();
 
       setFormularios(formulariosCarregados);
-      setEstatisticas(estatisticasCarregadas);
       setIsOnline(firebaseFormularioStorage.estaOnline());
       setTemDadosPendentes(firebaseFormularioStorage.temDadosPendentes());
     } catch (error) {
