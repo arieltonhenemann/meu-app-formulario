@@ -149,6 +149,7 @@ Tipo de Serviço: ${dados.tipodeservico || "Não informado"}
 Tipo de Fibra: ${dados.tipodefibra || "Não informado"}
 Metragem Inicial: ${dados.metrageminicial || "Não informado"}
 Metragem Final: ${dados.metragemfinal || "Não informado"}
+Metragem Cordoalha: ${dados.metragemcordoalha || "Não informado"}
 Metragem Total: ${dados.metragemtotal || "Não informado"}
 Adequação: ${dados.adequacao || "Não informado"}
 Cordoalha: ${dados.cordoalha || "Não informado"}
@@ -161,6 +162,10 @@ caboSubterrâneo: ${dados.cabosubterraneo || "Não informado"}
 DESCRIÇÕES:
 -----------
 PROBLEMA: ${dados.problema || "Não informado"}
+
+TRECHO:
+Ponta A: ${dados.pontoa || "Não informado"}
+Ponto B: ${dados.pontob || "Não informado"}
 
 RESOLUÇÃO: ${dados.resolucao || "Não informado"}
 

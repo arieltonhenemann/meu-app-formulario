@@ -244,8 +244,8 @@ export const FormularioAdequacao: React.FC<FormularioAdequacaoProps> = ({ onSubm
                         </div>
                     </div>
 
-                    {/* Row 3: Metragem inicial, final e total */}
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '20px', marginBottom: '20px' }}>
+                    {/* Row 3a: Metragem inicial e final */}
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
                         <div>
                             <label htmlFor="metrageminicial" style={labelStyle}>METRAGEM INICIAL:</label>
                             <input id="metrageminicial" name="metrageminicial" type="text" value={formData.metrageminicial} onChange={(e) => handleChange('metrageminicial', e.target.value)} style={inputStyle} placeholder="Ex: 3KM" />
@@ -253,6 +253,14 @@ export const FormularioAdequacao: React.FC<FormularioAdequacaoProps> = ({ onSubm
                         <div>
                             <label htmlFor="metragemfinal" style={labelStyle}>METRAGEM FINAL:</label>
                             <input id="metragemfinal" name="metragemfinal" type="text" value={formData.metragemfinal} onChange={(e) => handleChange('metragemfinal', e.target.value)} style={inputStyle} placeholder="Ex: 3KM" />
+                        </div>
+                    </div>
+
+                    {/* Row 3b: Metragem cordoalha e total */}
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
+                        <div>
+                            <label htmlFor="metragemcordoalha" style={labelStyle}>METRAGEM CORDOALHA:</label>
+                            <input id="metragemcordoalha" name="metragemcordoalha" type="text" value={formData.metragemcordoalha} onChange={(e) => handleChange('metragemcordoalha', e.target.value)} style={inputStyle} placeholder="Ex: 2KM" />
                         </div>
                         <div>
                             <label htmlFor="metragemtotal" style={labelStyle}>METRAGEM TOTAL:</label>
@@ -266,6 +274,20 @@ export const FormularioAdequacao: React.FC<FormularioAdequacaoProps> = ({ onSubm
                         <textarea id="problema" name="problema" value={formData.problema} onChange={(e) => handleChange('problema', e.target.value)} style={textareaStyle} placeholder="Descreva o problema..." rows={3} />
                     </div>
 
+                    {/* Trecho: Ponta A e Ponto B */}
+                    <div style={{ marginBottom: '20px' }}>
+                        <label style={{ ...labelStyle, marginBottom: '10px', display: 'block' }}>TRECHO:</label>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                            <div>
+                                <label htmlFor="pontoa" style={labelStyle}>PONTA A:</label>
+                                <input id="pontoa" name="pontoa" type="text" value={formData.pontoa} onChange={(e) => handleChange('pontoa', e.target.value)} style={inputStyle} placeholder="Ex: CTO-001" />
+                            </div>
+                            <div>
+                                <label htmlFor="pontob" style={labelStyle}>PONTO B:</label>
+                                <input id="pontob" name="pontob" type="text" value={formData.pontob} onChange={(e) => handleChange('pontob', e.target.value)} style={inputStyle} placeholder="Ex: CTO-002" />
+                            </div>
+                        </div>
+                    </div>
                     {/* Resolução (textarea) */}
                     <div style={{ marginBottom: '20px' }}>
                         <label htmlFor="resolucao" style={labelStyle}>RESOLUÇÃO:</label>

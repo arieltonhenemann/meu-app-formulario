@@ -6,8 +6,11 @@ export interface OrdemServicoAdequacao {
   tipodefibra: string;
   metrageminicial: string;
   metragemfinal: string;
+  metragemcordoalha: string;
   metragemtotal: string;
   problema: string;
+  pontoa: string;
+  pontob: string;
   resolucao: string;
   materialutilizado: string;
   datainicio: string;
@@ -27,8 +30,11 @@ export const criarAdequacaoVazia = (): OrdemServicoAdequacao => ({
   tipodefibra: "",
   metrageminicial: "",
   metragemfinal: "",
+  metragemcordoalha: "",
   metragemtotal: "",
   problema: "",
+  pontoa: "",
+  pontob: "",
   resolucao: "",
   materialutilizado: "",
   datainicio: "",
