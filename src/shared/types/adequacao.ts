@@ -20,6 +20,7 @@ export interface OrdemServicoAdequacao {
   cabosubterraneo: string;
   adequacao: string;
   cordoalha: string;
+  equipagem: string;
 }
 
 // Função para criar uma O.S. de Adequação vazia
@@ -44,4 +45,5 @@ export const criarAdequacaoVazia = (): OrdemServicoAdequacao => ({
   cabosubterraneo: "",
   adequacao: "",
   cordoalha: "",
+  equipagem: "",
 });

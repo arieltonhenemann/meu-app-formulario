@@ -338,28 +338,32 @@ export const FormularioAdequacao: React.FC<FormularioAdequacaoProps> = ({ onSubm
                         <input id="funcionario" name="funcionario" type="text" value={formData.funcionario} onChange={(e) => handleChange('funcionario', e.target.value)} style={inputStyle} placeholder="Ex: NILTON" />
                     </div>
 
-                    {/* Cabo aéreo + subterrâneo em uma linha */}
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
-                        <div>
-                            <label htmlFor="caboaereo" style={labelStyle}>METRAGEM CABO AÉREO:</label>
-                            <input id="caboaereo" name="caboaereo" type="text" value={formData.caboaereo} onChange={(e) => handleChange('caboaereo', e.target.value)} style={inputStyle} placeholder="Ex: 3KM DE FIBRA 6fo" />
-                        </div>
-                        <div>
-                            <label htmlFor="cabosubterraneo" style={labelStyle}>METRAGEM CABO SUBTERRÂNEO:</label>
-                            <input id="cabosubterraneo" name="cabosubterraneo" type="text" value={formData.cabosubterraneo} onChange={(e) => handleChange('cabosubterraneo', e.target.value)} style={inputStyle} placeholder="Ex: 3KM DE FIBRA 6fo" />
-                        </div>
+                    {/* Lançamento de fo + Adequação condomínio (Full width each due to long labels) */}
+                    <div style={{ marginBottom: '20px' }}>
+                        <label htmlFor="caboaereo" style={labelStyle}>LANÇAMENTO DE FO INCLUINDO CRUZETA COM CORDOALHA:</label>
+                        <input id="caboaereo" name="caboaereo" type="text" value={formData.caboaereo} onChange={(e) => handleChange('caboaereo', e.target.value)} style={inputStyle} placeholder="Ex: 3KM DE FIBRA 6fo" />
                     </div>
 
-                    {/* Adequação + Cordoalha em uma linha */}
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
-                        <div>
-                            <label htmlFor="adequacao" style={labelStyle}>ADEQUAÇÃO:</label>
-                            <input id="adequacao" name="adequacao" type="text" value={formData.adequacao} onChange={(e) => handleChange('adequacao', e.target.value)} style={inputStyle} placeholder="Ex: O1 POSTE" />
-                        </div>
-                        <div>
-                            <label htmlFor="cordoalha" style={labelStyle}>CORDOALHA:</label>
-                            <input id="cordoalha" name="cordoalha" type="text" value={formData.cordoalha} onChange={(e) => handleChange('cordoalha', e.target.value)} style={inputStyle} placeholder="Ex: 01 CORDOALHA" />
-                        </div>
+                    <div style={{ marginBottom: '20px' }}>
+                        <label htmlFor="cabosubterraneo" style={labelStyle}>ADEQUAÇÃO EM CONDOMÍNIO AÉREO E SUBTERRÂNEO:</label>
+                        <input id="cabosubterraneo" name="cabosubterraneo" type="text" value={formData.cabosubterraneo} onChange={(e) => handleChange('cabosubterraneo', e.target.value)} style={inputStyle} placeholder="Ex: 3KM DE FIBRA 6fo" />
+                    </div>
+
+                    {/* Retirada de fo + Lançamento/Espinamento */}
+                    <div style={{ marginBottom: '20px' }}>
+                        <label htmlFor="adequacao" style={labelStyle}>RETIRADA DE FO:</label>
+                        <input id="adequacao" name="adequacao" type="text" value={formData.adequacao} onChange={(e) => handleChange('adequacao', e.target.value)} style={inputStyle} placeholder="Ex: O1 POSTE" />
+                    </div>
+
+                    <div style={{ marginBottom: '20px' }}>
+                        <label htmlFor="cordoalha" style={labelStyle}>LANÇAMENTO E ESPINAMENTO DE CABO E CORDOALHA EM SOBRA TÉCNICA E CTO P/POSTE:</label>
+                        <input id="cordoalha" name="cordoalha" type="text" value={formData.cordoalha} onChange={(e) => handleChange('cordoalha', e.target.value)} style={inputStyle} placeholder="Ex: 01 CORDOALHA" />
+                    </div>
+
+                    {/* Equipagem em troca de poste */}
+                    <div style={{ marginBottom: '20px' }}>
+                        <label htmlFor="equipagem" style={labelStyle}>EQUIPAGEM EM TROCA DE POSTE:</label>
+                        <input id="equipagem" name="equipagem" type="text" value={formData.equipagem} onChange={(e) => handleChange('equipagem', e.target.value)} style={inputStyle} placeholder="Ex: EQUIPAGEM COMPLETA" />
                     </div>
 
                     {/* Botões */}

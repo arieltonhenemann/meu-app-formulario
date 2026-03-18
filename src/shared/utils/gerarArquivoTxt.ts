@@ -156,8 +156,11 @@ Cordoalha: ${dados.cordoalha || "Não informado"}
 
 MEDIÇÕES:
 ---------
-caboAéreo: ${dados.caboaereo || "Não informado"}
-caboSubterrâneo: ${dados.cabosubterraneo || "Não informado"}
+Lançamento de fo incluindo cruzeta com cordoalha: ${dados.caboaereo || "Não informado"}
+Adequação em condomínio aereo e subterrâneo: ${dados.cabosubterraneo || "Não informado"}
+Retirada de fo: ${dados.adequacao || "Não informado"}
+Lançamento e espinamento de cabo e cordoalha em sobra técnica e cto p/poste: ${dados.cordoalha || "Não informado"}
+Equipagem em troca de poste: ${dados.equipagem || "Não informado"}
 
 DESCRIÇÕES:
 -----------
@@ -171,10 +174,6 @@ RESOLUÇÃO: ${dados.resolucao || "Não informado"}
 
 MATERIAL UTILIZADO:
 ${dados.materialutilizado || "Não informado"}
-
-LOCALIZAÇÃO:
-------------
-Região: ${dados.regiao || "Não informado"}
 
 ===========================================
   `.trim();
