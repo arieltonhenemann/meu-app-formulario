@@ -3,12 +3,10 @@ import { useAuth } from '../shared/contexts/AuthContext';
 
 interface HeaderProps {
   isAdmin?: boolean;
-  onVoltarTelaSelecionarSistema?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
-  isAdmin = false,
-  onVoltarTelaSelecionarSistema
+  isAdmin = false
 }) => {
   const { user, logout } = useAuth();
 
@@ -83,33 +81,6 @@ export const Header: React.FC<HeaderProps> = ({
               Logado
             </span>
           </div>
-
-          {/* Botão Trocar Sistema - apenas para admins */}
-          {isAdmin && onVoltarTelaSelecionarSistema && (
-            <button
-              onClick={onVoltarTelaSelecionarSistema}
-              style={{
-                backgroundColor: '#6c757d',
-                color: 'white',
-                border: 'none',
-                padding: '8px 16px',
-                borderRadius: '6px',
-                fontSize: '14px',
-                fontWeight: 'bold',
-                cursor: 'pointer',
-                transition: 'background-color 0.2s ease'
-              }}
-              onMouseOver={(e) => {
-                e.currentTarget.style.backgroundColor = '#545b62';
-              }}
-              onMouseOut={(e) => {
-                e.currentTarget.style.backgroundColor = '#6c757d';
-              }}
-              title="Voltar à tela de seleção de sistema"
-            >
-              ↩️ Trocar Sistema
-            </button>
-          )}
 
           {/* Botão de logout */}
           <button

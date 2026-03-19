@@ -1,6 +1,5 @@
 import React from 'react';
 import './App.css';
-import './styles/equipamentos.css'; // Estilos do sistema de equipamentos
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { SystemController } from './components/SystemController';
 import { AuthProvider } from './shared/contexts/AuthContext';

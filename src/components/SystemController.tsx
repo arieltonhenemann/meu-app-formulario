@@ -11,8 +11,6 @@ import { Header } from './Header';
 import { AdminPanel } from './AdminPanel';
 import { RelatoriosPage } from './RelatoriosPage';
 import { LogsAuditoriaPage } from './LogsAuditoriaPage';
-import { GestaoEquipamentos } from './CADASTRO FUNCIONARIO/GestaoEquipamentos';
-import { TelaSelecionarSistema } from './TelaSelecionarSistema';
 import { ConditionalEmergencyButton } from './ConditionalEmergencyButton';
 import { OrdemServico } from '../shared/types/os';
 import { OrdemServicoPON } from '../shared/types/pon';
@@ -27,46 +25,28 @@ export const SystemController: React.FC = () => {
   const [telaAtiva, setTelaAtiva] = useState<TelaAtiva>('GERENCIAR');
   const [formularioEditando, setFormularioEditando] = useState<FormularioSalvo | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [sistemaAtual, setSistemaAtual] = useState<'OS' | 'EQUIPAMENTOS' | null>(null);
   const [checkingAdmin, setCheckingAdmin] = useState(true);
 
-  // Função para voltar à tela de seleção de sistema (apenas para admins)
-  const voltarParaTelaSelecionarSistema = () => {
-    if (isAdmin) {
-      setSistemaAtual(null);
-    }
-  };
-
-  // Verificar se é admin e definir sistema padrão
+  // Verificar se é admin
   useEffect(() => {
-    const verificarAdminEDefinirSistema = async () => {
+    const verificarAdmin = async () => {
       if (user?.uid) {
         setCheckingAdmin(true);
         try {
           const ehAdmin = await userService.verificarSeEhAdmin(user.uid);
           setIsAdmin(ehAdmin);
-
-          // Se não for admin, direcionar automaticamente para sistema de OS
-          if (!ehAdmin) {
-            setSistemaAtual('OS');
-          }
-          // Se for admin, mostrar tela de seleção (sistemaAtual fica null)
         } catch (error) {
           console.error('Erro ao verificar admin:', error);
-          // Em caso de erro, assumir que não é admin
           setIsAdmin(false);
-          setSistemaAtual('OS');
         } finally {
           setCheckingAdmin(false);
         }
       } else {
-        // Se não há usuário, resetar estados
         setCheckingAdmin(false);
         setIsAdmin(false);
-        setSistemaAtual(null);
       }
     };
-    verificarAdminEDefinirSistema();
+    verificarAdmin();
   }, [user]);
 
   const editarFormulario = (formulario: FormularioSalvo) => {
@@ -188,7 +168,7 @@ export const SystemController: React.FC = () => {
         setTelaAtiva('GERENCIAR');
         return null;
       }
-      return <AdminPanel onVoltarTelaSelecionarSistema={voltarParaTelaSelecionarSistema} />;
+      return <AdminPanel />;
     }
 
     const dadosIniciais = formularioEditando?.dados;
@@ -274,23 +254,6 @@ export const SystemController: React.FC = () => {
     );
   }
 
-  // Se for admin e não escolheu sistema ainda, mostrar tela de seleção
-  if (isAdmin && sistemaAtual === null) {
-    return <TelaSelecionarSistema onSelecionarSistema={setSistemaAtual} />;
-  }
-
-  // Sistema de Equipamentos
-  if (sistemaAtual === 'EQUIPAMENTOS') {
-    return (
-      <>
-        <GestaoEquipamentos
-          isAdmin={isAdmin}
-          onVoltarTelaSelecionarSistema={voltarParaTelaSelecionarSistema}
-        />
-        <ConditionalEmergencyButton isAdmin={isAdmin} />
-      </>
-    );
-  }
 
   // Sistema de OS (padrão)
   return (
@@ -300,7 +263,6 @@ export const SystemController: React.FC = () => {
     }}>
       <Header
         isAdmin={isAdmin}
-        onVoltarTelaSelecionarSistema={voltarParaTelaSelecionarSistema}
       />
 
       <header style={{

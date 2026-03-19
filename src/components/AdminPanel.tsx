@@ -4,12 +4,9 @@ import { userService } from '../shared/services/userService';
 import { UsuarioStatus } from '../shared/types/usuario';
 
 interface AdminPanelProps {
-  onVoltarTelaSelecionarSistema?: () => void;
 }
 
-export const AdminPanel: React.FC<AdminPanelProps> = ({
-  onVoltarTelaSelecionarSistema
-}) => {
+export const AdminPanel: React.FC<AdminPanelProps> = () => {
   const { user } = useAuth();
   const [usuariosPendentes, setUsuariosPendentes] = useState<UsuarioStatus[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -137,26 +134,6 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
           }}>
             🛡️ Painel de Administração
           </h2>
-          {onVoltarTelaSelecionarSistema && (
-            <button
-              onClick={onVoltarTelaSelecionarSistema}
-              style={{
-                fontSize: '0.9rem',
-                padding: '8px 16px',
-                backgroundColor: '#6c757d',
-                color: 'white',
-                border: 'none',
-                borderRadius: '6px',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px'
-              }}
-              title="Voltar à tela de seleção de sistema"
-            >
-              ↩️ Trocar Sistema
-            </button>
-          )}
         </div>
 
         <div style={{ marginBottom: '30px' }}>
