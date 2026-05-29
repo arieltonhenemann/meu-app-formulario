@@ -2,37 +2,36 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../shared/contexts/AuthContext';
 import { userService } from '../shared/services/userService';
 import { UsuarioStatus } from '../shared/types/usuario';
+import { toast } from '../shared/components/Toast';
+import { registrarAcaoAuditoria } from '../shared/utils/auditoriaHelper';
 
 interface AdminPanelProps {
 }
 
 export const AdminPanel: React.FC<AdminPanelProps> = () => {
-  const { user } = useAuth();
+  const { user, isAdmin, checkingAdmin } = useAuth();
   const [usuariosPendentes, setUsuariosPendentes] = useState<UsuarioStatus[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
   const [processando, setProcessando] = useState<string | null>(null);
+  const [confirmApproval, setConfirmApproval] = useState<string | null>(null);
+  const [rejectInfo, setRejectInfo] = useState<{ uid: string; show: boolean; motivo: string }>({ uid: '', show: false, motivo: 'Não atende aos critérios de acesso' });
 
   useEffect(() => {
-    verificarAdminECarregar();
+    if (user && isAdmin) {
+      carregarUsuariosPendentes();
+    } else if (!checkingAdmin && !isAdmin) {
+      setIsLoading(false);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
+  }, [user, isAdmin, checkingAdmin]);
 
-  const verificarAdminECarregar = async () => {
-    if (!user) return;
-
+  const carregarUsuariosPendentes = async () => {
+    setIsLoading(true);
     try {
-      // Verificar se é admin
-      const ehAdmin = await userService.verificarSeEhAdmin(user.uid);
-      setIsAdmin(ehAdmin);
-
-      if (ehAdmin) {
-        // Carregar usuários pendentes
-        const pendentes = await userService.listarUsuariosPendentes();
-        setUsuariosPendentes(pendentes);
-      }
+      const pendentes = await userService.listarUsuariosPendentes();
+      setUsuariosPendentes(pendentes);
     } catch (error) {
-      console.error('Erro ao verificar admin:', error);
+      console.error('Erro ao carregar usuários:', error);
     } finally {
       setIsLoading(false);
     }
@@ -41,48 +40,47 @@ export const AdminPanel: React.FC<AdminPanelProps> = () => {
   const aprovarUsuario = async (uid: string) => {
     if (!user) return;
 
-    const confirmacao = window.confirm('Tem certeza que deseja aprovar este usuário?');
-    if (!confirmacao) return;
-
     setProcessando(uid);
     try {
       await userService.aprovarUsuario(uid, user.uid);
-      // Recarregar lista
-      await verificarAdminECarregar();
-      alert('Usuário aprovado com sucesso!');
+      await registrarAcaoAuditoria(user, 'EDITAR_FORMULARIO', {
+        acao: 'APROVAR_USUARIO',
+        usuarioAprovado: uid,
+        aprovadoPor: user.uid
+      });
+      await carregarUsuariosPendentes();
+      toast.success('Usuário aprovado com sucesso!');
     } catch (error) {
       console.error('Erro ao aprovar:', error);
-      alert('Erro ao aprovar usuário. Tente novamente.');
+      toast.error('Erro ao aprovar usuário. Tente novamente.');
     } finally {
       setProcessando(null);
     }
   };
 
-  const rejeitarUsuario = async (uid: string) => {
+  const rejeitarUsuario = async (uid: string, motivo: string) => {
     if (!user) return;
-
-    const motivo = window.prompt(
-      'Digite o motivo da rejeição (opcional):',
-      'Não atende aos critérios de acesso'
-    );
-
-    if (motivo === null) return; // Cancelou
 
     setProcessando(uid);
     try {
       await userService.rejeitarUsuario(uid, motivo, user.uid);
-      // Recarregar lista
-      await verificarAdminECarregar();
-      alert('Usuário rejeitado.');
+      await registrarAcaoAuditoria(user, 'EDITAR_FORMULARIO', {
+        acao: 'REJEITAR_USUARIO',
+        usuarioRejeitado: uid,
+        motivo,
+        rejeitadoPor: user.uid
+      });
+      await carregarUsuariosPendentes();
+      toast.success('Usuário rejeitado.');
     } catch (error) {
       console.error('Erro ao rejeitar:', error);
-      alert('Erro ao rejeitar usuário. Tente novamente.');
+      toast.error('Erro ao rejeitar usuário. Tente novamente.');
     } finally {
       setProcessando(null);
     }
   };
 
-  if (isLoading) {
+  if (isLoading || checkingAdmin) {
     return (
       <div style={{ padding: '40px', textAlign: 'center' }}>
         <div style={{ fontSize: '32px', marginBottom: '20px' }}>⏳</div>
@@ -191,7 +189,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = () => {
 
                   <div style={{ display: 'flex', gap: '10px', marginLeft: '20px' }}>
                     <button
-                      onClick={() => aprovarUsuario(usuario.uid)}
+                      onClick={() => {
+                        toast.warning(`Tem certeza que deseja aprovar "${usuario.email}"?`);
+                        setConfirmApproval(usuario.uid);
+                      }}
                       disabled={processando === usuario.uid}
                       style={{
                         backgroundColor: processando === usuario.uid ? '#95a5a6' : '#28a745',
@@ -209,7 +210,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = () => {
                     </button>
 
                     <button
-                      onClick={() => rejeitarUsuario(usuario.uid)}
+                      onClick={() => {
+                        toast.warning(`Digite o motivo da rejeição para "${usuario.email}"`);
+                        setRejectInfo({ uid: usuario.uid, show: true, motivo: 'Não atende aos critérios de acesso' });
+                      }}
                       disabled={processando === usuario.uid}
                       style={{
                         backgroundColor: processando === usuario.uid ? '#95a5a6' : '#dc3545',
@@ -252,7 +256,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = () => {
 
         <div style={{ marginTop: '20px', textAlign: 'center' }}>
           <button
-            onClick={verificarAdminECarregar}
+            onClick={carregarUsuariosPendentes}
             style={{
               backgroundColor: '#17a2b8',
               color: 'white',
@@ -268,6 +272,154 @@ export const AdminPanel: React.FC<AdminPanelProps> = () => {
           </button>
         </div>
       </div>
+
+      {confirmApproval && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0,0,0,0.5)',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          zIndex: 9999
+        }}>
+          <div style={{
+            backgroundColor: '#fff',
+            padding: '30px',
+            borderRadius: '10px',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
+            maxWidth: '400px',
+            width: '90%',
+            textAlign: 'center'
+          }}>
+            <div style={{ fontSize: '3rem', marginBottom: '15px' }}>✅</div>
+            <h3 style={{ color: '#333', marginBottom: '10px' }}>Confirmar Aprovação</h3>
+            <p style={{ color: '#666', marginBottom: '20px' }}>
+              Tem certeza que deseja aprovar este usuário?
+            </p>
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
+              <button
+                onClick={() => setConfirmApproval(null)}
+                style={{
+                  backgroundColor: '#6c757d',
+                  color: 'white',
+                  border: 'none',
+                  padding: '10px 20px',
+                  borderRadius: '6px',
+                  fontSize: '14px',
+                  fontWeight: 'bold',
+                  cursor: 'pointer'
+                }}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={() => {
+                  aprovarUsuario(confirmApproval);
+                  setConfirmApproval(null);
+                }}
+                style={{
+                  backgroundColor: '#28a745',
+                  color: 'white',
+                  border: 'none',
+                  padding: '10px 20px',
+                  borderRadius: '6px',
+                  fontSize: '14px',
+                  fontWeight: 'bold',
+                  cursor: 'pointer'
+                }}
+              >
+                Sim, Aprovar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {rejectInfo.show && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0,0,0,0.5)',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          zIndex: 9999
+        }}>
+          <div style={{
+            backgroundColor: '#fff',
+            padding: '30px',
+            borderRadius: '10px',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
+            maxWidth: '400px',
+            width: '90%',
+            textAlign: 'center'
+          }}>
+            <div style={{ fontSize: '3rem', marginBottom: '15px' }}>❌</div>
+            <h3 style={{ color: '#333', marginBottom: '10px' }}>Rejeitar Usuário</h3>
+            <p style={{ color: '#666', marginBottom: '15px' }}>
+              Digite o motivo da rejeição:
+            </p>
+            <textarea
+              value={rejectInfo.motivo}
+              onChange={(e) => setRejectInfo(prev => ({ ...prev, motivo: e.target.value }))}
+              style={{
+                width: '100%',
+                padding: '10px',
+                border: '1px solid #ddd',
+                borderRadius: '4px',
+                fontSize: '14px',
+                fontFamily: 'inherit',
+                boxSizing: 'border-box',
+                resize: 'vertical',
+                minHeight: '80px',
+                marginBottom: '20px'
+              }}
+            />
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
+              <button
+                onClick={() => setRejectInfo(prev => ({ ...prev, show: false }))}
+                style={{
+                  backgroundColor: '#6c757d',
+                  color: 'white',
+                  border: 'none',
+                  padding: '10px 20px',
+                  borderRadius: '6px',
+                  fontSize: '14px',
+                  fontWeight: 'bold',
+                  cursor: 'pointer'
+                }}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={() => {
+                  rejeitarUsuario(rejectInfo.uid, rejectInfo.motivo);
+                  setRejectInfo(prev => ({ ...prev, show: false }));
+                }}
+                style={{
+                  backgroundColor: '#dc3545',
+                  color: 'white',
+                  border: 'none',
+                  padding: '10px 20px',
+                  borderRadius: '6px',
+                  fontSize: '14px',
+                  fontWeight: 'bold',
+                  cursor: 'pointer'
+                }}
+              >
+                Sim, Rejeitar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

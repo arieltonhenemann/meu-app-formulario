@@ -1,32 +1,25 @@
-// Configuração do Firebase
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 
-// IMPORTANTE: Substitua pelas suas credenciais do Firebase
-// Para obter essas informações:
-// 1. Acesse https://console.firebase.google.com/
-// 2. Crie um novo projeto
-// 3. Adicione um app web
-// 4. Copie a configuração aqui
 const firebaseConfig = {
-  apiKey: "AIzaSyCnH1IiM1dYHTEWvv3N-tks9zjvta0dpxY",
-  authDomain: "cadastros-equipamentos.firebaseapp.com",
-  projectId: "cadastros-equipamentos",
-  storageBucket: "cadastros-equipamentos.firebasestorage.app",
-  messagingSenderId: "989457399548",
-  appId: "1:989457399548:web:ec6475bd02aa1eabb8e179",
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
-// Verificar se Firebase está configurado
 const isFirebaseConfigured = () => {
-  return (
-    firebaseConfig.apiKey !== "sua-api-key-aqui" &&
-    firebaseConfig.projectId !== "seu-projeto-id"
+  return !!(
+    firebaseConfig.apiKey &&
+    firebaseConfig.apiKey !== "your_api_key_here" &&
+    firebaseConfig.projectId &&
+    firebaseConfig.projectId !== "your_project_id_here"
   );
 };
 
-// Inicializar Firebase apenas se configurado
 let app: any = null;
 let db: any = null;
 let auth: any = null;
@@ -45,11 +38,4 @@ if (isFirebaseConfigured()) {
 }
 
 export { db, auth, isFirebaseConfigured };
-
-// Para desenvolvimento local (opcional)
-// Descomente as linhas abaixo se quiser usar o emulador do Firebase
-// if (location.hostname === 'localhost') {
-//   connectFirestoreEmulator(db, 'localhost', 8080);
-// }
-
 export default app;

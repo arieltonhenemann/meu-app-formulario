@@ -1,18 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { OrdemServicoLINK, criarLINKVazia, LinkInfo, criarLinkVazio } from '../shared/types/link';
 import { gerarArquivoLINK } from '../shared/utils/gerarArquivoTxt';
-// import { compatibilityStorage } from '../shared/services/compatibilityStorage';
 import { firebaseFormularioStorage } from '../shared/services/firebaseFormularioStorage';
 import { useAuth } from '../shared/contexts/AuthContext';
-import { auditoriaService } from '../shared/services/auditoriaService';
 import { TxtModal } from './TxtModal';
+import { labelStyle, inputStyle, buttonStyle, formContainerStyle, formCardStyle } from '../shared/styles/forms';
+import { toast } from '../shared/components/Toast';
+import { registrarAcaoAuditoria } from '../shared/utils/auditoriaHelper';
 
 interface FormularioLINKProps {
   onSubmit?: (dados: OrdemServicoLINK) => void;
-  dadosIniciais?: any;
+  dadosIniciais?: Partial<OrdemServicoLINK>;
   formularioId?: string;
-  modoGerenciamento?: boolean; // Nova prop para identificar se está no gerenciamento
-  onFinalizar?: (formularioId: string) => void; // Callback para finalizar
+  modoGerenciamento?: boolean;
+  onFinalizar?: (formularioId: string) => void;
 }
 
 export const FormularioLINK: React.FC<FormularioLINKProps> = ({ onSubmit, dadosIniciais, formularioId, modoGerenciamento, onFinalizar }) => {
@@ -26,6 +27,7 @@ export const FormularioLINK: React.FC<FormularioLINKProps> = ({ onSubmit, dadosI
 
   const [txtModalAberto, setTxtModalAberto] = useState(false);
   const [txtConteudo, setTxtConteudo] = useState('');
+  const [isHovered, setIsHovered] = useState(false);
 
   useEffect(() => {
     if (dadosIniciais) {
@@ -72,28 +74,18 @@ export const FormularioLINK: React.FC<FormularioLINKProps> = ({ onSubmit, dadosI
       console.log('Dados da O.S LINK:', formData);
       onSubmit?.(formData);
 
-      // Verificar se está editando um formulário existente ou criando um novo
       if (formularioId) {
-        // Modo edição - atualizar formulário existente
         await firebaseFormularioStorage.atualizar(formularioId, formData);
 
-        // Registrar log de auditoria
-        if (user) {
-          await auditoriaService.registrarAcao('EDITAR_FORMULARIO', {
-            uid: user.uid,
-            email: user.email || '',
-            displayName: user.displayName
-          }, {
-            formularioId,
-            codigoOS: formData.codigoOS,
-            tipoFormulario: 'LINK',
-            dadosAlterados: formData
-          });
-        }
+        await registrarAcaoAuditoria(user, 'EDITAR_FORMULARIO', {
+          formularioId,
+          codigoOS: formData.codigoOS,
+          tipoFormulario: 'LINK',
+          dadosAlterados: formData
+        });
 
-        alert('Ordem de Serviço LINK atualizada com sucesso!');
+        toast.success('Ordem de Serviço LINK atualizada com sucesso!');
       } else {
-        // Modo criação - criar novo formulário
         const criadoPor = user ? {
           uid: user.uid,
           email: user.email || '',
@@ -101,32 +93,22 @@ export const FormularioLINK: React.FC<FormularioLINKProps> = ({ onSubmit, dadosI
         } : undefined;
         const formularioSalvo = await firebaseFormularioStorage.salvar('LINK', formData, criadoPor);
 
-        // Registrar log de auditoria
-        if (user) {
-          await auditoriaService.registrarAcao('CRIAR_FORMULARIO', {
-            uid: user.uid,
-            email: user.email || '',
-            displayName: user.displayName
-          }, {
-            formularioId: formularioSalvo.id,
-            codigoOS: formData.codigoOS,
-            tipoFormulario: 'LINK'
-          });
-        }
+        await registrarAcaoAuditoria(user, 'CRIAR_FORMULARIO', {
+          formularioId: formularioSalvo.id,
+          codigoOS: formData.codigoOS,
+          tipoFormulario: 'LINK'
+        });
 
-        // Geração de TXT movida para ação manual (botão "Gerar TXT")
-        alert('Ordem de Serviço LINK salva com sucesso!');
+        toast.success('Ordem de Serviço LINK salva com sucesso!');
 
-        // Se não está editando, limpar formulário
         limparFormulario();
       }
     } catch (error) {
       console.error('Erro ao salvar formulário:', error);
-      alert('Erro ao salvar. Os dados foram salvos localmente e serão sincronizados quando possível.');
+      toast.error('Erro ao salvar. Os dados foram salvos localmente e serão sincronizados quando possível.');
     }
   };
 
-  // Gerar TXT manualmente (handler do botão)
   const handleGerarTxt = () => {
     try {
       const conteudo = gerarArquivoLINK(formData);
@@ -134,7 +116,7 @@ export const FormularioLINK: React.FC<FormularioLINKProps> = ({ onSubmit, dadosI
       setTxtModalAberto(true);
     } catch (err) {
       console.error('Erro ao gerar TXT:', err);
-      alert('Erro ao gerar arquivo TXT.');
+      toast.error('Erro ao gerar arquivo TXT.');
     }
   };
 
@@ -143,13 +125,8 @@ export const FormularioLINK: React.FC<FormularioLINKProps> = ({ onSubmit, dadosI
   };
 
   return (
-    <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
-      <div style={{
-        backgroundColor: '#fff',
-        padding: '30px',
-        borderRadius: '10px',
-        boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
-      }}>
+    <div style={formContainerStyle}>
+      <div style={formCardStyle}>
         <h2 style={{
           textAlign: 'center',
           marginBottom: '30px',
@@ -191,22 +168,16 @@ export const FormularioLINK: React.FC<FormularioLINKProps> = ({ onSubmit, dadosI
               <button
                 type="button"
                 onClick={adicionarLink}
+                onMouseEnter={() => setIsHovered(true)}
+                onMouseLeave={() => setIsHovered(false)}
                 style={{
                   ...buttonStyle,
-                  backgroundColor: '#17a2b8',
+                  backgroundColor: isHovered ? '#138496' : '#17a2b8',
                   fontSize: '14px',
                   padding: '10px 18px',
                   boxShadow: '0 2px 4px rgba(23, 162, 184, 0.3)',
-                  transform: 'scale(1)',
+                  transform: isHovered ? 'scale(1.05)' : 'scale(1)',
                   transition: 'all 0.2s ease'
-                }}
-                onMouseOver={(e) => {
-                  e.currentTarget.style.transform = 'scale(1.05)';
-                  e.currentTarget.style.backgroundColor = '#138496';
-                }}
-                onMouseOut={(e) => {
-                  e.currentTarget.style.transform = 'scale(1)';
-                  e.currentTarget.style.backgroundColor = '#17a2b8';
                 }}
               >
                 ➕ Adicionar Link
@@ -364,28 +335,19 @@ export const FormularioLINK: React.FC<FormularioLINKProps> = ({ onSubmit, dadosI
                   if (!formularioId) return;
 
                   try {
-                    // Primeiro salvar as alterações
                     await firebaseFormularioStorage.atualizar(formularioId, formData);
 
-                    // Registrar log de auditoria da edição
-                    if (user) {
-                      await auditoriaService.registrarAcao('EDITAR_FORMULARIO', {
-                        uid: user.uid,
-                        email: user.email || '',
-                        displayName: user.displayName
-                      }, {
-                        formularioId,
-                        codigoOS: formData.codigoOS,
-                        tipoFormulario: 'LINK',
-                        dadosAlterados: formData
-                      });
-                    }
+                    await registrarAcaoAuditoria(user, 'EDITAR_FORMULARIO', {
+                      formularioId,
+                      codigoOS: formData.codigoOS,
+                      tipoFormulario: 'LINK',
+                      dadosAlterados: formData
+                    });
 
-                    // Depois finalizar
                     onFinalizar && onFinalizar(formularioId);
                   } catch (error) {
                     console.error('Erro ao salvar antes de finalizar:', error);
-                    alert('Erro ao salvar alterações. Tente novamente.');
+                    toast.error('Erro ao salvar alterações. Tente novamente.');
                   }
                 }}
                 disabled={!formularioId}
@@ -450,34 +412,4 @@ export const FormularioLINK: React.FC<FormularioLINKProps> = ({ onSubmit, dadosI
       />
     </div>
   );
-};
-
-// Estilos
-const labelStyle: React.CSSProperties = {
-  display: 'block',
-  marginBottom: '5px',
-  fontWeight: 'bold',
-  color: '#333',
-  fontSize: '14px'
-};
-
-const inputStyle: React.CSSProperties = {
-  width: '100%',
-  padding: '10px',
-  border: '1px solid #ddd',
-  borderRadius: '4px',
-  fontSize: '14px',
-  fontFamily: 'inherit',
-  boxSizing: 'border-box'
-};
-
-const buttonStyle: React.CSSProperties = {
-  padding: '12px 20px',
-  border: 'none',
-  borderRadius: '5px',
-  color: 'white',
-  fontSize: '16px',
-  fontWeight: 'bold',
-  cursor: 'pointer',
-  transition: 'opacity 0.2s'
 };

@@ -1,13 +1,17 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { authService, AuthUser } from '../services/authService';
+import { userService } from '../services/userService';
 
 interface AuthContextType {
   user: AuthUser | null;
   isLoading: boolean;
   isAuthenticated: boolean;
+  isAdmin: boolean;
+  checkingAdmin: boolean;
   login: (email: string, password: string) => Promise<AuthUser>;
   registrar: (email: string, password: string) => Promise<AuthUser>;
   logout: () => Promise<void>;
+  refreshAdminStatus: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -19,18 +23,38 @@ interface AuthProviderProps {
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [checkingAdmin, setCheckingAdmin] = useState(false);
+
+  const verificarAdmin = async (uid: string) => {
+    setCheckingAdmin(true);
+    try {
+      const ehAdmin = await userService.verificarSeEhAdmin(uid);
+      setIsAdmin(ehAdmin);
+    } catch {
+      setIsAdmin(false);
+    } finally {
+      setCheckingAdmin(false);
+    }
+  };
 
   useEffect(() => {
-    // Escutar mudanças de autenticação
     const unsubscribe = authService.onAuthStateChange((authUser) => {
       setUser(authUser);
+      if (authUser?.uid) {
+        verificarAdmin(authUser.uid);
+      } else {
+        setIsAdmin(false);
+      }
       setIsLoading(false);
     });
 
-    // Verificar se já tem usuário logado (para casos onde Firebase não está configurado)
     const currentUser = authService.getCurrentUser();
     if (currentUser) {
       setUser(currentUser);
+      if (currentUser.uid) {
+        verificarAdmin(currentUser.uid);
+      }
     }
     setIsLoading(false);
 
@@ -72,13 +96,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  const refreshAdminStatus = async () => {
+    if (user?.uid) {
+      await verificarAdmin(user.uid);
+    }
+  };
+
   const value: AuthContextType = {
     user,
     isLoading,
     isAuthenticated: user !== null,
+    isAdmin,
+    checkingAdmin,
     login,
     registrar,
-    logout
+    logout,
+    refreshAdminStatus,
   };
 
   return (

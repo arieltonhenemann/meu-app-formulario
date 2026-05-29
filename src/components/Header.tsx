@@ -1,24 +1,17 @@
 import React from 'react';
 import { useAuth } from '../shared/contexts/AuthContext';
+import { toast } from '../shared/components/Toast';
 
-interface HeaderProps {
-  isAdmin?: boolean;
-}
-
-export const Header: React.FC<HeaderProps> = ({
-  isAdmin = false
-}) => {
+export const Header: React.FC = () => {
   const { user, logout } = useAuth();
 
   const handleLogout = async () => {
-    const confirmLogout = window.confirm('Tem certeza que deseja sair?');
-    if (confirmLogout) {
-      try {
-        await logout();
-      } catch (error) {
-        console.error('Erro ao fazer logout:', error);
-        alert('Erro ao fazer logout. Tente novamente.');
-      }
+    try {
+      await logout();
+      toast.info('Sessão encerrada.');
+    } catch (error) {
+      console.error('Erro ao fazer logout:', error);
+      toast.error('Erro ao fazer logout. Tente novamente.');
     }
   };
 
@@ -38,7 +31,6 @@ export const Header: React.FC<HeaderProps> = ({
         maxWidth: '1200px',
         margin: '0 auto'
       }}>
-        {/* Logo/Título */}
         <div style={{
           display: 'flex',
           alignItems: 'center',
@@ -55,13 +47,11 @@ export const Header: React.FC<HeaderProps> = ({
           </h1>
         </div>
 
-        {/* Informações do usuário */}
         <div style={{
           display: 'flex',
           alignItems: 'center',
           gap: '15px'
         }}>
-          {/* Info do usuário */}
           <div style={{
             display: 'flex',
             flexDirection: 'column',
@@ -82,7 +72,6 @@ export const Header: React.FC<HeaderProps> = ({
             </span>
           </div>
 
-          {/* Botão de logout */}
           <button
             onClick={handleLogout}
             style={{
@@ -95,12 +84,6 @@ export const Header: React.FC<HeaderProps> = ({
               fontWeight: 'bold',
               cursor: 'pointer',
               transition: 'background-color 0.2s ease'
-            }}
-            onMouseOver={(e) => {
-              e.currentTarget.style.backgroundColor = '#c82333';
-            }}
-            onMouseOut={(e) => {
-              e.currentTarget.style.backgroundColor = '#dc3545';
             }}
           >
             🚪 Sair

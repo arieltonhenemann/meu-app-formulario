@@ -1,6 +1,5 @@
 import React from 'react';
 import { useAuth } from '../shared/contexts/AuthContext';
-import { userService } from '../shared/services/userService';
 
 export type TipoFormulario = 'CTO' | 'PON' | 'LINK' | 'ADEQUACAO';
 export type TelaAtiva = TipoFormulario | 'GERENCIAR' | 'RELATORIOS' | 'LOGS' | 'ADMIN';
@@ -18,21 +17,8 @@ export const NavegacaoFormularios: React.FC<NavegacaoFormulariosProps> = ({
   modoEdicao = false,
   onVoltar
 }) => {
-  const { user } = useAuth();
-  const [isAdmin, setIsAdmin] = React.useState(false);
+  const { isAdmin } = useAuth();
 
-  // Verificar se é admin
-  React.useEffect(() => {
-    const verificarAdmin = async () => {
-      if (user?.uid) {
-        const ehAdmin = await userService.verificarSeEhAdmin(user.uid);
-        setIsAdmin(ehAdmin);
-      }
-    };
-    verificarAdmin();
-  }, [user]);
-
-  // Botões básicos que todos os usuários vêem
   const botoesBasicos = [
     { tipo: 'GERENCIAR' as TelaAtiva, label: '📋 Gerenciar', cor: '#6f42c1' },
     { tipo: 'CTO' as TipoFormulario, label: '🏢 CTO', cor: '#007bff' },
@@ -41,14 +27,12 @@ export const NavegacaoFormularios: React.FC<NavegacaoFormulariosProps> = ({
     { tipo: 'ADEQUACAO' as TipoFormulario, label: '🔧 ADEQUAÇÃO', cor: '#d4a30eff' }
   ];
 
-  // Botões administrativos que só admins vêem
   const botoesAdmin = [
     { tipo: 'RELATORIOS' as TelaAtiva, label: '📈 Relatórios', cor: '#20c997' },
     { tipo: 'LOGS' as TelaAtiva, label: '📋 Logs', cor: '#17a2b8' },
     { tipo: 'ADMIN' as TelaAtiva, label: '🛡️ Admin', cor: '#fd7e14' }
   ];
 
-  // Combinar botões baseado nas permissões
   const botoes = isAdmin ? [...botoesBasicos, ...botoesAdmin] : botoesBasicos;
 
   return (

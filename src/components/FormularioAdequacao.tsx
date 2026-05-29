@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { OrdemServicoAdequacao, criarAdequacaoVazia } from '../shared/types/adequacao';
 import { gerarArquivoADEQUACAO } from '../shared/utils/gerarArquivoTxt';
-//import { compatibilityStorage } from '../shared/services/compatibilityStorage';
 import { firebaseFormularioStorage } from '../shared/services/firebaseFormularioStorage';
 import { useAuth } from '../shared/contexts/AuthContext';
-import { auditoriaService } from '../shared/services/auditoriaService';
-import type { TipoFormularioAuditoria } from '../shared/types/auditoria';
 import { TxtModal } from './TxtModal';
+import { labelStyle, inputStyle, buttonStyle, formContainerStyle, formCardStyle, textareaStyle } from '../shared/styles/forms';
+import { toast } from '../shared/components/Toast';
+import { registrarAcaoAuditoria } from '../shared/utils/auditoriaHelper';
 
 interface FormularioAdequacaoProps {
     onSubmit?: (dados: OrdemServicoAdequacao) => void;
@@ -41,7 +41,6 @@ export const FormularioAdequacao: React.FC<FormularioAdequacaoProps> = ({ onSubm
             [field]: value
         }));
 
-        // Remove erro quando usuário começa a digitar
         if (errors[field]) {
             setErrors(prev => ({
                 ...prev,
@@ -50,7 +49,6 @@ export const FormularioAdequacao: React.FC<FormularioAdequacaoProps> = ({ onSubm
         }
     };
 
-    // Valida se a string é uma data existente no formato DD/MM/AAAA
     const validarData = (data: string): boolean => {
         if (!data) return false;
         const partes = data.split('/');
@@ -65,7 +63,6 @@ export const FormularioAdequacao: React.FC<FormularioAdequacaoProps> = ({ onSubm
 
         if (m < 1 || m > 12) return false;
 
-        // dias no mês (ano bissexto tratado automaticamente por Date)
         const diasNoMes = new Date(y, m, 0).getDate();
         if (d < 1 || d > diasNoMes) return false;
 
@@ -75,7 +72,6 @@ export const FormularioAdequacao: React.FC<FormularioAdequacaoProps> = ({ onSubm
     const validarFormulario = (requireDates = false): boolean => {
         const newErrors: Partial<Record<keyof OrdemServicoAdequacao, string>> = {};
 
-        // Se as datas são obrigatórias (finalizar), exigimos presença e validade
         if (requireDates) {
             if (!formData.datainicio || !validarData(formData.datainicio)) {
                 newErrors.datainicio = 'Informe a data de início no formato DD/MM/AAAA (data válida).';
@@ -84,7 +80,6 @@ export const FormularioAdequacao: React.FC<FormularioAdequacaoProps> = ({ onSubm
                 newErrors.datatermino = 'Informe a data de término no formato DD/MM/AAAA (data válida).';
             }
         } else {
-            // Para salvar: datas são opcionais, mas se preenchidas devem ser válidas
             if (formData.datainicio && !validarData(formData.datainicio)) {
                 newErrors.datainicio = 'Data de início inválida (DD/MM/AAAA).';
             }
@@ -93,7 +88,6 @@ export const FormularioAdequacao: React.FC<FormularioAdequacaoProps> = ({ onSubm
             }
         }
 
-        // Se ambas as datas estiverem presentes e válidas (em qualquer modo), checar ordem
         if (!newErrors.datainicio && !newErrors.datatermino && formData.datainicio && formData.datatermino) {
             const [d1, m1, y1] = formData.datainicio.split('/').map(Number);
             const [d2, m2, y2] = formData.datatermino.split('/').map(Number);
@@ -109,35 +103,23 @@ export const FormularioAdequacao: React.FC<FormularioAdequacaoProps> = ({ onSubm
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        //if (validarFormulario()) {
         if (validarFormulario(false)) {
-            // salva (data opcional)
             try {
                 console.log('Dados da O.S:', formData);
                 onSubmit?.(formData);
 
-                // Verificar se está editando um formulário existente ou criando um novo
                 if (formularioId) {
-                    // Modo edição - atualizar formulário existente
                     await firebaseFormularioStorage.atualizar(formularioId, formData);
 
-                    // Registrar log de auditoria
-                    if (user) {
-                        await auditoriaService.registrarAcao('EDITAR_FORMULARIO', {
-                            uid: user.uid,
-                            email: user.email || '',
-                            displayName: user.displayName
-                        }, {
-                            formularioId,
-                            codigoOS: formData.codigoOS,
-                            tipoFormulario: 'ADEQUACAO' as TipoFormularioAuditoria,
-                            dadosAlterados: formData
-                        });
-                    }
+                    await registrarAcaoAuditoria(user, 'EDITAR_FORMULARIO', {
+                        formularioId,
+                        codigoOS: formData.codigoOS,
+                        tipoFormulario: 'ADEQUACAO',
+                        dadosAlterados: formData
+                    });
 
-                    alert('Ordem de Serviço ADEQUAÇÃO atualizada com sucesso!');
+                    toast.success('Ordem de Serviço ADEQUAÇÃO atualizada com sucesso!');
                 } else {
-                    // Modo criação - criar novo formulário
                     const criadoPor = user ? {
                         uid: user.uid,
                         email: user.email || '',
@@ -145,28 +127,19 @@ export const FormularioAdequacao: React.FC<FormularioAdequacaoProps> = ({ onSubm
                     } : undefined;
                     const formularioSalvo = await firebaseFormularioStorage.salvar('ADEQUACAO', formData, criadoPor);
 
-                    // Registrar log de auditoria
-                    if (user) {
-                        await auditoriaService.registrarAcao('CRIAR_FORMULARIO', {
-                            uid: user.uid,
-                            email: user.email || '',
-                            displayName: user.displayName
-                        }, {
-                            formularioId: formularioSalvo.id,
-                            codigoOS: formData.codigoOS,
-                            tipoFormulario: 'ADEQUACAO' as TipoFormularioAuditoria
-                        });
-                    }
+                    await registrarAcaoAuditoria(user, 'CRIAR_FORMULARIO', {
+                        formularioId: formularioSalvo.id,
+                        codigoOS: formData.codigoOS,
+                        tipoFormulario: 'ADEQUACAO'
+                    });
 
-                    // Geração de TXT movida para ação manual (botão "Gerar TXT")
-                    alert('Ordem de Serviço ADEQUAÇÃO salva com sucesso!');
+                    toast.success('Ordem de Serviço ADEQUAÇÃO salva com sucesso!');
 
-                    // Se não está editando, limpar formulário
                     limparFormulario();
                 }
             } catch (error) {
                 console.error('Erro ao salvar formulário:', error);
-                alert('Erro ao salvar. Os dados foram salvos localmente e serão sincronizados quando possível.');
+                toast.error('Erro ao salvar. Os dados foram salvos localmente e serão sincronizados quando possível.');
             }
         }
     };
@@ -176,9 +149,8 @@ export const FormularioAdequacao: React.FC<FormularioAdequacaoProps> = ({ onSubm
         setErrors({});
     };
 
-    // Formata enquanto o usuário digita: insere "/" após 2 e 4 dígitos
     const formatarDataInput = (value: string): string => {
-        const somenteDigitos = value.replace(/\D/g, '').slice(0, 8); // ddmmyyyy
+        const somenteDigitos = value.replace(/\D/g, '').slice(0, 8);
         if (somenteDigitos.length <= 2) return somenteDigitos;
         if (somenteDigitos.length <= 4) return `${somenteDigitos.slice(0, 2)}/${somenteDigitos.slice(2)}`;
         return `${somenteDigitos.slice(0, 2)}/${somenteDigitos.slice(2, 4)}/${somenteDigitos.slice(4, 8)}`;
@@ -189,7 +161,6 @@ export const FormularioAdequacao: React.FC<FormularioAdequacaoProps> = ({ onSubm
         handleChange(field as keyof OrdemServicoAdequacao, formatted);
     };
 
-    // Gerar TXT manualmente (handler do botão)
     const handleGerarTxt = () => {
         try {
             const conteudo = gerarArquivoADEQUACAO(formData);
@@ -197,18 +168,13 @@ export const FormularioAdequacao: React.FC<FormularioAdequacaoProps> = ({ onSubm
             setTxtModalAberto(true);
         } catch (err) {
             console.error('Erro ao gerar TXT:', err);
-            alert('Erro ao gerar arquivo TXT.');
+            toast.error('Erro ao gerar arquivo TXT.');
         }
     };
 
     return (
-        <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
-            <div style={{
-                backgroundColor: '#fff',
-                padding: '30px',
-                borderRadius: '10px',
-                boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
-            }}>
+        <div style={formContainerStyle}>
+            <div style={formCardStyle}>
                 <h2 style={{
                     textAlign: 'center',
                     marginBottom: '30px',
@@ -379,36 +345,26 @@ export const FormularioAdequacao: React.FC<FormularioAdequacaoProps> = ({ onSubm
                                 onClick={async () => {
                                     if (!formularioId) return;
 
-                                    // Para finalizar, as datas são obrigatórias
                                     if (!validarFormulario(true)) {
-                                        alert('Corrija os erros antes de finalizar a ordem (datas obrigatórias).');
+                                        toast.error('Corrija os erros antes de finalizar a ordem (datas obrigatórias).');
                                         return;
                                     }
 
                                     try {
-                                        // Primeiro salvar as alterações
                                         await firebaseFormularioStorage.atualizar(formularioId, formData);
 
-                                        // Registrar log de auditoria da edição
-                                        if (user) {
-                                            await auditoriaService.registrarAcao('EDITAR_FORMULARIO', {
-                                                uid: user.uid,
-                                                email: user.email || '',
-                                                displayName: user.displayName
-                                            }, {
-                                                formularioId,
-                                                codigoOS: formData.codigoOS,
-                                                tipoFormulario: 'ADEQUACAO' as TipoFormularioAuditoria,
-                                                dadosAlterados: formData
-                                            });
-                                        }
+                                        await registrarAcaoAuditoria(user, 'EDITAR_FORMULARIO', {
+                                            formularioId,
+                                            codigoOS: formData.codigoOS,
+                                            tipoFormulario: 'ADEQUACAO',
+                                            dadosAlterados: formData
+                                        });
 
-                                        // Depois finalizar
                                         onFinalizar && onFinalizar(formularioId);
-                                        alert('Ordem finalizada com sucesso!');
+                                        toast.success('Ordem finalizada com sucesso!');
                                     } catch (error) {
                                         console.error('Erro ao salvar antes de finalizar:', error);
-                                        alert('Erro ao salvar alterações. Tente novamente.');
+                                        toast.error('Erro ao salvar alterações. Tente novamente.');
                                     }
                                 }}
                                 disabled={!formularioId}
@@ -462,45 +418,3 @@ export const FormularioAdequacao: React.FC<FormularioAdequacaoProps> = ({ onSubm
         </div>
     );
 };
-
-// Estilos
-const labelStyle: React.CSSProperties = {
-    display: 'block',
-    marginBottom: '5px',
-    fontWeight: 'bold',
-    color: '#333',
-    fontSize: '14px'
-};
-
-const inputStyle: React.CSSProperties = {
-    width: '100%',
-    padding: '10px',
-    border: '1px solid #ddd',
-    borderRadius: '4px',
-    fontSize: '14px',
-    fontFamily: 'inherit',
-    boxSizing: 'border-box'
-};
-
-const buttonStyle: React.CSSProperties = {
-    padding: '12px 20px',
-    border: 'none',
-    borderRadius: '5px',
-    color: 'white',
-    fontSize: '16px',
-    fontWeight: 'bold',
-    cursor: 'pointer',
-    transition: 'opacity 0.2s'
-};
-
-const textareaStyle: React.CSSProperties = {
-    width: '100%',
-    padding: '10px',
-    border: '1px solid #ddd',
-    borderRadius: '4px',
-    fontSize: '14px',
-    fontFamily: 'inherit',
-    boxSizing: 'border-box',
-    resize: 'vertical'
-};
-

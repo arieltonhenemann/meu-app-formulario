@@ -21,7 +21,7 @@ export interface DetalhesAcao {
   tipoFormulario?: TipoFormularioAuditoria;
   statusAnterior?: string;
   statusNovo?: string;
-  dadosAlterados?: any;
+  dadosAlterados?: Record<string, unknown>;
   observacoes?: string;
 }
 
@@ -41,7 +41,7 @@ export const criarLogAuditoria = (
   usuario: UsuarioAuditoria,
   detalhes: DetalhesAcao
 ): LogAuditoria => {
-  const id = Math.random().toString(36).substring(2) + Date.now().toString(36);
+  const id = crypto.randomUUID();
   
   return {
     id,

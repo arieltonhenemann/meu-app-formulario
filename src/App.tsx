@@ -1,19 +1,23 @@
 import React from 'react';
 import './App.css';
+import { AuthProvider } from './shared/contexts/AuthContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { SystemController } from './components/SystemController';
-import { AuthProvider } from './shared/contexts/AuthContext';
+import { ToastContainer } from './shared/components/Toast';
+import { ErrorBoundary } from './shared/components/ErrorBoundary';
 
-// Componente principal
 function App() {
   return (
-    <AuthProvider>
-      <div className="App">
-        <ProtectedRoute>
-          <SystemController />
-        </ProtectedRoute>
-      </div>
-    </AuthProvider>
+    <ErrorBoundary>
+      <AuthProvider>
+        <div className="App">
+          <ProtectedRoute>
+            <SystemController />
+          </ProtectedRoute>
+          <ToastContainer />
+        </div>
+      </AuthProvider>
+    </ErrorBoundary>
   );
 }
 

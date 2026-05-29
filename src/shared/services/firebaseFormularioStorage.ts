@@ -7,6 +7,7 @@ import {
   updateDoc,
   deleteDoc,
   query,
+  where,
   orderBy,
   onSnapshot
 } from "firebase/firestore";
@@ -53,13 +54,14 @@ class FirebaseFormularioStorageService {
   }
 
   // Obter todos os formulários
-  async obterTodos(): Promise<FormularioSalvo[]> {
+  async obterTodos(uidFilter?: string): Promise<FormularioSalvo[]> {
     if (this.isOnline && this.isFirebaseConfigured()) {
       try {
-        const q = query(
-          collection(db, COLLECTION_NAME),
-          orderBy("dataModificacao", "desc")
-        );
+        const constraints: any[] = [orderBy("dataModificacao", "desc")];
+        if (uidFilter) {
+          constraints.unshift(where("criadoPor.uid", "==", uidFilter));
+        }
+        const q = query(collection(db, COLLECTION_NAME), ...constraints);
         const querySnapshot = await getDocs(q);
 
         const formularios: FormularioSalvo[] = [];
@@ -79,10 +81,10 @@ class FirebaseFormularioStorageService {
           "Erro ao buscar no Firebase, usando localStorage:",
           error
         );
-        return this.obterDoLocalStorage();
+        return this.obterDoLocalStorage(uidFilter);
       }
     } else {
-      return this.obterDoLocalStorage();
+      return this.obterDoLocalStorage(uidFilter);
     }
   }
 
@@ -283,21 +285,23 @@ class FirebaseFormularioStorageService {
 
   // Escutar mudanças em tempo real (opcional)
   escutarMudancas(
-    callback: (formularios: FormularioSalvo[]) => void
+    callback: (formularios: FormularioSalvo[]) => void,
+    uidFilter?: string
   ): () => void {
     this.listeners.push(callback);
 
     if (!this.isOnline || !this.isFirebaseConfigured()) {
       // Se offline, usar dados do localStorage
-      const formularios = this.obterDoLocalStorage();
+      const formularios = this.obterDoLocalStorage(uidFilter);
       callback(formularios);
       return () => {};
     }
 
-    const q = query(
-      collection(db, COLLECTION_NAME),
-      orderBy("dataModificacao", "desc")
-    );
+    const constraints: any[] = [orderBy("dataModificacao", "desc")];
+    if (uidFilter) {
+      constraints.unshift(where("criadoPor.uid", "==", uidFilter));
+    }
+    const q = query(collection(db, COLLECTION_NAME), ...constraints);
 
     const unsubscribe = onSnapshot(
       q,
@@ -317,7 +321,7 @@ class FirebaseFormularioStorageService {
       },
       (error) => {
         console.error("Erro ao escutar mudanças, usando cache local:", error);
-        const formularios = this.obterDoLocalStorage();
+        const formularios = this.obterDoLocalStorage(uidFilter);
         callback(formularios);
       }
     );
@@ -332,10 +336,14 @@ class FirebaseFormularioStorageService {
 
   // === MÉTODOS PRIVADOS PARA LOCALSTORAGE ===
 
-  private obterDoLocalStorage(): FormularioSalvo[] {
+  private obterDoLocalStorage(uidFilter?: string): FormularioSalvo[] {
     try {
       const data = localStorage.getItem(STORAGE_KEY);
-      return data ? JSON.parse(data) : [];
+      const formularios: FormularioSalvo[] = data ? JSON.parse(data) : [];
+      if (uidFilter) {
+        return formularios.filter((f) => f.criadoPor?.uid === uidFilter);
+      }
+      return formularios;
     } catch (error) {
       console.error("Erro ao carregar do localStorage:", error);
       return [];

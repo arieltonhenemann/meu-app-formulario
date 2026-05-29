@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { FormularioSalvo } from '../shared/types/formularioSalvo';
 import { firebaseFormularioStorage } from '../shared/services/firebaseFormularioStorage';
 import { exportadorRelatorios } from '../shared/utils/exportarRelatorios';
+import { toast } from '../shared/components/Toast';
+import { formatarData } from '../shared/utils';
 
 interface EstadoRelatorios {
   dataInicio: string;
@@ -9,7 +11,7 @@ interface EstadoRelatorios {
   formularios: FormularioSalvo[];
   formulariosFiltrados: FormularioSalvo[];
   carregando: boolean;
-  estatisticas: any;
+  estatisticas: { total: number; porTipo: Record<string, number> } | null;
   filtroTipo: string;
 }
 
@@ -121,10 +123,10 @@ export const RelatoriosPage: React.FC = () => {
         dataFimTexto
       );
 
-      alert('✅ Relatório PDF gerado com sucesso!');
+      toast.success('Relatório PDF gerado com sucesso!');
     } catch (error) {
       console.error('❌ Erro ao exportar PDF:', error);
-      alert('❌ Erro ao gerar relatório PDF. Tente novamente.');
+      toast.error('Erro ao gerar relatório PDF. Tente novamente.');
     } finally {
       setExportando(prev => ({ ...prev, pdf: false }));
     }
@@ -145,10 +147,10 @@ export const RelatoriosPage: React.FC = () => {
         dataFimTexto
       );
 
-      alert('✅ Planilha Excel gerada com sucesso!');
+      toast.success('Planilha Excel gerada com sucesso!');
     } catch (error) {
       console.error('❌ Erro ao exportar Excel:', error);
-      alert('❌ Erro ao gerar planilha Excel. Tente novamente.');
+      toast.error('Erro ao gerar planilha Excel. Tente novamente.');
     } finally {
       setExportando(prev => ({ ...prev, excel: false }));
     }
@@ -161,11 +163,6 @@ export const RelatoriosPage: React.FC = () => {
       dataFim: '',
       filtroTipo: 'TODOS'
     }));
-  };
-
-  const formatarData = (data: any) => {
-    if (!data) return 'N/A';
-    return new Date(data).toLocaleDateString('pt-BR');
   };
 
   if (estado.carregando) {
@@ -459,13 +456,13 @@ export const RelatoriosPage: React.FC = () => {
                         {dados.codigoOS || 'N/A'}
                       </td>
                       <td style={{ padding: '12px', borderBottom: '1px solid #dee2e6' }}>
-                        {formatarData(formulario.dataCriacao)}
+                        {formulario.dataCriacao ? formatarData(new Date(formulario.dataCriacao)) : 'N/A'}
                       </td>
                       <td style={{ padding: '12px', borderBottom: '1px solid #dee2e6' }}>
-                        {(dados as any).regiao || 'N/A'}
+                        {'regiao' in dados ? dados.regiao : 'N/A'}
                       </td>
                       <td style={{ padding: '12px', borderBottom: '1px solid #dee2e6' }}>
-                        {(dados as any).cto || (dados as any).pon || 'Links'}
+                        {'cto' in dados ? dados.cto : ('pon' in dados ? dados.pon : 'Links')}
                       </td>
                       <td style={{ padding: '12px', borderBottom: '1px solid #dee2e6', maxWidth: '200px' }}>
                         <div
@@ -474,9 +471,9 @@ export const RelatoriosPage: React.FC = () => {
                             textOverflow: 'ellipsis',
                             whiteSpace: 'nowrap'
                           }}
-                          title={(dados as any).problema || 'N/A'}
+                          title={dados.problema || 'N/A'}
                         >
-                          {(dados as any).problema || 'N/A'}
+                          {dados.problema || 'N/A'}
                         </div>
                       </td>
                       <td style={{ padding: '12px', borderBottom: '1px solid #dee2e6', maxWidth: '200px' }}>
@@ -486,9 +483,9 @@ export const RelatoriosPage: React.FC = () => {
                             textOverflow: 'ellipsis',
                             whiteSpace: 'nowrap'
                           }}
-                          title={(dados as any).endereco || 'N/A'}
+                          title={'endereco' in dados ? dados.endereco : 'N/A'}
                         >
-                          {(dados as any).endereco || 'N/A'}
+                          {'endereco' in dados ? dados.endereco : 'N/A'}
                         </div>
                       </td>
                     </tr>

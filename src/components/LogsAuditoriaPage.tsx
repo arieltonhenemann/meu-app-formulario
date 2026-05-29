@@ -7,7 +7,7 @@ import {
   obterDescricaoAcao
 } from '../shared/types/auditoria';
 import { auditoriaService } from '../shared/services/auditoriaService';
-import { formatarData } from '../shared';
+import { formatarData } from '../shared/utils';
 
 export const LogsAuditoriaPage: React.FC = () => {
   const [logs, setLogs] = useState<LogAuditoria[]>([]);
@@ -17,7 +17,11 @@ export const LogsAuditoriaPage: React.FC = () => {
   const [filtroUsuario, setFiltroUsuario] = useState('');
   const [filtroPeriodo, setFiltroPeriodo] = useState('7'); // últimos 7 dias
   const [busca, setBusca] = useState('');
-  const [estatisticas, setEstatisticas] = useState<any>(null);
+  const [estatisticas, setEstatisticas] = useState<{
+    total: number;
+    porAcao: Record<string, number>;
+    ultimasSemanas: { semana: string; total: number }[];
+  } | null>(null);
   const [isOnline, setIsOnline] = useState(auditoriaService.estaOnline());
 
   useEffect(() => {

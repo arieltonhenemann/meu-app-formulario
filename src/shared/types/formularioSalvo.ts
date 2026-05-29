@@ -64,7 +64,7 @@ export const criarFormularioSalvo = <
   }
 ): FormularioSalvo => {
   const agora = new Date().toISOString();
-  const id = Math.random().toString(36).substring(2) + Date.now().toString(36);
+  const id = crypto.randomUUID();
 
   return {
     id,

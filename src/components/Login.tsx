@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../shared/contexts/AuthContext';
+import { toast } from '../shared/components/Toast';
 
 export const Login: React.FC = () => {
   const { login, registrar, isLoading } = useAuth();
@@ -46,15 +47,15 @@ export const Login: React.FC = () => {
       } else {
         const user = await registrar(formData.email, formData.password);
         // Mostrar mensagem de sucesso após registro
-        alert(
-          `✅ Conta criada com sucesso!\n\n` +
+        toast.success(
+          `Conta criada com sucesso!\n\n` +
           `📧 Email: ${user.email}\n` +
           `⏳ Status: Aguardando aprovação\n\n` +
           `O administrador foi notificado e você receberá acesso em breve.`
         );
       }
-    } catch (error: any) {
-      setError(error.message || 'Erro inesperado. Tente novamente.');
+    } catch (error: unknown) {
+      setError((error as Error).message || 'Erro inesperado. Tente novamente.');
     }
   };
 

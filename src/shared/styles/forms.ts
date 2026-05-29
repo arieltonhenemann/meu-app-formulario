@@ -1,0 +1,93 @@
+import React from 'react';
+
+export const labelStyle: React.CSSProperties = {
+  display: 'block',
+  marginBottom: '5px',
+  fontWeight: 'bold',
+  color: '#333',
+  fontSize: '14px'
+};
+
+export const inputStyle: React.CSSProperties = {
+  width: '100%',
+  padding: '10px',
+  border: '1px solid #ddd',
+  borderRadius: '4px',
+  fontSize: '14px',
+  fontFamily: 'inherit',
+  boxSizing: 'border-box'
+};
+
+export const buttonStyle: React.CSSProperties = {
+  padding: '12px 20px',
+  border: 'none',
+  borderRadius: '5px',
+  color: 'white',
+  fontSize: '16px',
+  fontWeight: 'bold',
+  cursor: 'pointer',
+  transition: 'opacity 0.2s'
+};
+
+export const cardStyle: React.CSSProperties = {
+  backgroundColor: '#fff',
+  padding: '20px',
+  borderRadius: '8px',
+  boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+  border: '1px solid #e9ecef'
+};
+
+export const formContainerStyle: React.CSSProperties = {
+  maxWidth: '800px',
+  margin: '0 auto',
+  padding: '20px'
+};
+
+export const formCardStyle: React.CSSProperties = {
+  backgroundColor: '#fff',
+  padding: '30px',
+  borderRadius: '10px',
+  boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+};
+
+export const textareaStyle: React.CSSProperties = {
+  width: '100%',
+  padding: '10px',
+  border: '1px solid #ddd',
+  borderRadius: '4px',
+  fontSize: '14px',
+  fontFamily: 'inherit',
+  boxSizing: 'border-box',
+  resize: 'vertical'
+};
+
+export const badgeStyle: React.CSSProperties = {
+  padding: '4px 8px',
+  borderRadius: '12px',
+  fontSize: '0.75rem',
+  fontWeight: 'bold',
+  textTransform: 'uppercase',
+  whiteSpace: 'nowrap'
+};
+
+export const statCardStyle: React.CSSProperties = {
+  backgroundColor: '#fff',
+  padding: '15px',
+  borderRadius: '8px',
+  boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+  border: '1px solid #e9ecef',
+  borderLeft: '4px solid',
+};
+
+export const gridStyle: React.CSSProperties = {
+  display: 'grid',
+  gridTemplateColumns: '1fr 1fr',
+  gap: '20px',
+  marginBottom: '20px'
+};
+
+export const flexCenterStyle: React.CSSProperties = {
+  display: 'flex',
+  justifyContent: 'center',
+  alignItems: 'center',
+};

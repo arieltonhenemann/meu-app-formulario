@@ -1,18 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { OrdemServicoPON, criarPONVazia } from '../shared/types/pon';
 import { gerarArquivoPON } from '../shared/utils/gerarArquivoTxt';
-// import { compatibilityStorage } from '../shared/services/compatibilityStorage';
 import { firebaseFormularioStorage } from '../shared/services/firebaseFormularioStorage';
 import { useAuth } from '../shared/contexts/AuthContext';
-import { auditoriaService } from '../shared/services/auditoriaService';
 import { TxtModal } from './TxtModal';
+import { labelStyle, inputStyle, buttonStyle, formContainerStyle, formCardStyle, textareaStyle } from '../shared/styles/forms';
+import { toast } from '../shared/components/Toast';
+import { registrarAcaoAuditoria } from '../shared/utils/auditoriaHelper';
 
 interface FormularioPONProps {
   onSubmit?: (dados: OrdemServicoPON) => void;
-  dadosIniciais?: any;
+  dadosIniciais?: Partial<OrdemServicoPON>;
   formularioId?: string;
-  modoGerenciamento?: boolean; // Nova prop para identificar se está no gerenciamento
-  onFinalizar?: (formularioId: string) => void; // Callback para finalizar
+  modoGerenciamento?: boolean;
+  onFinalizar?: (formularioId: string) => void;
 }
 
 export const FormularioPON: React.FC<FormularioPONProps> = ({ onSubmit, dadosIniciais, formularioId, modoGerenciamento, onFinalizar }) => {
@@ -47,28 +48,18 @@ export const FormularioPON: React.FC<FormularioPONProps> = ({ onSubmit, dadosIni
       console.log('Dados da O.S PON:', formData);
       onSubmit?.(formData);
 
-      // Verificar se está editando um formulário existente ou criando um novo
       if (formularioId) {
-        // Modo edição - atualizar formulário existente
         await firebaseFormularioStorage.atualizar(formularioId, formData);
 
-        // Registrar log de auditoria
-        if (user) {
-          await auditoriaService.registrarAcao('EDITAR_FORMULARIO', {
-            uid: user.uid,
-            email: user.email || '',
-            displayName: user.displayName
-          }, {
-            formularioId,
-            codigoOS: formData.codigoOS,
-            tipoFormulario: 'PON',
-            dadosAlterados: formData
-          });
-        }
+        await registrarAcaoAuditoria(user, 'EDITAR_FORMULARIO', {
+          formularioId,
+          codigoOS: formData.codigoOS,
+          tipoFormulario: 'PON',
+          dadosAlterados: formData
+        });
 
-        alert('Ordem de Serviço PON atualizada com sucesso!');
+        toast.success('Ordem de Serviço PON atualizada com sucesso!');
       } else {
-        // Modo criação - criar novo formulário
         const criadoPor = user ? {
           uid: user.uid,
           email: user.email || '',
@@ -76,30 +67,21 @@ export const FormularioPON: React.FC<FormularioPONProps> = ({ onSubmit, dadosIni
         } : undefined;
         const formularioSalvo = await firebaseFormularioStorage.salvar('PON', formData, criadoPor);
 
-        // Registrar log de auditoria
-        if (user) {
-          await auditoriaService.registrarAcao('CRIAR_FORMULARIO', {
-            uid: user.uid,
-            email: user.email || '',
-            displayName: user.displayName
-          }, {
-            formularioId: formularioSalvo.id,
-            codigoOS: formData.codigoOS,
-            tipoFormulario: 'PON'
-          });
-        }
+        await registrarAcaoAuditoria(user, 'CRIAR_FORMULARIO', {
+          formularioId: formularioSalvo.id,
+          codigoOS: formData.codigoOS,
+          tipoFormulario: 'PON'
+        });
 
-        // Gerar arquivo TXT apenas na criação
         gerarArquivoPON(formData);
 
-        alert('Ordem de Serviço PON salva e arquivo TXT gerado com sucesso!');
+        toast.success('Ordem de Serviço PON salva e arquivo TXT gerado com sucesso!');
 
-        // Se não está editando, limpar formulário
         limparFormulario();
       }
     } catch (error) {
       console.error('Erro ao salvar formulário:', error);
-      alert('Erro ao salvar. Os dados foram salvos localmente e serão sincronizados quando possível.');
+      toast.error('Erro ao salvar. Os dados foram salvos localmente e serão sincronizados quando possível.');
     }
   };
 
@@ -110,7 +92,7 @@ export const FormularioPON: React.FC<FormularioPONProps> = ({ onSubmit, dadosIni
       setTxtModalAberto(true);
     } catch (err) {
       console.error('Erro ao gerar TXT:', err);
-      alert('Erro ao gerar arquivo TXT.');
+      toast.error('Erro ao gerar arquivo TXT.');
     }
   };
 
@@ -119,13 +101,8 @@ export const FormularioPON: React.FC<FormularioPONProps> = ({ onSubmit, dadosIni
   };
 
   return (
-    <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
-      <div style={{
-        backgroundColor: '#fff',
-        padding: '30px',
-        borderRadius: '10px',
-        boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
-      }}>
+    <div style={formContainerStyle}>
+      <div style={formCardStyle}>
         <h2 style={{
           textAlign: 'center',
           marginBottom: '30px',
@@ -137,7 +114,6 @@ export const FormularioPON: React.FC<FormularioPONProps> = ({ onSubmit, dadosIni
         </h2>
 
         <form onSubmit={handleSubmit}>
-          {/* Código da O.S */}
           <div style={{ marginBottom: '20px' }}>
             <label style={labelStyle}>CÓDIGO DA O.S:</label>
             <input
@@ -150,7 +126,6 @@ export const FormularioPON: React.FC<FormularioPONProps> = ({ onSubmit, dadosIni
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
-            {/* PON */}
             <div>
               <label style={labelStyle}>PON:</label>
               <input
@@ -162,7 +137,6 @@ export const FormularioPON: React.FC<FormularioPONProps> = ({ onSubmit, dadosIni
               />
             </div>
 
-            {/* Região */}
             <div>
               <label style={labelStyle}>REGIÃO:</label>
               <input
@@ -175,7 +149,6 @@ export const FormularioPON: React.FC<FormularioPONProps> = ({ onSubmit, dadosIni
             </div>
           </div>
 
-          {/* Novo bloco para Placa e Porta logo após PON e REGIÃO */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
             <div>
               <label style={labelStyle}>PLACA:</label>
@@ -200,7 +173,6 @@ export const FormularioPON: React.FC<FormularioPONProps> = ({ onSubmit, dadosIni
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
-            {/* Clientes Afetados */}
             <div>
               <label style={labelStyle}>CLIENTES AFETADOS:</label>
               <input
@@ -212,7 +184,6 @@ export const FormularioPON: React.FC<FormularioPONProps> = ({ onSubmit, dadosIni
               />
             </div>
 
-            {/* Média de Nível Pos */}
             <div>
               <label style={labelStyle}>MÉDIA DE NÍVEL POS:</label>
               <input
@@ -225,52 +196,45 @@ export const FormularioPON: React.FC<FormularioPONProps> = ({ onSubmit, dadosIni
             </div>
           </div>
 
-          {/* Problema */}
           <div style={{ marginBottom: '20px' }}>
             <label style={labelStyle}>PROBLEMA:</label>
             <textarea
               value={formData.problema}
               onChange={(e) => handleChange('problema', e.target.value)}
               style={{
-                ...inputStyle,
-                minHeight: '80px',
-                resize: 'vertical'
+                ...textareaStyle,
+                minHeight: '80px'
               }}
               placeholder="Descreva o problema encontrado na PON..."
             />
           </div>
 
-          {/* Resolução */}
           <div style={{ marginBottom: '20px' }}>
             <label style={labelStyle}>RESOLUÇÃO:</label>
             <textarea
               value={formData.resolucao}
               onChange={(e) => handleChange('resolucao', e.target.value)}
               style={{
-                ...inputStyle,
-                minHeight: '80px',
-                resize: 'vertical'
+                ...textareaStyle,
+                minHeight: '80px'
               }}
               placeholder="Descreva as ações tomadas para resolver o problema..."
             />
           </div>
 
-          {/* Material Utilizado */}
           <div style={{ marginBottom: '20px' }}>
             <label style={labelStyle}>MATERIAL UTILIZADO:</label>
             <textarea
               value={formData.materialUtilizado}
               onChange={(e) => handleChange('materialUtilizado', e.target.value)}
               style={{
-                ...inputStyle,
-                minHeight: '60px',
-                resize: 'vertical'
+                ...textareaStyle,
+                minHeight: '60px'
               }}
               placeholder="Liste os materiais utilizados no reparo..."
             />
           </div>
 
-          {/* Endereço */}
           <div style={{ marginBottom: '20px' }}>
             <label style={labelStyle}>ENDEREÇO:</label>
             <input
@@ -282,7 +246,6 @@ export const FormularioPON: React.FC<FormularioPONProps> = ({ onSubmit, dadosIni
             />
           </div>
 
-          {/* Localização */}
           <div style={{ marginBottom: '30px' }}>
             <label style={labelStyle}>LOCALIZAÇÃO:</label>
             <input
@@ -294,14 +257,12 @@ export const FormularioPON: React.FC<FormularioPONProps> = ({ onSubmit, dadosIni
             />
           </div>
 
-          {/* Botões */}
           <div style={{
             display: 'flex',
             justifyContent: 'space-between',
             gap: '15px',
             marginTop: '30px'
           }}>
-            {/* Botão esquerdo - condicional baseado no modo */}
             {modoGerenciamento ? (
               <button
                 type="button"
@@ -309,28 +270,19 @@ export const FormularioPON: React.FC<FormularioPONProps> = ({ onSubmit, dadosIni
                   if (!formularioId) return;
 
                   try {
-                    // Primeiro salvar as alterações
                     await firebaseFormularioStorage.atualizar(formularioId, formData);
 
-                    // Registrar log de auditoria da edição
-                    if (user) {
-                      await auditoriaService.registrarAcao('EDITAR_FORMULARIO', {
-                        uid: user.uid,
-                        email: user.email || '',
-                        displayName: user.displayName
-                      }, {
-                        formularioId,
-                        codigoOS: formData.codigoOS,
-                        tipoFormulario: 'PON',
-                        dadosAlterados: formData
-                      });
-                    }
+                    await registrarAcaoAuditoria(user, 'EDITAR_FORMULARIO', {
+                      formularioId,
+                      codigoOS: formData.codigoOS,
+                      tipoFormulario: 'PON',
+                      dadosAlterados: formData
+                    });
 
-                    // Depois finalizar
                     onFinalizar && onFinalizar(formularioId);
                   } catch (error) {
                     console.error('Erro ao salvar antes de finalizar:', error);
-                    alert('Erro ao salvar alterações. Tente novamente.');
+                    toast.error('Erro ao salvar alterações. Tente novamente.');
                   }
                 }}
                 disabled={!formularioId}
@@ -357,7 +309,6 @@ export const FormularioPON: React.FC<FormularioPONProps> = ({ onSubmit, dadosIni
               </button>
             )}
 
-            {/* Grupo de ação (Gerar TXT + Salvar) */}
             <div style={{ display: 'flex', gap: '10px', flex: '2' }}>
               <button
                 type="button"
@@ -385,7 +336,7 @@ export const FormularioPON: React.FC<FormularioPONProps> = ({ onSubmit, dadosIni
             </div>
           </div>
         </form>
-      </div >
+      </div>
 
       <TxtModal
         isOpen={txtModalAberto}
@@ -393,36 +344,6 @@ export const FormularioPON: React.FC<FormularioPONProps> = ({ onSubmit, dadosIni
         onClose={() => setTxtModalAberto(false)}
         titulo="Visualização de Arquivo TXT - PON"
       />
-    </div >
+    </div>
   );
-};
-
-// Estilos
-const labelStyle: React.CSSProperties = {
-  display: 'block',
-  marginBottom: '5px',
-  fontWeight: 'bold',
-  color: '#333',
-  fontSize: '14px'
-};
-
-const inputStyle: React.CSSProperties = {
-  width: '100%',
-  padding: '10px',
-  border: '1px solid #ddd',
-  borderRadius: '4px',
-  fontSize: '14px',
-  fontFamily: 'inherit',
-  boxSizing: 'border-box'
-};
-
-const buttonStyle: React.CSSProperties = {
-  padding: '12px 20px',
-  border: 'none',
-  borderRadius: '5px',
-  color: 'white',
-  fontSize: '16px',
-  fontWeight: 'bold',
-  cursor: 'pointer',
-  transition: 'opacity 0.2s'
 };

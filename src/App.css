@@ -48,6 +48,18 @@ button:hover {
   transition: all 0.2s ease;
 }
 
+/* Animação para o Toast */
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
 /* Scrollbar customizada */
 ::-webkit-scrollbar {
   width: 8px;

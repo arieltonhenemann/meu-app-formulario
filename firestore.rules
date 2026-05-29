@@ -1,0 +1,98 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ==========================================
+    // FUNÇÕES AUXILIARES
+    // ==========================================
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isAuthenticated()
+        && exists(/databases/$(database)/documents/admin_settings/admins)
+        && get(/databases/$(database)/documents/admin_settings/admins).data.lista.hasAny([request.auth.uid]);
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isOwnerOrAdmin(userId) {
+      return isOwner(userId) || isAdmin();
+    }
+
+    // Valida estrutura de um formulário
+    function isValidFormulario() {
+      let data = request.resource.data;
+      let requiredFields = ['tipo', 'dados', 'dataCriacao', 'dataModificacao', 'codigoOS', 'criadoPor'];
+      let validTypes = ['CTO', 'PON', 'LINK', 'ADEQUACAO'];
+      return data is map
+        && data.keys().hasAll(requiredFields)
+        && data.tipo in validTypes
+        && data.criadoPor is map
+        && data.criadoPor.keys().hasAll(['uid', 'email'])
+        && data.criadoPor.uid == request.auth.uid;
+    }
+
+    // Valida estrutura de um log de auditoria
+    function isValidAuditoriaLog() {
+      let data = request.resource.data;
+      return data is map
+        && data.keys().hasAll(['acao', 'usuarioId', 'usuarioEmail', 'timestamp']);
+    }
+
+    // ==========================================
+    // COLEÇÃO: admin_settings
+    // ==========================================
+    match /admin_settings/{document} {
+      allow read: if isAdmin();
+      allow write: if isAdmin();
+      allow create: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // ==========================================
+    // COLEÇÃO: users
+    // ==========================================
+    match /users/{userId} {
+      allow read: if isOwnerOrAdmin(userId);
+      allow create: if isOwner(userId);
+      allow update: if isOwnerOrAdmin(userId);
+      allow delete: if false;
+    }
+
+    // ==========================================
+    // COLEÇÃO: formularios
+    // ==========================================
+    match /formularios/{formularioId} {
+      // Usuário só lê próprios formulários; admin lê todos
+      allow read: if isAuthenticated()
+        && (resource.data.criadoPor.uid == request.auth.uid || isAdmin());
+
+      // Criação: autenticado, estrutura válida, criadoPor == próprio uid
+      allow create: if isAuthenticated() && isValidFormulario();
+
+      // Atualização: próprio criador ou admin
+      allow update: if isAuthenticated()
+        && (resource.data.criadoPor.uid == request.auth.uid || isAdmin());
+
+      // Exclusão: apenas admin
+      allow delete: if isAdmin();
+
+      // Validação de dados em create/update (exceto admin)
+      allow create, update: if isAdmin() || request.resource.data.criadoPor.uid == request.auth.uid;
+    }
+
+    // ==========================================
+    // COLEÇÃO: logs_auditoria
+    // ==========================================
+    match /logs_auditoria/{logId} {
+      allow create: if isAuthenticated() && isValidAuditoriaLog();
+      allow read: if isAdmin();
+      allow update, delete: if false;
+    }
+  }
+}

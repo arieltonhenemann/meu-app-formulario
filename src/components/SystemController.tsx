@@ -1,62 +1,36 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, Suspense, lazy } from 'react';
 import { useAuth } from '../shared/contexts/AuthContext';
-import { userService } from '../shared/services/userService';
-import { FormularioOS } from './FormularioOS';
-import { FormularioPON } from './FormularioPON';
-import { FormularioLINK } from './FormularioLINK';
-import { FormularioAdequacao } from './FormularioAdequacao';
 import { GerenciarFormularios } from './GerenciarFormularios';
 import { NavegacaoFormularios, TelaAtiva } from './NavegacaoFormularios';
 import { Header } from './Header';
-import { AdminPanel } from './AdminPanel';
-import { RelatoriosPage } from './RelatoriosPage';
-import { LogsAuditoriaPage } from './LogsAuditoriaPage';
-import { ConditionalEmergencyButton } from './ConditionalEmergencyButton';
+
+const FormularioOS = lazy(() => import('./FormularioOS').then(m => ({ default: m.FormularioOS })));
+const FormularioPON = lazy(() => import('./FormularioPON').then(m => ({ default: m.FormularioPON })));
+const FormularioLINK = lazy(() => import('./FormularioLINK').then(m => ({ default: m.FormularioLINK })));
+const FormularioAdequacao = lazy(() => import('./FormularioAdequacao').then(m => ({ default: m.FormularioAdequacao })));
+const AdminPanel = lazy(() => import('./AdminPanel').then(m => ({ default: m.AdminPanel })));
+const RelatoriosPage = lazy(() => import('./RelatoriosPage').then(m => ({ default: m.RelatoriosPage })));
+const LogsAuditoriaPage = lazy(() => import('./LogsAuditoriaPage').then(m => ({ default: m.LogsAuditoriaPage })));
+
 import { OrdemServico } from '../shared/types/os';
 import { OrdemServicoPON } from '../shared/types/pon';
 import { OrdemServicoLINK } from '../shared/types/link';
 import { OrdemServicoAdequacao } from '../shared/types/adequacao';
 import { FormularioSalvo } from '../shared/types/formularioSalvo';
-import { formatarData } from '../shared';
+import { formatarData } from '../shared/utils';
+import { firebaseFormularioStorage } from '../shared/services/firebaseFormularioStorage';
+import { toast } from '../shared/components/Toast';
+import { registrarAcaoAuditoria } from '../shared/utils/auditoriaHelper';
 import type { TipoFormularioAuditoria } from '../shared/types/auditoria';
 
 export const SystemController: React.FC = () => {
-  const { user } = useAuth();
+  const { user, isAdmin, checkingAdmin } = useAuth();
   const [telaAtiva, setTelaAtiva] = useState<TelaAtiva>('GERENCIAR');
   const [formularioEditando, setFormularioEditando] = useState<FormularioSalvo | null>(null);
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [checkingAdmin, setCheckingAdmin] = useState(true);
-
-  // Verificar se é admin
-  useEffect(() => {
-    const verificarAdmin = async () => {
-      if (user?.uid) {
-        setCheckingAdmin(true);
-        try {
-          const ehAdmin = await userService.verificarSeEhAdmin(user.uid);
-          setIsAdmin(ehAdmin);
-        } catch (error) {
-          console.error('Erro ao verificar admin:', error);
-          setIsAdmin(false);
-        } finally {
-          setCheckingAdmin(false);
-        }
-      } else {
-        setCheckingAdmin(false);
-        setIsAdmin(false);
-      }
-    };
-    verificarAdmin();
-  }, [user]);
 
   const editarFormulario = (formulario: FormularioSalvo) => {
     setFormularioEditando(formulario);
     setTelaAtiva(formulario.tipo as TelaAtiva);
-  };
-
-  const novoFormulario = () => {
-    setFormularioEditando(null);
-    setTelaAtiva('CTO');
   };
 
   const voltarParaGerenciar = () => {
@@ -64,72 +38,32 @@ export const SystemController: React.FC = () => {
     setTelaAtiva('GERENCIAR');
   };
 
-  const handleSubmitCTO = (dados: OrdemServico) => {
-    console.log('Dados da Ordem de Serviço CTO:', dados);
-    // Se estava editando, voltar para gerenciar após salvar
+  const handleSubmit = async (_dados: OrdemServico | OrdemServicoPON | OrdemServicoLINK | OrdemServicoAdequacao) => {
     if (formularioEditando) {
-      setTimeout(() => voltarParaGerenciar(), 1000);
+      voltarParaGerenciar();
     }
   };
 
-  const handleSubmitPON = (dados: OrdemServicoPON) => {
-    console.log('Dados da Ordem de Serviço PON:', dados);
-    // Se estava editando, voltar para gerenciar após salvar
-    if (formularioEditando) {
-      setTimeout(() => voltarParaGerenciar(), 1000);
-    }
-  };
-
-  const handleSubmitLINK = (dados: OrdemServicoLINK) => {
-    console.log('Dados da Ordem de Serviço LINK:', dados);
-    // Se estava editando, voltar para gerenciar após salvar
-    if (formularioEditando) {
-      setTimeout(() => voltarParaGerenciar(), 1000);
-    }
-  };
-
-  const handleSubmitAdequacao = (dados: OrdemServicoAdequacao) => {
-    console.log('Dados da Ordem de Serviço ADEQUACAO:', dados);
-    // Se estava editando, voltar para gerenciar após salvar
-    if (formularioEditando) {
-      setTimeout(() => voltarParaGerenciar(), 1000);
-    }
-  };
-
-  // Nova função para finalizar formulários
   const handleFinalizar = async (formularioId: string) => {
     try {
-      const { firebaseFormularioStorage } = await import('../shared/services/firebaseFormularioStorage');
-      const { auditoriaService } = await import('../shared/services/auditoriaService');
-
-      // Obter dados do formulário antes de finalizar
       const formulario = formularioEditando;
-
       const sucesso = await firebaseFormularioStorage.atualizarStatus(formularioId, 'finalizado');
       if (sucesso) {
-        // Registrar log de auditoria
         if (user && formulario) {
-          await auditoriaService.registrarAcao('FINALIZAR_FORMULARIO', {
-            uid: user.uid,
-            email: user.email || '',
-            displayName: user.displayName
-          }, {
+          await registrarAcaoAuditoria(user, 'FINALIZAR_FORMULARIO', {
             formularioId,
             codigoOS: formulario.codigoOS,
             tipoFormulario: formulario.tipo as TipoFormularioAuditoria,
             statusAnterior: 'pendente',
-            statusNovo: 'finalizado'
+            statusNovo: 'finalizado',
           });
         }
-
-        alert('Ordem de serviço finalizada com sucesso!');
-
-        // Voltar para a tela de gerenciamento após finalizar
-        setTimeout(() => voltarParaGerenciar(), 1000);
+        toast.success('Ordem de serviço finalizada com sucesso!');
+        voltarParaGerenciar();
       }
     } catch (error) {
       console.error('Erro ao finalizar formulário:', error);
-      alert('Erro ao finalizar. Tente novamente.');
+      toast.error('Erro ao finalizar. Tente novamente.');
     }
   };
 
@@ -138,98 +72,59 @@ export const SystemController: React.FC = () => {
       return (
         <GerenciarFormularios
           onEditarFormulario={editarFormulario}
-          onNovoFormulario={novoFormulario}
         />
       );
     }
 
-    if (telaAtiva === 'RELATORIOS') {
+    if (telaAtiva === 'RELATORIOS' || telaAtiva === 'LOGS' || telaAtiva === 'ADMIN') {
       if (!isAdmin) {
-        // Redirecionar não-admins para gerenciar
         setTelaAtiva('GERENCIAR');
         return null;
       }
-      return <RelatoriosPage />;
-    }
-
-    if (telaAtiva === 'LOGS') {
-      if (!isAdmin) {
-        // Redirecionar não-admins para gerenciar
-        setTelaAtiva('GERENCIAR');
-        return null;
-      }
-      return <LogsAuditoriaPage />;
-    }
-
-    // Telas administrativas - só admins podem acessar
-    if (telaAtiva === 'ADMIN') {
-      if (!isAdmin) {
-        // Redirecionar não-admins para gerenciar
-        setTelaAtiva('GERENCIAR');
-        return null;
-      }
-      return <AdminPanel />;
+      const SuspenseFallback = () => (
+        <div style={{ textAlign: 'center', padding: '60px', color: '#666' }}>
+          <div style={{ fontSize: '2rem', marginBottom: '15px' }}>⏳</div>
+          <p>Carregando...</p>
+        </div>
+      );
+      if (telaAtiva === 'RELATORIOS') return <Suspense fallback={<SuspenseFallback />}><RelatoriosPage /></Suspense>;
+      if (telaAtiva === 'LOGS') return <Suspense fallback={<SuspenseFallback />}><LogsAuditoriaPage /></Suspense>;
+      return <Suspense fallback={<SuspenseFallback />}><AdminPanel /></Suspense>;
     }
 
     const dadosIniciais = formularioEditando?.dados;
     const formularioId = formularioEditando?.id;
-    const modoGerenciamento = !!formularioEditando; // Estamos no modo gerenciamento se está editando
+    const modoGerenciamento = !!formularioEditando;
+
+    const SuspenseFallback = () => (
+      <div style={{ textAlign: 'center', padding: '60px', color: '#666' }}>
+        <div style={{ fontSize: '2rem', marginBottom: '15px' }}>⏳</div>
+        <p>Carregando formulário...</p>
+      </div>
+    );
+
+    const formProps = {
+      onSubmit: handleSubmit,
+      dadosIniciais,
+      formularioId,
+      modoGerenciamento,
+      onFinalizar: handleFinalizar,
+    };
 
     switch (telaAtiva) {
       case 'CTO':
-        return (
-          <FormularioOS
-            onSubmit={handleSubmitCTO}
-            dadosIniciais={dadosIniciais}
-            formularioId={formularioId}
-            modoGerenciamento={modoGerenciamento}
-            onFinalizar={handleFinalizar}
-          />
-        );
+        return <Suspense fallback={<SuspenseFallback />}><FormularioOS {...formProps} /></Suspense>;
       case 'PON':
-        return (
-          <FormularioPON
-            onSubmit={handleSubmitPON}
-            dadosIniciais={dadosIniciais}
-            formularioId={formularioId}
-            modoGerenciamento={modoGerenciamento}
-            onFinalizar={handleFinalizar}
-          />
-        );
+        return <Suspense fallback={<SuspenseFallback />}><FormularioPON {...formProps} /></Suspense>;
       case 'LINK':
-        return (
-          <FormularioLINK
-            onSubmit={handleSubmitLINK}
-            dadosIniciais={dadosIniciais}
-            formularioId={formularioId}
-            modoGerenciamento={modoGerenciamento}
-            onFinalizar={handleFinalizar}
-          />
-        );
+        return <Suspense fallback={<SuspenseFallback />}><FormularioLINK {...formProps} /></Suspense>;
       case 'ADEQUACAO':
-        return (
-          <FormularioAdequacao
-            onSubmit={handleSubmitAdequacao}
-            dadosIniciais={dadosIniciais}
-            formularioId={formularioId}
-            modoGerenciamento={modoGerenciamento}
-            onFinalizar={handleFinalizar}
-          />
-        );
+        return <Suspense fallback={<SuspenseFallback />}><FormularioAdequacao {...formProps} /></Suspense>;
       default:
-        return (
-          <FormularioOS
-            onSubmit={handleSubmitCTO}
-            dadosIniciais={dadosIniciais}
-            formularioId={formularioId}
-            modoGerenciamento={modoGerenciamento}
-            onFinalizar={handleFinalizar}
-          />
-        );
+        return <Suspense fallback={<SuspenseFallback />}><FormularioOS {...formProps} /></Suspense>;
     }
   };
 
-  // Mostrar loading enquanto verifica se é admin
   if (checkingAdmin) {
     return (
       <div style={{
@@ -254,16 +149,12 @@ export const SystemController: React.FC = () => {
     );
   }
 
-
-  // Sistema de OS (padrão)
   return (
     <div style={{
       backgroundColor: '#f8f9fa',
       minHeight: '100vh'
     }}>
-      <Header
-        isAdmin={isAdmin}
-      />
+      <Header />
 
       <header style={{
         textAlign: 'center',
@@ -309,7 +200,7 @@ export const SystemController: React.FC = () => {
         {renderTelaAtiva()}
       </main>
 
-      <ConditionalEmergencyButton isAdmin={isAdmin} />
+
 
       <footer style={{
         textAlign: 'center',
@@ -317,7 +208,6 @@ export const SystemController: React.FC = () => {
         color: '#666',
         fontSize: '0.9rem'
       }}>
-        <p>💻 Sistema desenvolvido com React + TypeScript</p>
         <p style={{ marginTop: '5px', fontSize: '0.8rem' }}>
           Tela ativa: <strong>{telaAtiva}</strong>
           {formularioEditando && (

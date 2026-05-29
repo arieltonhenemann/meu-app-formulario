@@ -1,18 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { OrdemServico, criarOSVazia } from '../shared/types/os';
 import { gerarArquivoCTO } from '../shared/utils/gerarArquivoTxt';
-// import { compatibilityStorage } from '../shared/services/compatibilityStorage';
 import { firebaseFormularioStorage } from '../shared/services/firebaseFormularioStorage';
 import { useAuth } from '../shared/contexts/AuthContext';
-import { auditoriaService } from '../shared/services/auditoriaService';
 import { TxtModal } from './TxtModal';
+import { labelStyle, inputStyle, buttonStyle, formContainerStyle, formCardStyle, textareaStyle } from '../shared/styles/forms';
+import { toast } from '../shared/components/Toast';
+import { registrarAcaoAuditoria } from '../shared/utils/auditoriaHelper';
 
 interface FormularioOSProps {
   onSubmit?: (dados: OrdemServico) => void;
-  dadosIniciais?: any;
+  dadosIniciais?: Partial<OrdemServico>;
   formularioId?: string;
-  modoGerenciamento?: boolean; // Nova prop para identificar se está no gerenciamento
-  onFinalizar?: (formularioId: string) => void; // Callback para finalizar
+  modoGerenciamento?: boolean;
+  onFinalizar?: (formularioId: string) => void;
 }
 
 export const FormularioOS: React.FC<FormularioOSProps> = ({ onSubmit, dadosIniciais, formularioId, modoGerenciamento, onFinalizar }) => {
@@ -40,7 +41,6 @@ export const FormularioOS: React.FC<FormularioOSProps> = ({ onSubmit, dadosInici
       [field]: value
     }));
 
-    // Remove erro quando usuário começa a digitar
     if (errors[field]) {
       setErrors(prev => ({
         ...prev,
@@ -50,7 +50,6 @@ export const FormularioOS: React.FC<FormularioOSProps> = ({ onSubmit, dadosInici
   };
 
   const validarFormulario = (): boolean => {
-    // Todos os campos são opcionais agora
     return true;
   };
 
@@ -62,28 +61,18 @@ export const FormularioOS: React.FC<FormularioOSProps> = ({ onSubmit, dadosInici
         console.log('Dados da O.S:', formData);
         onSubmit?.(formData);
 
-        // Verificar se está editando um formulário existente ou criando um novo
         if (formularioId) {
-          // Modo edição - atualizar formulário existente
           await firebaseFormularioStorage.atualizar(formularioId, formData);
 
-          // Registrar log de auditoria
-          if (user) {
-            await auditoriaService.registrarAcao('EDITAR_FORMULARIO', {
-              uid: user.uid,
-              email: user.email || '',
-              displayName: user.displayName
-            }, {
-              formularioId,
-              codigoOS: formData.codigoOS,
-              tipoFormulario: 'CTO',
-              dadosAlterados: formData
-            });
-          }
+          await registrarAcaoAuditoria(user, 'EDITAR_FORMULARIO', {
+            formularioId,
+            codigoOS: formData.codigoOS,
+            tipoFormulario: 'CTO',
+            dadosAlterados: formData
+          });
 
-          alert('Ordem de Serviço CTO atualizada com sucesso!');
+          toast.success('Ordem de Serviço CTO atualizada com sucesso!');
         } else {
-          // Modo criação - criar novo formulário
           const criadoPor = user ? {
             uid: user.uid,
             email: user.email || '',
@@ -91,30 +80,21 @@ export const FormularioOS: React.FC<FormularioOSProps> = ({ onSubmit, dadosInici
           } : undefined;
           const formularioSalvo = await firebaseFormularioStorage.salvar('CTO', formData, criadoPor);
 
-          // Registrar log de auditoria
-          if (user) {
-            await auditoriaService.registrarAcao('CRIAR_FORMULARIO', {
-              uid: user.uid,
-              email: user.email || '',
-              displayName: user.displayName
-            }, {
-              formularioId: formularioSalvo.id,
-              codigoOS: formData.codigoOS,
-              tipoFormulario: 'CTO'
-            });
-          }
+          await registrarAcaoAuditoria(user, 'CRIAR_FORMULARIO', {
+            formularioId: formularioSalvo.id,
+            codigoOS: formData.codigoOS,
+            tipoFormulario: 'CTO'
+          });
 
-          // Gerar arquivo TXT apenas na criação
           gerarArquivoCTO(formData);
 
-          alert('Ordem de Serviço CTO salva e arquivo TXT gerado com sucesso!');
+          toast.success('Ordem de Serviço CTO salva e arquivo TXT gerado com sucesso!');
 
-          // Se não está editando, limpar formulário
           limparFormulario();
         }
       } catch (error) {
         console.error('Erro ao salvar formulário:', error);
-        alert('Erro ao salvar. Os dados foram salvos localmente e serão sincronizados quando possível.');
+        toast.error('Erro ao salvar. Os dados foram salvos localmente e serão sincronizados quando possível.');
       }
     }
   };
@@ -124,7 +104,6 @@ export const FormularioOS: React.FC<FormularioOSProps> = ({ onSubmit, dadosInici
     setErrors({});
   };
 
-  // Função para gerar on-demand
   const handleGerarTxt = () => {
     try {
       const conteudo = gerarArquivoCTO(formData);
@@ -132,18 +111,13 @@ export const FormularioOS: React.FC<FormularioOSProps> = ({ onSubmit, dadosInici
       setTxtModalAberto(true);
     } catch (err) {
       console.error('Erro ao gerar TXT:', err);
-      alert('Erro ao gerar arquivo TXT.');
+      toast.error('Erro ao gerar arquivo TXT.');
     }
   };
 
   return (
-    <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
-      <div style={{
-        backgroundColor: '#fff',
-        padding: '30px',
-        borderRadius: '10px',
-        boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
-      }}>
+    <div style={formContainerStyle}>
+      <div style={formCardStyle}>
         <h2 style={{
           textAlign: 'center',
           marginBottom: '30px',
@@ -156,7 +130,6 @@ export const FormularioOS: React.FC<FormularioOSProps> = ({ onSubmit, dadosInici
 
         <form onSubmit={handleSubmit}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
-            {/* Código da O.S */}
             <div>
               <label style={labelStyle}>
                 CÓDIGO DA O.S:
@@ -170,7 +143,6 @@ export const FormularioOS: React.FC<FormularioOSProps> = ({ onSubmit, dadosInici
               />
             </div>
 
-            {/* CTO */}
             <div>
               <label style={labelStyle}>
                 CTO:
@@ -186,7 +158,6 @@ export const FormularioOS: React.FC<FormularioOSProps> = ({ onSubmit, dadosInici
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
-            {/* Região */}
             <div>
               <label style={labelStyle}>
                 REGIÃO:
@@ -200,7 +171,6 @@ export const FormularioOS: React.FC<FormularioOSProps> = ({ onSubmit, dadosInici
               />
             </div>
 
-            {/* UPC ou APC */}
             <div>
               <label style={labelStyle}>UPC OU APC:</label>
               <input
@@ -214,7 +184,6 @@ export const FormularioOS: React.FC<FormularioOSProps> = ({ onSubmit, dadosInici
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
-            {/* Splitter */}
             <div>
               <label style={labelStyle}>SPLITTER:</label>
               <input
@@ -226,7 +195,6 @@ export const FormularioOS: React.FC<FormularioOSProps> = ({ onSubmit, dadosInici
               />
             </div>
 
-            {/* Identificada */}
             <div>
               <label style={labelStyle}>IDENTIFICADA [S/N]:</label>
               <select
@@ -242,7 +210,6 @@ export const FormularioOS: React.FC<FormularioOSProps> = ({ onSubmit, dadosInici
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
-            {/* Nível Antes */}
             <div>
               <label style={labelStyle}>NÍVEL ANTES:</label>
               <input
@@ -254,7 +221,6 @@ export const FormularioOS: React.FC<FormularioOSProps> = ({ onSubmit, dadosInici
               />
             </div>
 
-            {/* Nível Pos */}
             <div>
               <label style={labelStyle}>NÍVEL POS:</label>
               <input
@@ -267,7 +233,6 @@ export const FormularioOS: React.FC<FormularioOSProps> = ({ onSubmit, dadosInici
             </div>
           </div>
 
-          {/* Problema */}
           <div style={{ marginBottom: '20px' }}>
             <label style={labelStyle}>
               PROBLEMA:
@@ -276,15 +241,13 @@ export const FormularioOS: React.FC<FormularioOSProps> = ({ onSubmit, dadosInici
               value={formData.problema}
               onChange={(e) => handleChange('problema', e.target.value)}
               style={{
-                ...inputStyle,
-                minHeight: '80px',
-                resize: 'vertical'
+                ...textareaStyle,
+                minHeight: '80px'
               }}
               placeholder="Descreva detalhadamente o problema encontrado..."
             />
           </div>
 
-          {/* Resolução */}
           <div style={{ marginBottom: '20px' }}>
             <label style={labelStyle}>
               RESOLUÇÃO:
@@ -293,30 +256,26 @@ export const FormularioOS: React.FC<FormularioOSProps> = ({ onSubmit, dadosInici
               value={formData.resolucao}
               onChange={(e) => handleChange('resolucao', e.target.value)}
               style={{
-                ...inputStyle,
-                minHeight: '80px',
-                resize: 'vertical'
+                ...textareaStyle,
+                minHeight: '80px'
               }}
               placeholder="Descreva as ações tomadas para resolver o problema..."
             />
           </div>
 
-          {/* Material Utilizado */}
           <div style={{ marginBottom: '20px' }}>
             <label style={labelStyle}>MATERIAL UTILIZADO:</label>
             <textarea
               value={formData.materialUtilizado}
               onChange={(e) => handleChange('materialUtilizado', e.target.value)}
               style={{
-                ...inputStyle,
-                minHeight: '60px',
-                resize: 'vertical'
+                ...textareaStyle,
+                minHeight: '60px'
               }}
               placeholder="Liste os materiais utilizados no reparo..."
             />
           </div>
 
-          {/* Endereço */}
           <div style={{ marginBottom: '20px' }}>
             <label style={labelStyle}>ENDEREÇO:</label>
             <input
@@ -328,7 +287,6 @@ export const FormularioOS: React.FC<FormularioOSProps> = ({ onSubmit, dadosInici
             />
           </div>
 
-          {/* Localização */}
           <div style={{ marginBottom: '30px' }}>
             <label style={labelStyle}>LOCALIZAÇÃO:</label>
             <input
@@ -340,9 +298,7 @@ export const FormularioOS: React.FC<FormularioOSProps> = ({ onSubmit, dadosInici
             />
           </div>
 
-          {/* Botões */}
           <div style={{ display: 'flex', justifyContent: 'space-between', gap: '15px', marginTop: '30px' }}>
-            {/* Botão esquerdo - condicional baseado no modo */}
             {modoGerenciamento ? (
               <button
                 type="button"
@@ -350,28 +306,19 @@ export const FormularioOS: React.FC<FormularioOSProps> = ({ onSubmit, dadosInici
                   if (!formularioId) return;
 
                   try {
-                    // Primeiro salvar as alterações
                     await firebaseFormularioStorage.atualizar(formularioId, formData);
 
-                    // Registrar log de auditoria da edição
-                    if (user) {
-                      await auditoriaService.registrarAcao('EDITAR_FORMULARIO', {
-                        uid: user.uid,
-                        email: user.email || '',
-                        displayName: user.displayName
-                      }, {
-                        formularioId,
-                        codigoOS: formData.codigoOS,
-                        tipoFormulario: 'CTO',
-                        dadosAlterados: formData
-                      });
-                    }
+                    await registrarAcaoAuditoria(user, 'EDITAR_FORMULARIO', {
+                      formularioId,
+                      codigoOS: formData.codigoOS,
+                      tipoFormulario: 'CTO',
+                      dadosAlterados: formData
+                    });
 
-                    // Depois finalizar
                     onFinalizar && onFinalizar(formularioId);
                   } catch (error) {
                     console.error('Erro ao salvar antes de finalizar:', error);
-                    alert('Erro ao salvar alterações. Tente novamente.');
+                    toast.error('Erro ao salvar alterações. Tente novamente.');
                   }
                 }}
                 disabled={!formularioId}
@@ -427,34 +374,3 @@ export const FormularioOS: React.FC<FormularioOSProps> = ({ onSubmit, dadosInici
     </div>
   );
 };
-
-// Estilos
-const labelStyle: React.CSSProperties = {
-  display: 'block',
-  marginBottom: '5px',
-  fontWeight: 'bold',
-  color: '#333',
-  fontSize: '14px'
-};
-
-const inputStyle: React.CSSProperties = {
-  width: '100%',
-  padding: '10px',
-  border: '1px solid #ddd',
-  borderRadius: '4px',
-  fontSize: '14px',
-  fontFamily: 'inherit',
-  boxSizing: 'border-box'
-};
-
-const buttonStyle: React.CSSProperties = {
-  padding: '12px 20px',
-  border: 'none',
-  borderRadius: '5px',
-  color: 'white',
-  fontSize: '16px',
-  fontWeight: 'bold',
-  cursor: 'pointer',
-  transition: 'opacity 0.2s'
-};
-

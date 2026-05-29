@@ -1,0 +1,13 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "formularios",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "criadoPor.uid", "order": "ASCENDING" },
+        { "fieldPath": "dataModificacao", "order": "DESCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}

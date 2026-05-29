@@ -1,7 +1,6 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useAuth } from '../shared/contexts/AuthContext';
 import { Login } from './Login';
-import { makeUserAdmin } from '../utils/makeAdmin';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -9,9 +8,7 @@ interface ProtectedRouteProps {
 
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const { isAuthenticated, isLoading, user } = useAuth();
-  const [emergencyProcessing, setEmergencyProcessing] = useState(false);
 
-  // Mostrar loading enquanto verifica autenticação
   if (isLoading) {
     return (
       <div style={{
@@ -43,7 +40,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
             Verificando autenticação
           </p>
         </div>
-        
+
         <style>
           {`
             @keyframes spin {
@@ -56,12 +53,10 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     );
   }
 
-  // Se não está autenticado, mostrar tela de login
   if (!isAuthenticated) {
     return <Login />;
   }
 
-  // Se está autenticado mas não aprovado, mostrar tela de aguardo
   if (user && user.isApproved === false) {
     return (
       <div style={{
@@ -125,45 +120,9 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
           }}>
             <button
               onClick={async () => {
-                if (!window.confirm('🚨 FUNÇÃO DE EMERGÊNCIA\n\nIsso tornará você administrador do sistema.\n\nUse apenas se não houver outros administradores.\n\nContinuar?')) {
-                  return;
-                }
-                
-                setEmergencyProcessing(true);
-                try {
-                  await makeUserAdmin(user.uid, user.email || 'admin@sistema.com');
-                  alert('✅ SUCESSO!\n\nVocê agora é administrador!\n\nAtualizando página...');
-                  setTimeout(() => {
-                    window.location.reload();
-                  }, 1000);
-                } catch (error: any) {
-                  alert(`❌ ERRO: ${error.message}`);
-                  setEmergencyProcessing(false);
-                }
-              }}
-              disabled={emergencyProcessing}
-              style={{
-                backgroundColor: emergencyProcessing ? '#6c757d' : '#dc3545',
-                color: 'white',
-                border: 'none',
-                padding: '12px 24px',
-                borderRadius: '8px',
-                fontSize: '14px',
-                fontWeight: 'bold',
-                cursor: emergencyProcessing ? 'not-allowed' : 'pointer',
-                marginBottom: '10px'
-              }}
-            >
-              {emergencyProcessing ? '⏳ Processando...' : '🚨 Tornar-me Admin (Emergência)'}
-            </button>
-            <button
-              onClick={async () => {
-                if (window.confirm('Tem certeza que deseja sair?')) {
-                  // Usar authService diretamente
-                  const { authService } = await import('../shared/services/authService');
-                  await authService.logout();
-                  window.location.reload();
-                }
+                const { authService } = await import('../shared/services/authService');
+                await authService.logout();
+                window.location.reload();
               }}
               style={{
                 backgroundColor: '#6c757d',
@@ -192,6 +151,5 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     );
   }
 
-  // Se está autenticado e aprovado, mostrar conteúdo protegido
   return <>{children}</>;
 };

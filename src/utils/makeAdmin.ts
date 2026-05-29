@@ -2,10 +2,16 @@ import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { db } from '../shared/config/firebase';
 
 /**
- * Função de emergência para tornar um usuário em administrador
- * Use apenas quando não há nenhum admin no sistema
+ * Função de emergência para tornar um usuário em administrador.
+ * Só funciona se VITE_ALLOW_EMERGENCY_ADMIN=true no .env.
+ * Use apenas quando não há nenhum admin no sistema.
+ * Após criar o primeiro admin, remova esta variável e recompile.
  */
 export const makeUserAdmin = async (uid: string, email: string): Promise<void> => {
+  if (import.meta.env.VITE_ALLOW_EMERGENCY_ADMIN !== 'true') {
+    throw new Error('Função desabilitada. Defina VITE_ALLOW_EMERGENCY_ADMIN=true no .env para usar.');
+  }
+
   try {
     console.log('🔧 Iniciando processo de emergência para criar administrador...');
     console.log('👤 UID do usuário:', uid);
@@ -83,6 +89,10 @@ export const makeUserAdmin = async (uid: string, email: string): Promise<void> =
 
 // Função para ser executada no console do navegador
 export const makeCurrentUserAdmin = async (): Promise<void> => {
+  if (import.meta.env.VITE_ALLOW_EMERGENCY_ADMIN !== 'true') {
+    throw new Error('Função desabilitada. Defina VITE_ALLOW_EMERGENCY_ADMIN=true no .env para usar.');
+  }
+
   try {
     // Tentar obter o usuário atual do Firebase Auth
     const auth = await import('../shared/config/firebase').then(m => m.auth);
