@@ -150,15 +150,17 @@ export const LogsAuditoriaPage: React.FC = () => {
     <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '20px' }}>
       {/* Cabeçalho */}
       <div style={{
-        backgroundColor: '#fff',
+        backgroundColor: 'var(--bg-card)',
+        color: 'var(--text-main)',
         padding: '30px',
         borderRadius: '10px',
-        boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-        marginBottom: '20px'
+        boxShadow: '0 4px 6px rgba(0,0,0,0.05)',
+        marginBottom: '20px',
+        border: '1px solid var(--border-color)'
       }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
           <div>
-            <h1 style={{ color: '#333', fontSize: '2rem', margin: 0, marginBottom: '8px' }}>
+            <h1 style={{ color: 'var(--text-main)', fontSize: '2rem', margin: 0, marginBottom: '8px' }}>
               📊 Logs de Auditoria
             </h1>
             <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
@@ -448,12 +450,13 @@ export const LogsAuditoriaPage: React.FC = () => {
 
 // Estilos
 const cardStyle: React.CSSProperties = {
-  backgroundColor: '#fff',
+  backgroundColor: 'var(--bg-card)',
   padding: '15px 20px',
   borderRadius: '8px',
-  boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-  border: '1px solid #e9ecef',
-  transition: 'all 0.2s ease'
+  boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
+  border: '1px solid var(--border-color)',
+  transition: 'all 0.2s ease',
+  color: 'var(--text-main)'
 };
 
 const statCardStyle: React.CSSProperties = {
@@ -466,13 +469,13 @@ const statCardStyle: React.CSSProperties = {
 const statNumberStyle: React.CSSProperties = {
   fontSize: '1.8rem',
   fontWeight: 'bold',
-  color: '#333',
+  color: 'var(--text-main)',
   margin: 0
 };
 
 const statLabelStyle: React.CSSProperties = {
   fontSize: '0.8rem',
-  color: '#666',
+  color: 'var(--text-muted)',
   marginTop: '5px'
 };
 
@@ -480,18 +483,20 @@ const labelStyle: React.CSSProperties = {
   display: 'block',
   marginBottom: '5px',
   fontWeight: 'bold',
-  color: '#333',
+  color: 'var(--text-main)',
   fontSize: '14px'
 };
 
 const inputStyle: React.CSSProperties = {
   width: '100%',
   padding: '8px 12px',
-  border: '1px solid #ddd',
+  border: '1px solid var(--border-color)',
   borderRadius: '4px',
   fontSize: '14px',
   fontFamily: 'inherit',
-  boxSizing: 'border-box'
+  boxSizing: 'border-box',
+  backgroundColor: 'var(--input-bg)',
+  color: 'var(--text-main)'
 };
 
 const buttonStyle: React.CSSProperties = {

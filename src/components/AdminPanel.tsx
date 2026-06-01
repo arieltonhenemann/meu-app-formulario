@@ -113,21 +113,23 @@ export const AdminPanel: React.FC<AdminPanelProps> = () => {
   return (
     <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '20px' }}>
       <div style={{
-        backgroundColor: '#fff',
+        backgroundColor: 'var(--bg-card)',
+        color: 'var(--text-main)',
         padding: '30px',
         borderRadius: '10px',
-        boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+        boxShadow: '0 4px 6px rgba(0,0,0,0.05)',
+        border: '1px solid var(--border-color)'
       }}>
         <div style={{
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
           marginBottom: '30px',
-          borderBottom: '2px solid #dc3545',
+          borderBottom: '2px solid var(--border-color)',
           paddingBottom: '10px'
         }}>
           <h2 style={{
-            color: '#333',
+            color: 'var(--text-main)',
             margin: 0
           }}>
             🛡️ Painel de Administração
@@ -287,17 +289,19 @@ export const AdminPanel: React.FC<AdminPanelProps> = () => {
           zIndex: 9999
         }}>
           <div style={{
-            backgroundColor: '#fff',
+            backgroundColor: 'var(--bg-card)',
+            color: 'var(--text-main)',
             padding: '30px',
             borderRadius: '10px',
-            boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.25)',
             maxWidth: '400px',
             width: '90%',
-            textAlign: 'center'
+            textAlign: 'center',
+            border: '1px solid var(--border-color)'
           }}>
             <div style={{ fontSize: '3rem', marginBottom: '15px' }}>✅</div>
-            <h3 style={{ color: '#333', marginBottom: '10px' }}>Confirmar Aprovação</h3>
-            <p style={{ color: '#666', marginBottom: '20px' }}>
+            <h3 style={{ color: 'var(--text-main)', marginBottom: '10px' }}>Confirmar Aprovação</h3>
+            <p style={{ color: 'var(--text-muted)', marginBottom: '20px' }}>
               Tem certeza que deseja aprovar este usuário?
             </p>
             <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
@@ -353,17 +357,19 @@ export const AdminPanel: React.FC<AdminPanelProps> = () => {
           zIndex: 9999
         }}>
           <div style={{
-            backgroundColor: '#fff',
+            backgroundColor: 'var(--bg-card)',
+            color: 'var(--text-main)',
             padding: '30px',
             borderRadius: '10px',
-            boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.25)',
             maxWidth: '400px',
             width: '90%',
-            textAlign: 'center'
+            textAlign: 'center',
+            border: '1px solid var(--border-color)'
           }}>
             <div style={{ fontSize: '3rem', marginBottom: '15px' }}>❌</div>
-            <h3 style={{ color: '#333', marginBottom: '10px' }}>Rejeitar Usuário</h3>
-            <p style={{ color: '#666', marginBottom: '15px' }}>
+            <h3 style={{ color: 'var(--text-main)', marginBottom: '10px' }}>Rejeitar Usuário</h3>
+            <p style={{ color: 'var(--text-muted)', marginBottom: '15px' }}>
               Digite o motivo da rejeição:
             </p>
             <textarea
@@ -372,7 +378,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = () => {
               style={{
                 width: '100%',
                 padding: '10px',
-                border: '1px solid #ddd',
+                backgroundColor: 'var(--input-bg)',
+                color: 'var(--text-main)',
+                border: '1px solid var(--border-color)',
                 borderRadius: '4px',
                 fontSize: '14px',
                 fontFamily: 'inherit',

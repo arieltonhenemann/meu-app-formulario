@@ -7,6 +7,7 @@ import { TxtModal } from './TxtModal';
 import { labelStyle, inputStyle, buttonStyle, formContainerStyle, formCardStyle, textareaStyle } from '../shared/styles/forms';
 import { toast } from '../shared/components/Toast';
 import { registrarAcaoAuditoria } from '../shared/utils/auditoriaHelper';
+import { StatusFormulario } from '../shared/types/formularioSalvo';
 
 interface FormularioAdequacaoProps {
     onSubmit?: (dados: OrdemServicoAdequacao) => void;
@@ -18,6 +19,7 @@ interface FormularioAdequacaoProps {
 
 export const FormularioAdequacao: React.FC<FormularioAdequacaoProps> = ({ onSubmit, dadosIniciais, formularioId, modoGerenciamento, onFinalizar }) => {
     const { user } = useAuth();
+    const [status, setStatus] = useState<StatusFormulario>('pendente');
     const [formData, setFormData] = useState<OrdemServicoAdequacao>(() => {
         if (dadosIniciais) {
             return { ...criarAdequacaoVazia(), ...dadosIniciais };
@@ -125,7 +127,7 @@ export const FormularioAdequacao: React.FC<FormularioAdequacaoProps> = ({ onSubm
                         email: user.email || '',
                         displayName: user.displayName
                     } : undefined;
-                    const formularioSalvo = await firebaseFormularioStorage.salvar('ADEQUACAO', formData, criadoPor);
+                    const formularioSalvo = await firebaseFormularioStorage.salvar('ADEQUACAO', formData, criadoPor, status);
 
                     await registrarAcaoAuditoria(user, 'CRIAR_FORMULARIO', {
                         formularioId: formularioSalvo.id,
@@ -178,7 +180,7 @@ export const FormularioAdequacao: React.FC<FormularioAdequacaoProps> = ({ onSubm
                 <h2 style={{
                     textAlign: 'center',
                     marginBottom: '30px',
-                    color: '#333',
+                    color: 'var(--text-main)',
                     borderBottom: '2px solid #007bff',
                     paddingBottom: '10px'
                 }}>
@@ -186,12 +188,30 @@ export const FormularioAdequacao: React.FC<FormularioAdequacaoProps> = ({ onSubm
                 </h2>
 
                 <form onSubmit={handleSubmit}>
-                    {/* Row 1: Código da O.S + Região */}
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
+                    {/* Row 1: Código da O.S + Região (+ Status Inicial) */}
+                    <div style={{
+                        display: 'grid',
+                        gridTemplateColumns: !modoGerenciamento ? '1fr 1fr 1fr' : '1fr 1fr',
+                        gap: '20px',
+                        marginBottom: '20px'
+                    }}>
                         <div>
                             <label htmlFor="codigoOS" style={labelStyle}>CÓDIGO DA O.S:</label>
                             <input id="codigoOS" name="codigoOS" type="text" value={formData.codigoOS} onChange={(e) => handleChange('codigoOS', e.target.value)} style={inputStyle} placeholder="Ex: 12345678" />
                         </div>
+                        {!modoGerenciamento && (
+                            <div>
+                                <label style={labelStyle}>STATUS INICIAL:</label>
+                                <select
+                                    value={status}
+                                    onChange={(e) => setStatus(e.target.value as StatusFormulario)}
+                                    style={inputStyle}
+                                >
+                                    <option value="pendente">⏳ Pendente</option>
+                                    <option value="aguardando">⏸️ Aguardando</option>
+                                </select>
+                            </div>
+                        )}
                         <div>
                             <label htmlFor="regiao" style={labelStyle}>REGIÃO:</label>
                             <input id="regiao" name="regiao" type="text" value={formData.regiao} onChange={(e) => handleChange('regiao', e.target.value)} style={inputStyle} placeholder="Ex: ATUBA" />

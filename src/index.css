@@ -1,5 +1,40 @@
+:root {
+  /* Light Theme */
+  --bg-app: #f8f9fa;
+  --bg-card: #ffffff;
+  --border-color: #e9ecef;
+  --text-main: #333333;
+  --text-muted: #666666;
+  --input-bg: #ffffff;
+  --input-border: #dddddd;
+  
+  /* Status Colors */
+  --status-aguardando: #17a2b8;
+  --status-pendente: #ffc107;
+  --status-finalizado: #28a745;
+}
+
+[data-theme="dark"] {
+  /* Dark Theme */
+  --bg-app: #121212;
+  --bg-card: #1e1e1e;
+  --border-color: #2d2d2d;
+  --text-main: #f8f9fa;
+  --text-muted: #a0a0a0;
+  --input-bg: #2d2d2d;
+  --input-border: #444444;
+
+  /* Adjust status colors slightly for better contrast on dark backgrounds if needed */
+  --status-aguardando: #148f9d;
+  --status-pendente: #d39e00;
+  --status-finalizado: #1e7e34;
+}
+
 body {
   margin: 0;
+  background-color: var(--bg-app);
+  color: var(--text-main);
+  transition: background-color 0.3s ease, color 0.3s ease;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
     sans-serif;

@@ -7,6 +7,7 @@ import { TxtModal } from './TxtModal';
 import { labelStyle, inputStyle, buttonStyle, formContainerStyle, formCardStyle } from '../shared/styles/forms';
 import { toast } from '../shared/components/Toast';
 import { registrarAcaoAuditoria } from '../shared/utils/auditoriaHelper';
+import { StatusFormulario } from '../shared/types/formularioSalvo';
 
 interface FormularioLINKProps {
   onSubmit?: (dados: OrdemServicoLINK) => void;
@@ -18,6 +19,7 @@ interface FormularioLINKProps {
 
 export const FormularioLINK: React.FC<FormularioLINKProps> = ({ onSubmit, dadosIniciais, formularioId, modoGerenciamento, onFinalizar }) => {
   const { user } = useAuth();
+  const [status, setStatus] = useState<StatusFormulario>('pendente');
   const [formData, setFormData] = useState<OrdemServicoLINK>(() => {
     if (dadosIniciais) {
       return { ...criarLINKVazia(), ...dadosIniciais };
@@ -91,7 +93,7 @@ export const FormularioLINK: React.FC<FormularioLINKProps> = ({ onSubmit, dadosI
           email: user.email || '',
           displayName: user.displayName
         } : undefined;
-        const formularioSalvo = await firebaseFormularioStorage.salvar('LINK', formData, criadoPor);
+        const formularioSalvo = await firebaseFormularioStorage.salvar('LINK', formData, criadoPor, status);
 
         await registrarAcaoAuditoria(user, 'CRIAR_FORMULARIO', {
           formularioId: formularioSalvo.id,
@@ -130,24 +132,44 @@ export const FormularioLINK: React.FC<FormularioLINKProps> = ({ onSubmit, dadosI
         <h2 style={{
           textAlign: 'center',
           marginBottom: '30px',
-          color: '#333',
+          color: 'var(--text-main)',
           borderBottom: '2px solid #dc3545',
           paddingBottom: '10px'
         }}>
-          🔗 Formulário de Abertura de Ordem LINK
+          🔗 Ordem de Serviço — Link
         </h2>
 
         <form onSubmit={handleSubmit}>
           {/* Código da O.S */}
-          <div style={{ marginBottom: '20px' }}>
-            <label style={labelStyle}>CÓDIGO DA O.S:</label>
-            <input
-              type="text"
-              value={formData.codigoOS}
-              onChange={(e) => handleChange('codigoOS', e.target.value)}
-              style={inputStyle}
-              placeholder="Ex: OS-LINK-2024-001"
-            />
+          <div style={{
+            display: !modoGerenciamento ? 'grid' : 'block',
+            gridTemplateColumns: !modoGerenciamento ? '1fr 1fr' : 'none',
+            gap: !modoGerenciamento ? '20px' : 'none',
+            marginBottom: '20px'
+          }}>
+            <div>
+              <label style={labelStyle}>CÓDIGO DA O.S:</label>
+              <input
+                type="text"
+                value={formData.codigoOS}
+                onChange={(e) => handleChange('codigoOS', e.target.value)}
+                style={inputStyle}
+                placeholder="Ex: OS-LINK-2024-001"
+              />
+            </div>
+            {!modoGerenciamento && (
+              <div>
+                <label style={labelStyle}>STATUS INICIAL:</label>
+                <select
+                  value={status}
+                  onChange={(e) => setStatus(e.target.value as StatusFormulario)}
+                  style={inputStyle}
+                >
+                  <option value="pendente">⏳ Pendente</option>
+                  <option value="aguardando">⏸️ Aguardando</option>
+                </select>
+              </div>
+            )}
           </div>
 
           {/* Seção de Links Dinâmicos */}
@@ -158,11 +180,11 @@ export const FormularioLINK: React.FC<FormularioLINKProps> = ({ onSubmit, dadosI
               alignItems: 'center',
               marginBottom: '15px',
               padding: '15px',
-              backgroundColor: '#e7f3ff',
+              backgroundColor: 'var(--bg-app)',
               borderRadius: '8px',
-              border: '1px solid #bee5eb'
+              border: '1px solid var(--border-color)'
             }}>
-              <h3 style={{ color: '#495057', fontSize: '18px', margin: 0 }}>
+              <h3 style={{ color: 'var(--text-main)', fontSize: '18px', margin: 0 }}>
                 🔗 Links Configurados: <span style={{ color: '#17a2b8', fontWeight: 'bold' }}>({formData.links.length})</span>
               </h3>
               <button
@@ -186,11 +208,11 @@ export const FormularioLINK: React.FC<FormularioLINKProps> = ({ onSubmit, dadosI
 
             {formData.links.map((link, index) => (
               <div key={link.id} style={{
-                border: '2px solid #e9ecef',
+                border: '2px solid var(--border-color)',
                 borderRadius: '8px',
                 padding: '20px',
                 marginBottom: '15px',
-                backgroundColor: '#f8f9fa',
+                backgroundColor: 'var(--bg-app)',
                 position: 'relative'
               }}>
                 <div style={{
@@ -200,7 +222,7 @@ export const FormularioLINK: React.FC<FormularioLINKProps> = ({ onSubmit, dadosI
                   marginBottom: '15px'
                 }}>
                   <h4 style={{
-                    color: '#495057',
+                    color: 'var(--text-main)',
                     fontSize: '16px',
                     margin: 0
                   }}>

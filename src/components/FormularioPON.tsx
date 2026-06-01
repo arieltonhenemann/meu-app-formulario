@@ -7,6 +7,7 @@ import { TxtModal } from './TxtModal';
 import { labelStyle, inputStyle, buttonStyle, formContainerStyle, formCardStyle, textareaStyle } from '../shared/styles/forms';
 import { toast } from '../shared/components/Toast';
 import { registrarAcaoAuditoria } from '../shared/utils/auditoriaHelper';
+import { StatusFormulario } from '../shared/types/formularioSalvo';
 
 interface FormularioPONProps {
   onSubmit?: (dados: OrdemServicoPON) => void;
@@ -18,6 +19,7 @@ interface FormularioPONProps {
 
 export const FormularioPON: React.FC<FormularioPONProps> = ({ onSubmit, dadosIniciais, formularioId, modoGerenciamento, onFinalizar }) => {
   const { user } = useAuth();
+  const [status, setStatus] = useState<StatusFormulario>('pendente');
   const [formData, setFormData] = useState<OrdemServicoPON>(() => {
     if (dadosIniciais) {
       return { ...criarPONVazia(), ...dadosIniciais };
@@ -65,7 +67,7 @@ export const FormularioPON: React.FC<FormularioPONProps> = ({ onSubmit, dadosIni
           email: user.email || '',
           displayName: user.displayName
         } : undefined;
-        const formularioSalvo = await firebaseFormularioStorage.salvar('PON', formData, criadoPor);
+        const formularioSalvo = await firebaseFormularioStorage.salvar('PON', formData, criadoPor, status);
 
         await registrarAcaoAuditoria(user, 'CRIAR_FORMULARIO', {
           formularioId: formularioSalvo.id,
@@ -106,23 +108,43 @@ export const FormularioPON: React.FC<FormularioPONProps> = ({ onSubmit, dadosIni
         <h2 style={{
           textAlign: 'center',
           marginBottom: '30px',
-          color: '#333',
+          color: 'var(--text-main)',
           borderBottom: '2px solid #28a745',
           paddingBottom: '10px'
         }}>
-          📡 Formulário de Abertura de Ordem PON
+          📡 Ordem de Serviço — Pon
         </h2>
 
         <form onSubmit={handleSubmit}>
-          <div style={{ marginBottom: '20px' }}>
-            <label style={labelStyle}>CÓDIGO DA O.S:</label>
-            <input
-              type="text"
-              value={formData.codigoOS}
-              onChange={(e) => handleChange('codigoOS', e.target.value)}
-              style={inputStyle}
-              placeholder="Ex: 123456"
-            />
+          <div style={{
+            display: !modoGerenciamento ? 'grid' : 'block',
+            gridTemplateColumns: !modoGerenciamento ? '1fr 1fr' : 'none',
+            gap: !modoGerenciamento ? '20px' : 'none',
+            marginBottom: '20px'
+          }}>
+            <div>
+              <label style={labelStyle}>CÓDIGO DA O.S:</label>
+              <input
+                type="text"
+                value={formData.codigoOS}
+                onChange={(e) => handleChange('codigoOS', e.target.value)}
+                style={inputStyle}
+                placeholder="Ex: 123456"
+              />
+            </div>
+            {!modoGerenciamento && (
+              <div>
+                <label style={labelStyle}>STATUS INICIAL:</label>
+                <select
+                  value={status}
+                  onChange={(e) => setStatus(e.target.value as StatusFormulario)}
+                  style={inputStyle}
+                >
+                  <option value="pendente">⏳ Pendente</option>
+                  <option value="aguardando">⏸️ Aguardando</option>
+                </select>
+              </div>
+            )}
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>

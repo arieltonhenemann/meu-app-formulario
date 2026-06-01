@@ -7,6 +7,7 @@ import { TxtModal } from './TxtModal';
 import { labelStyle, inputStyle, buttonStyle, formContainerStyle, formCardStyle, textareaStyle } from '../shared/styles/forms';
 import { toast } from '../shared/components/Toast';
 import { registrarAcaoAuditoria } from '../shared/utils/auditoriaHelper';
+import { StatusFormulario } from '../shared/types/formularioSalvo';
 
 interface FormularioOSProps {
   onSubmit?: (dados: OrdemServico) => void;
@@ -18,6 +19,7 @@ interface FormularioOSProps {
 
 export const FormularioOS: React.FC<FormularioOSProps> = ({ onSubmit, dadosIniciais, formularioId, modoGerenciamento, onFinalizar }) => {
   const { user } = useAuth();
+  const [status, setStatus] = useState<StatusFormulario>('pendente');
   const [formData, setFormData] = useState<OrdemServico>(() => {
     if (dadosIniciais) {
       return { ...criarOSVazia(), ...dadosIniciais };
@@ -78,7 +80,7 @@ export const FormularioOS: React.FC<FormularioOSProps> = ({ onSubmit, dadosInici
             email: user.email || '',
             displayName: user.displayName
           } : undefined;
-          const formularioSalvo = await firebaseFormularioStorage.salvar('CTO', formData, criadoPor);
+          const formularioSalvo = await firebaseFormularioStorage.salvar('CTO', formData, criadoPor, status);
 
           await registrarAcaoAuditoria(user, 'CRIAR_FORMULARIO', {
             formularioId: formularioSalvo.id,
@@ -121,15 +123,20 @@ export const FormularioOS: React.FC<FormularioOSProps> = ({ onSubmit, dadosInici
         <h2 style={{
           textAlign: 'center',
           marginBottom: '30px',
-          color: '#333',
+          color: 'var(--text-main)',
           borderBottom: '2px solid #007bff',
           paddingBottom: '10px'
         }}>
-          🏢 Formulário de Abertura de Ordem CTO
+          🏢 Ordem de Serviço — Cto
         </h2>
 
         <form onSubmit={handleSubmit}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: !modoGerenciamento ? '1fr 1fr 1fr' : '1fr 1fr',
+            gap: '20px',
+            marginBottom: '20px'
+          }}>
             <div>
               <label style={labelStyle}>
                 CÓDIGO DA O.S:
@@ -142,6 +149,20 @@ export const FormularioOS: React.FC<FormularioOSProps> = ({ onSubmit, dadosInici
                 placeholder="Ex: OS-2024-001"
               />
             </div>
+
+            {!modoGerenciamento && (
+              <div>
+                <label style={labelStyle}>STATUS INICIAL:</label>
+                <select
+                  value={status}
+                  onChange={(e) => setStatus(e.target.value as StatusFormulario)}
+                  style={inputStyle}
+                >
+                  <option value="pendente">⏳ Pendente</option>
+                  <option value="aguardando">⏸️ Aguardando</option>
+                </select>
+              </div>
+            )}
 
             <div>
               <label style={labelStyle}>

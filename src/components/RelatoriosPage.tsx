@@ -15,6 +15,16 @@ interface EstadoRelatorios {
   filtroTipo: string;
 }
 
+const obterCorTipo = (tipo: string) => {
+  switch (tipo) {
+    case 'CTO': return '#007bff';
+    case 'PON': return '#28a745';
+    case 'LINK': return '#dc3545';
+    case 'ADEQUACAO': return '#d4a30e';
+    default: return '#17a2b8';
+  }
+};
+
 export const RelatoriosPage: React.FC = () => {
   const [estado, setEstado] = useState<EstadoRelatorios>({
     dataInicio: '',
@@ -30,6 +40,8 @@ export const RelatoriosPage: React.FC = () => {
     pdf: false,
     excel: false
   });
+
+  const [hoveredCard, setHoveredCard] = useState<string | null>(null);
 
   // Carregar todos os formulários ao iniciar
   useEffect(() => {
@@ -209,13 +221,14 @@ export const RelatoriosPage: React.FC = () => {
 
       {/* Filtros */}
       <div style={{
-        backgroundColor: '#f8f9fa',
+        backgroundColor: 'var(--bg-card)',
+        color: 'var(--text-main)',
         padding: '20px',
         borderRadius: '8px',
         marginBottom: '25px',
-        border: '1px solid #dee2e6'
+        border: '1px solid var(--border-color)'
       }}>
-        <h3 style={{ margin: '0 0 15px 0', color: '#495057' }}>
+        <h3 style={{ margin: '0 0 15px 0', color: 'var(--text-main)' }}>
           🔍 Filtros
         </h3>
 
@@ -236,9 +249,12 @@ export const RelatoriosPage: React.FC = () => {
               style={{
                 width: '100%',
                 padding: '8px',
-                border: '1px solid #ddd',
+                border: '1px solid var(--border-color)',
                 borderRadius: '4px',
-                fontSize: '14px'
+                fontSize: '14px',
+                backgroundColor: 'var(--input-bg)',
+                color: 'var(--text-main)',
+                boxSizing: 'border-box'
               }}
             />
           </div>
@@ -254,9 +270,12 @@ export const RelatoriosPage: React.FC = () => {
               style={{
                 width: '100%',
                 padding: '8px',
-                border: '1px solid #ddd',
+                border: '1px solid var(--border-color)',
                 borderRadius: '4px',
-                fontSize: '14px'
+                fontSize: '14px',
+                backgroundColor: 'var(--input-bg)',
+                color: 'var(--text-main)',
+                boxSizing: 'border-box'
               }}
             />
           </div>
@@ -271,9 +290,12 @@ export const RelatoriosPage: React.FC = () => {
               style={{
                 width: '100%',
                 padding: '8px',
-                border: '1px solid #ddd',
+                border: '1px solid var(--border-color)',
                 borderRadius: '4px',
-                fontSize: '14px'
+                fontSize: '14px',
+                backgroundColor: 'var(--input-bg)',
+                color: 'var(--text-main)',
+                boxSizing: 'border-box'
               }}
             >
               <option value="TODOS">Todos os tipos</option>
@@ -311,34 +333,61 @@ export const RelatoriosPage: React.FC = () => {
           gap: '15px',
           marginBottom: '25px'
         }}>
-          <div style={{
-            backgroundColor: '#e3f2fd',
-            padding: '15px',
-            borderRadius: '8px',
-            textAlign: 'center'
-          }}>
-            <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#1976d2' }}>
-              {estado.estatisticas.total}
-            </div>
-            <div style={{ color: '#424242' }}>Total de Formulários</div>
-          </div>
-
-          {Object.entries(estado.estatisticas.porTipo).map(([tipo, quantidade]) => (
-            <div key={tipo} style={{
-              backgroundColor: tipo === 'CTO' ? '#e8f5e8' : tipo === 'PON' ? '#fff3e0' : '#f3e5f5',
+          <div
+            onClick={() => definirFiltroTipo('TODOS')}
+            onMouseEnter={() => setHoveredCard('total')}
+            onMouseLeave={() => setHoveredCard(null)}
+            style={{
+              backgroundColor: estado.filtroTipo === 'TODOS' ? 'rgba(111, 66, 193, 0.15)' : 'var(--bg-card)',
+              border: '1px solid var(--border-color)',
+              borderLeft: '4px solid #6f42c1',
               padding: '15px',
               borderRadius: '8px',
-              textAlign: 'center'
-            }}>
-              <div style={{
-                fontSize: '24px', fontWeight: 'bold',
-                color: tipo === 'CTO' ? '#388e3c' : tipo === 'PON' ? '#f57c00' : '#7b1fa2'
-              }}>
-                {quantidade as number}
-              </div>
-              <div style={{ color: '#424242' }}>Formulários {tipo}</div>
+              textAlign: 'center',
+              cursor: 'pointer',
+              transform: hoveredCard === 'total' ? 'translateY(-2px)' : 'none',
+              boxShadow: hoveredCard === 'total' ? '0 4px 8px rgba(0,0,0,0.15)' : (estado.filtroTipo === 'TODOS' ? '0 4px 6px rgba(0,0,0,0.12)' : '0 2px 4px rgba(0,0,0,0.02)'),
+              transition: 'all 0.2s ease'
+            }}
+          >
+            <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#6f42c1' }}>
+              {estado.estatisticas.total}
             </div>
-          ))}
+            <div style={{ color: 'var(--text-main)', fontSize: '14px', marginTop: '5px' }}>Total de Formulários</div>
+          </div>
+
+          {Object.entries(estado.estatisticas.porTipo).map(([tipo, quantidade]) => {
+            const cor = obterCorTipo(tipo);
+            return (
+              <div
+                key={tipo}
+                onClick={() => definirFiltroTipo(tipo)}
+                onMouseEnter={() => setHoveredCard(tipo)}
+                onMouseLeave={() => setHoveredCard(null)}
+                style={{
+                  backgroundColor: estado.filtroTipo === tipo ? `${cor}26` : 'var(--bg-card)',
+                  border: '1px solid var(--border-color)',
+                  borderLeft: `4px solid ${cor}`,
+                  padding: '15px',
+                  borderRadius: '8px',
+                  textAlign: 'center',
+                  cursor: 'pointer',
+                  transform: hoveredCard === tipo ? 'translateY(-2px)' : 'none',
+                  boxShadow: hoveredCard === tipo ? '0 4px 8px rgba(0,0,0,0.15)' : (estado.filtroTipo === tipo ? '0 4px 6px rgba(0,0,0,0.12)' : '0 2px 4px rgba(0,0,0,0.02)'),
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                <div style={{
+                  fontSize: '24px',
+                  fontWeight: 'bold',
+                  color: cor
+                }}>
+                  {quantidade as number}
+                </div>
+                <div style={{ color: 'var(--text-main)', fontSize: '14px', marginTop: '5px' }}>Formulários {tipo}</div>
+              </div>
+            );
+          })}
         </div>
       )}
 
@@ -392,10 +441,12 @@ export const RelatoriosPage: React.FC = () => {
 
       {/* Tabela de Dados */}
       <div style={{
-        backgroundColor: 'white',
+        backgroundColor: 'var(--bg-card)',
+        color: 'var(--text-main)',
         borderRadius: '8px',
         overflow: 'hidden',
-        boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+        boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
+        border: '1px solid var(--border-color)'
       }}>
         <div style={{
           backgroundColor: '#428bca',
@@ -421,14 +472,14 @@ export const RelatoriosPage: React.FC = () => {
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
-                <tr style={{ backgroundColor: '#f8f9fa' }}>
-                  <th style={{ padding: '12px', borderBottom: '2px solid #dee2e6', textAlign: 'left' }}>Tipo</th>
-                  <th style={{ padding: '12px', borderBottom: '2px solid #dee2e6', textAlign: 'left' }}>Código OS</th>
-                  <th style={{ padding: '12px', borderBottom: '2px solid #dee2e6', textAlign: 'left' }}>Data</th>
-                  <th style={{ padding: '12px', borderBottom: '2px solid #dee2e6', textAlign: 'left' }}>Região</th>
-                  <th style={{ padding: '12px', borderBottom: '2px solid #dee2e6', textAlign: 'left' }}>CTO/PON</th>
-                  <th style={{ padding: '12px', borderBottom: '2px solid #dee2e6', textAlign: 'left' }}>Problema</th>
-                  <th style={{ padding: '12px', borderBottom: '2px solid #dee2e6', textAlign: 'left' }}>Endereço</th>
+                <tr style={{ backgroundColor: 'var(--bg-app)' }}>
+                  <th style={{ padding: '12px', borderBottom: '2px solid var(--border-color)', textAlign: 'left' }}>Tipo</th>
+                  <th style={{ padding: '12px', borderBottom: '2px solid var(--border-color)', textAlign: 'left' }}>Código OS</th>
+                  <th style={{ padding: '12px', borderBottom: '2px solid var(--border-color)', textAlign: 'left' }}>Data</th>
+                  <th style={{ padding: '12px', borderBottom: '2px solid var(--border-color)', textAlign: 'left' }}>Região</th>
+                  <th style={{ padding: '12px', borderBottom: '2px solid var(--border-color)', textAlign: 'left' }}>CTO/PON</th>
+                  <th style={{ padding: '12px', borderBottom: '2px solid var(--border-color)', textAlign: 'left' }}>Problema</th>
+                  <th style={{ padding: '12px', borderBottom: '2px solid var(--border-color)', textAlign: 'left' }}>Endereço</th>
                 </tr>
               </thead>
               <tbody>
@@ -436,9 +487,9 @@ export const RelatoriosPage: React.FC = () => {
                   const dados = formulario.dados;
                   return (
                     <tr key={formulario.id || index} style={{
-                      backgroundColor: index % 2 === 0 ? 'white' : '#f8f9fa'
+                      backgroundColor: index % 2 === 0 ? 'var(--bg-card)' : 'var(--bg-app)'
                     }}>
-                      <td style={{ padding: '12px', borderBottom: '1px solid #dee2e6' }}>
+                      <td style={{ padding: '12px', borderBottom: '1px solid var(--border-color)' }}>
                         <span style={{
                           padding: '4px 8px',
                           borderRadius: '4px',
@@ -501,10 +552,11 @@ export const RelatoriosPage: React.FC = () => {
       <div style={{
         marginTop: '25px',
         padding: '15px',
-        backgroundColor: '#f8f9fa',
+        backgroundColor: 'var(--bg-card)',
         borderRadius: '6px',
         fontSize: '14px',
-        color: '#666'
+        color: 'var(--text-muted)',
+        border: '1px solid var(--border-color)'
       }}>
         <div style={{ fontWeight: 'bold', marginBottom: '5px' }}>ℹ️ Informações:</div>
         <ul style={{ margin: '0', paddingLeft: '20px' }}>

@@ -75,11 +75,12 @@ export const Login: React.FC = () => {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      background: 'linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%)',
       padding: '20px'
     }}>
       <div style={{
-        backgroundColor: 'white',
+        backgroundColor: 'var(--bg-card)',
+        color: 'var(--text-main)',
         padding: '40px',
         borderRadius: '15px',
         boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
@@ -89,7 +90,7 @@ export const Login: React.FC = () => {
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: '30px' }}>
           <h1 style={{
-            color: '#333',
+            color: 'var(--text-main)',
             fontSize: '28px',
             marginBottom: '10px',
             fontWeight: 'bold'
@@ -97,7 +98,7 @@ export const Login: React.FC = () => {
             📋 Sistema OS
           </h1>
           <p style={{
-            color: '#666',
+            color: 'var(--text-muted)',
             fontSize: '16px',
             margin: 0
           }}>
@@ -170,7 +171,7 @@ export const Login: React.FC = () => {
             disabled={isLoading}
             style={{
               ...buttonStyle,
-              backgroundColor: isLoading ? '#95a5a6' : '#6c5ce7',
+              backgroundColor: isLoading ? '#95a5a6' : '#2563eb',
               cursor: isLoading ? 'not-allowed' : 'pointer'
             }}
           >
@@ -189,7 +190,7 @@ export const Login: React.FC = () => {
           paddingTop: '25px',
           borderTop: '1px solid #eee'
         }}>
-          <p style={{ color: '#666', marginBottom: '10px' }}>
+          <p style={{ color: 'var(--text-muted)', marginBottom: '10px' }}>
             {isLoginMode ? 'Não tem uma conta?' : 'Já tem uma conta?'}
           </p>
           <button
@@ -199,7 +200,7 @@ export const Login: React.FC = () => {
             style={{
               background: 'none',
               border: 'none',
-              color: '#6c5ce7',
+              color: '#2563eb',
               fontSize: '16px',
               fontWeight: 'bold',
               cursor: 'pointer',
@@ -219,20 +220,22 @@ const labelStyle: React.CSSProperties = {
   display: 'block',
   marginBottom: '8px',
   fontWeight: 'bold',
-  color: '#333',
+  color: 'var(--text-main)',
   fontSize: '14px'
 };
 
 const inputStyle: React.CSSProperties = {
   width: '100%',
   padding: '12px 15px',
-  border: '2px solid #ddd',
+  border: '2px solid var(--input-border)',
   borderRadius: '8px',
   fontSize: '16px',
   fontFamily: 'inherit',
   boxSizing: 'border-box',
   transition: 'border-color 0.2s ease',
-  outline: 'none'
+  outline: 'none',
+  backgroundColor: 'var(--input-bg)',
+  color: 'var(--text-main)'
 };
 
 const buttonStyle: React.CSSProperties = {

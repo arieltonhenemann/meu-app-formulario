@@ -102,9 +102,10 @@ class FirebaseFormularioStorageService {
       uid: string;
       email: string;
       displayName?: string | null;
-    }
+    },
+    status: StatusFormulario = "pendente"
   ): Promise<FormularioSalvo> {
-    const formulario = criarFormularioSalvo(tipo, dados, criadoPor);
+    const formulario = criarFormularioSalvo(tipo, dados, criadoPor, status);
 
     if (this.isOnline && this.isFirebaseConfigured()) {
       try {
@@ -241,6 +242,7 @@ class FirebaseFormularioStorageService {
       total: formularios.length,
       pendentes: formularios.filter((f) => f.status === "pendente").length,
       finalizados: formularios.filter((f) => f.status === "finalizado").length,
+      aguardando: formularios.filter((f) => f.status === "aguardando").length,
       porTipo: {
         CTO: formularios.filter((f) => f.tipo === "CTO").length,
         PON: formularios.filter((f) => f.tipo === "PON").length,

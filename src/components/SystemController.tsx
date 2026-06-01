@@ -54,7 +54,7 @@ export const SystemController: React.FC = () => {
             formularioId,
             codigoOS: formulario.codigoOS,
             tipoFormulario: formulario.tipo as TipoFormularioAuditoria,
-            statusAnterior: 'pendente',
+            statusAnterior: formulario.status,
             statusNovo: 'finalizado',
           });
         }
@@ -129,21 +129,22 @@ export const SystemController: React.FC = () => {
     return (
       <div style={{
         minHeight: '100vh',
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        background: 'linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center'
       }}>
         <div style={{
-          background: 'rgba(255, 255, 255, 0.95)',
+          background: 'var(--bg-card)',
+          color: 'var(--text-main)',
           borderRadius: '20px',
           padding: '40px',
           textAlign: 'center',
-          boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)'
+          boxShadow: '0 20px 60px rgba(0, 0, 0, 0.15)'
         }}>
           <div style={{ fontSize: '3rem', marginBottom: '20px' }}>🔄</div>
-          <h2 style={{ color: '#333', marginBottom: '10px' }}>Carregando...</h2>
-          <p style={{ color: '#666', margin: 0 }}>Verificando permissões de acesso</p>
+          <h2 style={{ color: 'var(--text-main)', marginBottom: '10px' }}>Carregando...</h2>
+          <p style={{ color: 'var(--text-muted)', margin: 0 }}>Verificando permissões de acesso</p>
         </div>
       </div>
     );
@@ -151,8 +152,10 @@ export const SystemController: React.FC = () => {
 
   return (
     <div style={{
-      backgroundColor: '#f8f9fa',
-      minHeight: '100vh'
+      backgroundColor: 'var(--bg-app)',
+      color: 'var(--text-main)',
+      minHeight: '100vh',
+      transition: 'background-color 0.3s ease, color 0.3s ease'
     }}>
       <Header />
 
@@ -162,15 +165,15 @@ export const SystemController: React.FC = () => {
         padding: '20px'
       }}>
         <h1 style={{
-          color: '#007bff',
+          color: 'var(--btn-primary, #007bff)',
           fontSize: '2.5rem',
           marginBottom: '10px',
-          textShadow: '2px 2px 4px rgba(0,0,0,0.1)'
+          textShadow: '2px 2px 4px rgba(0,0,0,0.05)'
         }}>
           🔧 Sistema de Ordem de Serviço
         </h1>
         <p style={{
-          color: '#666',
+          color: 'var(--text-muted)',
           fontSize: '1.1rem',
           maxWidth: '600px',
           margin: '0 auto'
@@ -179,7 +182,7 @@ export const SystemController: React.FC = () => {
         </p>
         <p style={{
           fontSize: '0.9rem',
-          color: '#888',
+          color: 'var(--text-muted)',
           marginTop: '10px'
         }}>
           📅 {formatarData(new Date())}
@@ -205,13 +208,13 @@ export const SystemController: React.FC = () => {
       <footer style={{
         textAlign: 'center',
         padding: '40px 20px 20px',
-        color: '#666',
+        color: 'var(--text-muted)',
         fontSize: '0.9rem'
       }}>
         <p style={{ marginTop: '5px', fontSize: '0.8rem' }}>
           Tela ativa: <strong>{telaAtiva}</strong>
           {formularioEditando && (
-            <span style={{ marginLeft: '10px', color: '#856404' }}>
+            <span style={{ marginLeft: '10px', color: 'var(--status-pendente)' }}>
               (Editando: {formularioEditando.codigoOS})
             </span>
           )}

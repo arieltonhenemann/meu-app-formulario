@@ -4,7 +4,7 @@ import { OrdemServicoPON } from "./pon";
 import { OrdemServicoLINK } from "./link";
 import { OrdemServicoAdequacao } from "./adequacao";
 
-export type StatusFormulario = "pendente" | "finalizado";
+export type StatusFormulario = "pendente" | "finalizado" | "aguardando";
 export type TipoFormulario = "CTO" | "PON" | "LINK" | "ADEQUACAO";
 
 export interface FormularioSalvoBase {
@@ -61,7 +61,8 @@ export const criarFormularioSalvo = <
     uid: string;
     email: string;
     displayName?: string | null;
-  }
+  },
+  status: StatusFormulario = "pendente"
 ): FormularioSalvo => {
   const agora = new Date().toISOString();
   const id = crypto.randomUUID();
@@ -69,7 +70,7 @@ export const criarFormularioSalvo = <
   return {
     id,
     tipo,
-    status: "pendente",
+    status,
     dataCriacao: agora,
     dataModificacao: agora,
     codigoOS: dados.codigoOS || `Sem código - ${id.slice(0, 6)}`,
@@ -81,9 +82,11 @@ export const criarFormularioSalvo = <
 export const obterCorStatus = (status: StatusFormulario): string => {
   switch (status) {
     case "pendente":
-      return "#ffc107";
+      return "var(--status-pendente)";
     case "finalizado":
-      return "#28a745";
+      return "var(--status-finalizado)";
+    case "aguardando":
+      return "var(--status-aguardando)";
     default:
       return "#6c757d";
   }

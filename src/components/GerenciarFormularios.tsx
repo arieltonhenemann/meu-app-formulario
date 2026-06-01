@@ -35,6 +35,7 @@ export const GerenciarFormularios: React.FC<GerenciarFormulariosProps> = ({
   const [isOnline, setIsOnline] = useState(firebaseFormularioStorage.estaOnline());
   const [temDadosPendentes, setTemDadosPendentes] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState<{ id: string; codigoOS: string } | null>(null);
+  const [hoveredCard, setHoveredCard] = useState<string | null>(null);
 
   useEffect(() => {
     carregarFormularios();
@@ -130,6 +131,54 @@ export const GerenciarFormularios: React.FC<GerenciarFormulariosProps> = ({
     }
   };
 
+  const iniciarFormulario = async (id: string) => {
+    try {
+      const formulario = formularios.find(f => f.id === id);
+      const sucesso = await firebaseFormularioStorage.atualizarStatus(id, 'pendente');
+      if (sucesso) {
+        if (user && formulario) {
+          await registrarAcaoAuditoria(user, 'INICIAR_FORMULARIO', {
+            formularioId: id,
+            codigoOS: formulario.codigoOS,
+            tipoFormulario: formulario.tipo,
+            statusAnterior: formulario.status,
+            statusNovo: 'pendente'
+          });
+        }
+
+        carregarFormularios();
+        toast.success('Serviço iniciado! Status alterado para Pendente.');
+      }
+    } catch (error) {
+      console.error('Erro ao iniciar serviço:', error);
+      toast.error('Erro ao iniciar serviço. Tente novamente.');
+    }
+  };
+
+  const pausarFormulario = async (id: string) => {
+    try {
+      const formulario = formularios.find(f => f.id === id);
+      const sucesso = await firebaseFormularioStorage.atualizarStatus(id, 'aguardando');
+      if (sucesso) {
+        if (user && formulario) {
+          await registrarAcaoAuditoria(user, 'AGUARDAR_FORMULARIO', {
+            formularioId: id,
+            codigoOS: formulario.codigoOS,
+            tipoFormulario: formulario.tipo,
+            statusAnterior: formulario.status,
+            statusNovo: 'aguardando'
+          });
+        }
+
+        carregarFormularios();
+        toast.success('Serviço colocado em Aguardando!');
+      }
+    } catch (error) {
+      console.error('Erro ao colocar serviço em aguardando:', error);
+      toast.error('Erro ao alterar status. Tente novamente.');
+    }
+  };
+
   const excluirFormulario = async (id: string, codigoOS: string) => {
     try {
       const formulario = formularios.find(f => f.id === id);
@@ -176,6 +225,7 @@ export const GerenciarFormularios: React.FC<GerenciarFormulariosProps> = ({
 
   const obterIconeStatus = (status: StatusFormulario) => {
     switch (status) {
+      case 'aguardando': return '⏸️';
       case 'pendente': return '⏳';
       case 'finalizado': return '✅';
     }
@@ -193,22 +243,27 @@ export const GerenciarFormularios: React.FC<GerenciarFormulariosProps> = ({
     total: formulariosParaEstatistica.length,
     pendentes: formulariosParaEstatistica.filter(f => f.status === 'pendente').length,
     finalizados: formulariosParaEstatistica.filter(f => f.status === 'finalizado').length,
+    aguardando: formulariosParaEstatistica.filter(f => f.status === 'aguardando').length,
   };
 
   return (
     <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '20px' }}>
       <div style={{
-        backgroundColor: '#fff',
+        backgroundColor: 'var(--bg-card)',
+        color: 'var(--text-main)',
         padding: '30px',
         borderRadius: '10px',
-        boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+        boxShadow: '0 4px 6px rgba(0,0,0,0.05)',
         marginBottom: '20px'
       }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
           <div>
-            <h1 style={{ color: '#333', fontSize: '2rem', margin: 0, marginBottom: '8px' }}>
-              📋 Gerenciar Formulários
+            <h1 style={{ color: 'var(--text-main)', fontSize: '2rem', margin: 0, marginBottom: '8px' }}>
+              Vorx Solutions Tech
             </h1>
+            <p style={{ color: 'var(--text-muted)', margin: 0, fontSize: '0.95rem' }}>
+              Gerenciamento de Formulários
+            </p>
             <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
               <div style={{
                 display: 'flex',
@@ -268,17 +323,80 @@ export const GerenciarFormularios: React.FC<GerenciarFormulariosProps> = ({
           gap: '15px',
           marginBottom: '20px'
         }}>
-          <div style={{ ...statCardStyle, borderLeftColor: '#6c757d' }}>
-            <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#333', margin: 0 }}>{statsFiltradas.total}</div>
-            <div style={{ fontSize: '0.9rem', color: '#666', marginTop: '5px' }}>Total</div>
+          {/* Card Total */}
+          <div
+            onClick={() => setFiltroStatus('todos')}
+            onMouseEnter={() => setHoveredCard('total')}
+            onMouseLeave={() => setHoveredCard(null)}
+            style={{
+              ...statCardStyle,
+              borderLeftColor: '#6c757d',
+              cursor: 'pointer',
+              transform: hoveredCard === 'total' ? 'translateY(-2px)' : 'none',
+              boxShadow: hoveredCard === 'total' ? '0 4px 8px rgba(0,0,0,0.15)' : (filtroStatus === 'todos' ? '0 4px 6px rgba(0,0,0,0.12)' : '0 2px 4px rgba(0,0,0,0.1)'),
+              backgroundColor: filtroStatus === 'todos' ? 'var(--border-color)' : 'var(--bg-card)',
+              transition: 'all 0.2s ease'
+            }}
+          >
+            <div style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--text-main)', margin: 0 }}>{statsFiltradas.total}</div>
+            <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginTop: '5px' }}>Total</div>
           </div>
-          <div style={{ ...statCardStyle, borderLeftColor: '#ffc107' }}>
-            <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#333', margin: 0 }}>{statsFiltradas.pendentes}</div>
-            <div style={{ fontSize: '0.9rem', color: '#666', marginTop: '5px' }}>Pendentes</div>
+
+          {/* Card Aguardando */}
+          <div
+            onClick={() => setFiltroStatus('aguardando')}
+            onMouseEnter={() => setHoveredCard('aguardando')}
+            onMouseLeave={() => setHoveredCard(null)}
+            style={{
+              ...statCardStyle,
+              borderLeftColor: '#17a2b8',
+              cursor: 'pointer',
+              transform: hoveredCard === 'aguardando' ? 'translateY(-2px)' : 'none',
+              boxShadow: hoveredCard === 'aguardando' ? '0 4px 8px rgba(0,0,0,0.15)' : (filtroStatus === 'aguardando' ? '0 4px 6px rgba(0,0,0,0.12)' : '0 2px 4px rgba(0,0,0,0.1)'),
+              backgroundColor: filtroStatus === 'aguardando' ? 'rgba(23, 162, 184, 0.15)' : 'var(--bg-card)',
+              transition: 'all 0.2s ease'
+            }}
+          >
+            <div style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--text-main)', margin: 0 }}>{statsFiltradas.aguardando}</div>
+            <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginTop: '5px' }}>Aguardando</div>
           </div>
-          <div style={{ ...statCardStyle, borderLeftColor: '#28a745' }}>
-            <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#333', margin: 0 }}>{statsFiltradas.finalizados}</div>
-            <div style={{ fontSize: '0.9rem', color: '#666', marginTop: '5px' }}>Finalizados</div>
+
+          {/* Card Pendentes */}
+          <div
+            onClick={() => setFiltroStatus('pendente')}
+            onMouseEnter={() => setHoveredCard('pendente')}
+            onMouseLeave={() => setHoveredCard(null)}
+            style={{
+              ...statCardStyle,
+              borderLeftColor: '#ffc107',
+              cursor: 'pointer',
+              transform: hoveredCard === 'pendente' ? 'translateY(-2px)' : 'none',
+              boxShadow: hoveredCard === 'pendente' ? '0 4px 8px rgba(0,0,0,0.15)' : (filtroStatus === 'pendente' ? '0 4px 6px rgba(0,0,0,0.12)' : '0 2px 4px rgba(0,0,0,0.1)'),
+              backgroundColor: filtroStatus === 'pendente' ? 'rgba(255, 193, 7, 0.15)' : 'var(--bg-card)',
+              transition: 'all 0.2s ease'
+            }}
+          >
+            <div style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--text-main)', margin: 0 }}>{statsFiltradas.pendentes}</div>
+            <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginTop: '5px' }}>Pendentes</div>
+          </div>
+
+          {/* Card Finalizados */}
+          <div
+            onClick={() => setFiltroStatus('finalizado')}
+            onMouseEnter={() => setHoveredCard('finalizado')}
+            onMouseLeave={() => setHoveredCard(null)}
+            style={{
+              ...statCardStyle,
+              borderLeftColor: '#28a745',
+              cursor: 'pointer',
+              transform: hoveredCard === 'finalizado' ? 'translateY(-2px)' : 'none',
+              boxShadow: hoveredCard === 'finalizado' ? '0 4px 8px rgba(0,0,0,0.15)' : (filtroStatus === 'finalizado' ? '0 4px 6px rgba(0,0,0,0.12)' : '0 2px 4px rgba(0,0,0,0.1)'),
+              backgroundColor: filtroStatus === 'finalizado' ? 'rgba(40, 167, 69, 0.15)' : 'var(--bg-card)',
+              transition: 'all 0.2s ease'
+            }}
+          >
+            <div style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--text-main)', margin: 0 }}>{statsFiltradas.finalizados}</div>
+            <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginTop: '5px' }}>Finalizados</div>
           </div>
         </div>
 
@@ -306,6 +424,7 @@ export const GerenciarFormularios: React.FC<GerenciarFormulariosProps> = ({
               style={inputStyle}
             >
               <option value="todos">Todos</option>
+              <option value="aguardando">Aguardando</option>
               <option value="pendente">Pendentes</option>
               <option value="finalizado">Finalizados</option>
             </select>
@@ -317,7 +436,8 @@ export const GerenciarFormularios: React.FC<GerenciarFormulariosProps> = ({
               style={{
                 ...inputStyle,
                 cursor: 'pointer',
-                backgroundColor: 'white',
+                backgroundColor: 'var(--input-bg)',
+                color: 'var(--text-main)',
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center'
@@ -329,7 +449,7 @@ export const GerenciarFormularios: React.FC<GerenciarFormulariosProps> = ({
                   ? 'Todos'
                   : filtrosTipo.map(t => t === 'ADEQUACAO' ? 'ADEQUAÇÃO' : t).join(', ')}
               </span>
-              <span style={{ fontSize: '10px', color: '#666' }}>▼</span>
+              <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>▼</span>
             </div>
 
             {dropdownTipoAberto && (
@@ -338,16 +458,16 @@ export const GerenciarFormularios: React.FC<GerenciarFormulariosProps> = ({
                 top: '100%',
                 left: 0,
                 right: 0,
-                backgroundColor: 'white',
-                border: '1px solid #ddd',
+                backgroundColor: 'var(--bg-card)',
+                border: '1px solid var(--border-color)',
                 borderRadius: '4px',
                 marginTop: '4px',
-                boxShadow: '0 2px 5px rgba(0,0,0,0.1)',
+                boxShadow: '0 2px 5px rgba(0,0,0,0.15)',
                 zIndex: 10,
                 maxHeight: '200px',
                 overflowY: 'auto'
               }}>
-                <label style={{ display: 'block', padding: '8px 12px', cursor: 'pointer', borderBottom: '1px solid #f0f0f0', fontSize: '14px', color: '#333' }}>
+                <label style={{ display: 'block', padding: '8px 12px', cursor: 'pointer', borderBottom: '1px solid var(--border-color)', fontSize: '14px', color: 'var(--text-main)' }}>
                   <input
                     type="checkbox"
                     checked={filtrosTipo.length === 0}
@@ -357,7 +477,7 @@ export const GerenciarFormularios: React.FC<GerenciarFormulariosProps> = ({
                   Todos
                 </label>
                 {(['CTO', 'PON', 'LINK', 'ADEQUACAO'] as TipoFormulario[]).map((tipo) => (
-                  <label key={tipo} style={{ display: 'block', padding: '8px 12px', cursor: 'pointer', borderBottom: '1px solid #f0f0f0', fontSize: '14px', color: '#333' }}>
+                  <label key={tipo} style={{ display: 'block', padding: '8px 12px', cursor: 'pointer', borderBottom: '1px solid var(--border-color)', fontSize: '14px', color: 'var(--text-main)' }}>
                     <input
                       type="checkbox"
                       checked={filtrosTipo.includes(tipo)}
@@ -385,7 +505,7 @@ export const GerenciarFormularios: React.FC<GerenciarFormulariosProps> = ({
             ...cardStyle,
             textAlign: 'center',
             padding: '60px 20px',
-            color: '#666'
+            color: 'var(--text-muted)'
           }}>
             <div style={{ fontSize: '3rem', marginBottom: '20px' }}>📝</div>
             <h3>Nenhum formulário encontrado</h3>
@@ -400,7 +520,7 @@ export const GerenciarFormularios: React.FC<GerenciarFormulariosProps> = ({
                     <span style={{ fontSize: '1.5rem' }}>
                       {obterIconeTipo(formulario.tipo)}
                     </span>
-                    <h3 style={{ margin: 0, color: '#333' }}>
+                    <h3 style={{ margin: 0, color: 'var(--text-main)' }}>
                       {formulario.codigoOS}
                     </h3>
                     <span style={{
@@ -419,18 +539,18 @@ export const GerenciarFormularios: React.FC<GerenciarFormulariosProps> = ({
                     </span>
                   </div>
 
-                  <div style={{ color: '#666', fontSize: '0.9rem', marginBottom: '15px' }}>
+                  <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '15px' }}>
                     <div>ID: {formulario.id}</div>
                     <div>Criado: {formatarData(new Date(formulario.dataCriacao))}</div>
                     <div>Modificado: {formatarData(new Date(formulario.dataModificacao))}</div>
                     {formulario.criadoPor && (
                       <div style={{ marginTop: '5px', display: 'flex', alignItems: 'center', gap: '5px' }}>
                         <span>👤 Criado por:</span>
-                        <span style={{ fontWeight: 'bold', color: '#495057' }}>
+                        <span style={{ fontWeight: 'bold', color: 'var(--text-main)' }}>
                           {formulario.criadoPor.displayName || formulario.criadoPor.email}
                         </span>
                         {formulario.criadoPor.displayName && (
-                          <span style={{ fontSize: '0.8rem', color: '#6c757d' }}>({formulario.criadoPor.email})</span>
+                          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>({formulario.criadoPor.email})</span>
                         )}
                       </div>
                     )}
@@ -450,19 +570,48 @@ export const GerenciarFormularios: React.FC<GerenciarFormulariosProps> = ({
                     ✏️ Editar
                   </button>
 
-                  {formulario.status === 'pendente' ? (
+                  {formulario.status === 'aguardando' && (
                     <button
-                      onClick={() => finalizarFormulario(formulario.id)}
+                      onClick={() => iniciarFormulario(formulario.id)}
                       style={{
                         ...buttonStyle,
-                        backgroundColor: '#28a745',
+                        backgroundColor: '#007bff',
                         padding: '8px 12px',
                         fontSize: '14px'
                       }}
                     >
-                      ✅ Finalizar
+                      ▶️ Iniciar
                     </button>
-                  ) : (
+                  )}
+
+                  {formulario.status === 'pendente' && (
+                    <>
+                      <button
+                        onClick={() => finalizarFormulario(formulario.id)}
+                        style={{
+                          ...buttonStyle,
+                          backgroundColor: '#28a745',
+                          padding: '8px 12px',
+                          fontSize: '14px'
+                        }}
+                      >
+                        ✅ Finalizar
+                      </button>
+                      <button
+                        onClick={() => pausarFormulario(formulario.id)}
+                        style={{
+                          ...buttonStyle,
+                          backgroundColor: '#6c757d',
+                          padding: '8px 12px',
+                          fontSize: '14px'
+                        }}
+                      >
+                        ⏸️ Aguardar
+                      </button>
+                    </>
+                  )}
+
+                  {formulario.status === 'finalizado' && (
                     <button
                       onClick={() => reabrirFormulario(formulario.id)}
                       style={{
@@ -512,17 +661,18 @@ export const GerenciarFormularios: React.FC<GerenciarFormulariosProps> = ({
           zIndex: 9999
         }}>
           <div style={{
-            backgroundColor: '#fff',
+            backgroundColor: 'var(--bg-card)',
+            color: 'var(--text-main)',
             padding: '30px',
             borderRadius: '10px',
-            boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.25)',
             maxWidth: '400px',
             width: '90%',
             textAlign: 'center'
           }}>
             <div style={{ fontSize: '3rem', marginBottom: '15px' }}>🗑️</div>
-            <h3 style={{ color: '#333', marginBottom: '10px' }}>Confirmar Exclusão</h3>
-            <p style={{ color: '#666', marginBottom: '20px' }}>
+            <h3 style={{ color: 'var(--text-main)', marginBottom: '10px' }}>Confirmar Exclusão</h3>
+            <p style={{ color: 'var(--text-muted)', marginBottom: '20px' }}>
               Tem certeza que deseja excluir o formulário "<strong>{confirmDelete.codigoOS}</strong>"? Esta ação não pode ser desfeita.
             </p>
             <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>

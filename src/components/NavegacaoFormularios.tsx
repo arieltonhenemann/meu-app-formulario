@@ -70,10 +70,10 @@ export const NavegacaoFormularios: React.FC<NavegacaoFormulariosProps> = ({
           onClick={() => onMudarTela(botao.tipo)}
           style={{
             padding: '12px 24px',
-            border: telaAtiva === botao.tipo ? `3px solid ${botao.cor}` : '2px solid #e9ecef',
+            border: telaAtiva === botao.tipo ? `3px solid ${botao.cor}` : '2px solid var(--border-color)',
             borderRadius: '8px',
-            backgroundColor: telaAtiva === botao.tipo ? botao.cor : '#fff',
-            color: telaAtiva === botao.tipo ? '#fff' : '#333',
+            backgroundColor: telaAtiva === botao.tipo ? botao.cor : 'var(--bg-card)',
+            color: telaAtiva === botao.tipo ? '#fff' : 'var(--text-main)',
             fontSize: '16px',
             fontWeight: 'bold',
             cursor: 'pointer',
@@ -81,7 +81,7 @@ export const NavegacaoFormularios: React.FC<NavegacaoFormulariosProps> = ({
             minWidth: '120px',
             boxShadow: telaAtiva === botao.tipo
               ? `0 4px 12px ${botao.cor}40`
-              : '0 2px 4px rgba(0,0,0,0.1)'
+              : '0 2px 4px rgba(0,0,0,0.05)'
           }}
         >
           {botao.label}
@@ -92,10 +92,10 @@ export const NavegacaoFormularios: React.FC<NavegacaoFormulariosProps> = ({
         <div style={{
           marginLeft: '20px',
           padding: '8px 16px',
-          backgroundColor: '#fff3cd',
-          border: '1px solid #ffeaa7',
+          backgroundColor: 'rgba(255, 193, 7, 0.15)',
+          border: '1px solid var(--status-pendente)',
           borderRadius: '6px',
-          color: '#856404',
+          color: 'var(--status-pendente)',
           fontSize: '14px',
           fontWeight: 'bold'
         }}>

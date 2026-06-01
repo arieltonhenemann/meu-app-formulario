@@ -32,7 +32,7 @@ export const TxtModal: React.FC<TxtModalProps> = ({
         <div style={overlayStyle}>
             <div style={modalStyle}>
                 <div style={headerStyle}>
-                    <h3 style={{ margin: 0, color: '#333' }}>{titulo}</h3>
+                    <h3 style={{ margin: 0, color: 'var(--text-main)' }}>{titulo}</h3>
                     <button onClick={onClose} style={closeButtonStyle}>✕</button>
                 </div>
 
@@ -85,14 +85,16 @@ const overlayStyle: React.CSSProperties = {
 };
 
 const modalStyle: React.CSSProperties = {
-    backgroundColor: '#fff',
+    backgroundColor: 'var(--bg-card)',
+    color: 'var(--text-main)',
     borderRadius: '8px',
     width: '90%',
     maxWidth: '600px',
     maxHeight: '90vh',
     display: 'flex',
     flexDirection: 'column',
-    boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)',
+    boxShadow: '0 4px 20px rgba(0, 0, 0, 0.25)',
+    border: '1px solid var(--border-color)',
 };
 
 const headerStyle: React.CSSProperties = {
@@ -100,7 +102,7 @@ const headerStyle: React.CSSProperties = {
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: '16px 20px',
-    borderBottom: '1px solid #e9ecef',
+    borderBottom: '1px solid var(--border-color)',
 };
 
 const closeButtonStyle: React.CSSProperties = {
@@ -108,7 +110,7 @@ const closeButtonStyle: React.CSSProperties = {
     border: 'none',
     fontSize: '20px',
     cursor: 'pointer',
-    color: '#6c757d',
+    color: 'var(--text-muted)',
     padding: '4px',
 };
 
@@ -125,18 +127,19 @@ const textAreaStyle: React.CSSProperties = {
     height: '400px',
     padding: '12px',
     borderRadius: '4px',
-    border: '1px solid #ced4da',
+    border: '1px solid var(--border-color)',
     fontSize: '14px',
     fontFamily: 'monospace',
     lineHeight: '1.5',
     resize: 'none',
-    backgroundColor: '#f8f9fa',
+    backgroundColor: 'var(--input-bg)',
+    color: 'var(--text-main)',
     boxSizing: 'border-box'
 };
 
 const footerStyle: React.CSSProperties = {
     padding: '16px 20px',
-    borderTop: '1px solid #e9ecef',
+    borderTop: '1px solid var(--border-color)',
     display: 'flex',
     justifyContent: 'flex-end',
     gap: '10px',

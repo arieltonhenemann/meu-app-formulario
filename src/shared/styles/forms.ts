@@ -4,18 +4,20 @@ export const labelStyle: React.CSSProperties = {
   display: 'block',
   marginBottom: '5px',
   fontWeight: 'bold',
-  color: '#333',
+  color: 'var(--text-main)',
   fontSize: '14px'
 };
 
 export const inputStyle: React.CSSProperties = {
   width: '100%',
   padding: '10px',
-  border: '1px solid #ddd',
+  border: '1px solid var(--input-border)',
   borderRadius: '4px',
   fontSize: '14px',
   fontFamily: 'inherit',
-  boxSizing: 'border-box'
+  boxSizing: 'border-box',
+  backgroundColor: 'var(--input-bg)',
+  color: 'var(--text-main)'
 };
 
 export const buttonStyle: React.CSSProperties = {
@@ -30,11 +32,11 @@ export const buttonStyle: React.CSSProperties = {
 };
 
 export const cardStyle: React.CSSProperties = {
-  backgroundColor: '#fff',
+  backgroundColor: 'var(--bg-card)',
   padding: '20px',
   borderRadius: '8px',
   boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-  border: '1px solid #e9ecef'
+  border: '1px solid var(--border-color)'
 };
 
 export const formContainerStyle: React.CSSProperties = {
@@ -44,21 +46,24 @@ export const formContainerStyle: React.CSSProperties = {
 };
 
 export const formCardStyle: React.CSSProperties = {
-  backgroundColor: '#fff',
+  backgroundColor: 'var(--bg-card)',
   padding: '30px',
   borderRadius: '10px',
-  boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+  boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+  color: 'var(--text-main)'
 };
 
 export const textareaStyle: React.CSSProperties = {
   width: '100%',
   padding: '10px',
-  border: '1px solid #ddd',
+  border: '1px solid var(--input-border)',
   borderRadius: '4px',
   fontSize: '14px',
   fontFamily: 'inherit',
   boxSizing: 'border-box',
-  resize: 'vertical'
+  resize: 'vertical',
+  backgroundColor: 'var(--input-bg)',
+  color: 'var(--text-main)'
 };
 
 export const badgeStyle: React.CSSProperties = {
@@ -71,12 +76,13 @@ export const badgeStyle: React.CSSProperties = {
 };
 
 export const statCardStyle: React.CSSProperties = {
-  backgroundColor: '#fff',
+  backgroundColor: 'var(--bg-card)',
   padding: '15px',
   borderRadius: '8px',
   boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-  border: '1px solid #e9ecef',
+  border: '1px solid var(--border-color)',
   borderLeft: '4px solid',
+  color: 'var(--text-main)'
 };
 
 export const gridStyle: React.CSSProperties = {

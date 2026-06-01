@@ -17,13 +17,14 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+        background: 'linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%)'
       }}>
         <div style={{
-          backgroundColor: 'white',
+          backgroundColor: 'var(--bg-card)',
+          color: 'var(--text-main)',
           padding: '40px',
           borderRadius: '15px',
-          boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
+          boxShadow: '0 10px 25px rgba(0,0,0,0.15)',
           textAlign: 'center'
         }}>
           <div style={{
@@ -33,10 +34,10 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
           }}>
             ⚙️
           </div>
-          <h2 style={{ color: '#333', marginBottom: '10px' }}>
+          <h2 style={{ color: 'var(--text-main)', marginBottom: '10px' }}>
             Carregando...
           </h2>
-          <p style={{ color: '#666', margin: 0 }}>
+          <p style={{ color: 'var(--text-muted)', margin: 0 }}>
             Verificando autenticação
           </p>
         </div>
@@ -69,10 +70,11 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
         padding: '20px'
       }}>
         <div style={{
-          backgroundColor: 'white',
+          backgroundColor: 'var(--bg-card)',
+          color: 'var(--text-main)',
           padding: '40px',
           borderRadius: '15px',
-          boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
+          boxShadow: '0 10px 25px rgba(0,0,0,0.15)',
           textAlign: 'center',
           maxWidth: '500px'
         }}>
@@ -90,7 +92,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
             Conta Pendente de Aprovação
           </h2>
           <p style={{
-            color: '#666',
+            color: 'var(--text-muted)',
             marginBottom: '20px',
             lineHeight: '1.6'
           }}>
@@ -141,7 +143,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
           <p style={{
             marginTop: '20px',
             fontSize: '12px',
-            color: '#999'
+            color: 'var(--text-muted)'
           }}>
             Status atual: <strong style={{ color: '#e67e22' }}>{user.statusInfo?.status || 'Pendente'}</strong><br />
             Data do registro: {user.statusInfo?.dataCriacao?.toLocaleDateString('pt-BR') || 'N/A'}
