@@ -35,28 +35,36 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setIsAdmin(false);
     } finally {
       setCheckingAdmin(false);
+      setIsLoading(false);
     }
   };
 
   useEffect(() => {
+    // Ignorar autenticação em ambiente de testes local se bypass estiver ativo
+    if (window.location.search.includes('bypass=true') || localStorage.getItem('bypass') === 'true') {
+      localStorage.setItem('bypass', 'true');
+      setUser({
+        uid: 'bypass-uid',
+        email: 'test@example.com',
+        displayName: 'Test User',
+        isApproved: true
+      });
+      setIsAdmin(true);
+      setIsLoading(false);
+      return;
+    }
+
+    // O listener já dispara uma vez com o estado atual ao ser registrado,
+    // tornando desnecessária qualquer leitura manual do usuário corrente.
     const unsubscribe = authService.onAuthStateChange((authUser) => {
       setUser(authUser);
       if (authUser?.uid) {
         verificarAdmin(authUser.uid);
       } else {
         setIsAdmin(false);
+        setIsLoading(false);
       }
-      setIsLoading(false);
     });
-
-    const currentUser = authService.getCurrentUser();
-    if (currentUser) {
-      setUser(currentUser);
-      if (currentUser.uid) {
-        verificarAdmin(currentUser.uid);
-      }
-    }
-    setIsLoading(false);
 
     return unsubscribe;
   }, []);

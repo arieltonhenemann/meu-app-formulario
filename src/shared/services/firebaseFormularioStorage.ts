@@ -14,6 +14,7 @@ import {
 import { db, isFirebaseConfigured } from "../config/firebase";
 import {
   FormularioSalvo,
+  FormularioSalvoBase,
   StatusFormulario,
   TipoFormulario,
   criarFormularioSalvo,
@@ -26,6 +27,15 @@ import { OrdemServicoAdequacao } from "../types/adequacao";
 const COLLECTION_NAME = "formularios";
 const STORAGE_KEY = "formularios_salvos";
 const SYNC_KEY = "sync_pendente";
+
+/** União de todos os tipos de dados de formulário suportados. */
+type DadosFormulario = OrdemServico | OrdemServicoPON | OrdemServicoLINK | OrdemServicoAdequacao;
+
+/** Operações offline pendentes de sincronização com o Firestore. */
+type OperacaoPendente =
+  | { tipo: 'criar'; dados: FormularioSalvo; timestamp: number }
+  | { tipo: 'atualizar'; id: string; dados: Partial<FormularioSalvoBase> & { dados?: DadosFormulario }; timestamp: number }
+  | { tipo: 'excluir'; id: string; timestamp: number };
 
 class FirebaseFormularioStorageService {
   private isOnline = navigator.onLine;
@@ -133,7 +143,7 @@ class FirebaseFormularioStorageService {
   }
 
   // Atualizar formulário existente
-  async atualizar(id: string, novosDados: any): Promise<boolean> {
+  async atualizar(id: string, novosDados: DadosFormulario): Promise<boolean> {
     if (this.isOnline && this.isFirebaseConfigured()) {
       try {
         const docRef = doc(db, COLLECTION_NAME, id);
@@ -373,18 +383,20 @@ class FirebaseFormularioStorageService {
     return formulario;
   }
 
-  private atualizarNoLocalStorage(id: string, novosDados: any): boolean {
+  private atualizarNoLocalStorage(id: string, novosDados: DadosFormulario): boolean {
     const formularios = this.obterDoLocalStorage();
     const index = formularios.findIndex((f) => f.id === id);
 
     if (index === -1) return false;
 
+    // O cast é seguro pois o campo `tipo` original é preservado no spread,
+    // mantendo o discriminante correto da união FormularioSalvo.
     formularios[index] = {
       ...formularios[index],
       dados: novosDados,
       codigoOS: novosDados.codigoOS || `Sem código - ${id.slice(0, 6)}`,
       dataModificacao: new Date().toISOString(),
-    };
+    } as FormularioSalvo;
 
     this.salvarNoLocalStorage(formularios);
     return true;
@@ -433,9 +445,9 @@ class FirebaseFormularioStorageService {
     localStorage.setItem(SYNC_KEY, JSON.stringify(pendentes));
   }
 
-  private salvarAtualizacaoParaSincronizar(id: string, dados: any): void {
+  private salvarAtualizacaoParaSincronizar(id: string, dados: DadosFormulario): void {
     const pendentes = this.obterDadosPendentesParaSincronizar();
-    pendentes.push({
+    const operacao: OperacaoPendente = {
       tipo: "atualizar",
       id,
       dados: {
@@ -444,7 +456,8 @@ class FirebaseFormularioStorageService {
         dataModificacao: new Date().toISOString(),
       },
       timestamp: Date.now(),
-    });
+    };
+    pendentes.push(operacao);
     localStorage.setItem(SYNC_KEY, JSON.stringify(pendentes));
   }
 
@@ -472,7 +485,7 @@ class FirebaseFormularioStorageService {
     localStorage.setItem(SYNC_KEY, JSON.stringify(pendentes));
   }
 
-  private obterDadosPendentesParaSincronizar(): any[] {
+  private obterDadosPendentesParaSincronizar(): OperacaoPendente[] {
     try {
       const data = localStorage.getItem(SYNC_KEY);
       return data ? JSON.parse(data) : [];

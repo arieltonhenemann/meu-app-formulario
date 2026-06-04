@@ -9,6 +9,13 @@ import { toast } from '../shared/components/Toast';
 import { registrarAcaoAuditoria } from '../shared/utils/auditoriaHelper';
 import { StatusFormulario } from '../shared/types/formularioSalvo';
 
+interface CtoData {
+  c: string; // codigo
+  e: string; // endereco_completo
+  lat: string; // latitude
+  lon: string; // longitude
+}
+
 interface FormularioOSProps {
   onSubmit?: (dados: OrdemServico) => void;
   dadosIniciais?: Partial<OrdemServico>;
@@ -31,11 +38,32 @@ export const FormularioOS: React.FC<FormularioOSProps> = ({ onSubmit, dadosInici
   const [txtModalAberto, setTxtModalAberto] = useState(false);
   const [txtConteudo, setTxtConteudo] = useState('');
 
+  // Estados para autocompletar CTO
+  const [allCtos, setAllCtos] = useState<CtoData[]>([]);
+  const [ctoSuggestions, setCtoSuggestions] = useState<CtoData[]>([]);
+  const [mostrarSugestoes, setMostrarSugestoes] = useState(false);
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+
   useEffect(() => {
     if (dadosIniciais) {
       setFormData({ ...criarOSVazia(), ...dadosIniciais });
     }
   }, [dadosIniciais]);
+
+  useEffect(() => {
+    const carregarBancoCtos = async () => {
+      try {
+        const response = await fetch('/ctos.json');
+        if (response.ok) {
+          const data = await response.json();
+          setAllCtos(data);
+        }
+      } catch (err) {
+        console.error('Erro ao carregar banco de dados de CTOs:', err);
+      }
+    };
+    carregarBancoCtos();
+  }, []);
 
   const handleChange = (field: keyof OrdemServico, value: string) => {
     setFormData(prev => ({
@@ -49,6 +77,35 @@ export const FormularioOS: React.FC<FormularioOSProps> = ({ onSubmit, dadosInici
         [field]: ''
       }));
     }
+  };
+
+  const handleCtoChange = (val: string) => {
+    handleChange('cto', val);
+
+    if (val.trim().length >= 2 && allCtos.length > 0) {
+      const termo = val.toLowerCase();
+      // Filtrar CTOs que contenham o termo digitado
+      const filtered = allCtos
+        .filter(c => c.c.toLowerCase().includes(termo))
+        .slice(0, 8); // Mostrar no máximo 8 sugestões
+      setCtoSuggestions(filtered);
+      setMostrarSugestoes(filtered.length > 0);
+    } else {
+      setCtoSuggestions([]);
+      setMostrarSugestoes(false);
+    }
+  };
+
+  const selecionarCto = (ctoSel: CtoData) => {
+    setFormData(prev => ({
+      ...prev,
+      cto: ctoSel.c,
+      endereco: ctoSel.e || prev.endereco,
+      localizacao: ctoSel.lat && ctoSel.lon 
+        ? `https://www.google.com/maps/search/?api=1&query=${ctoSel.lat},${ctoSel.lon}` 
+        : prev.localizacao
+    }));
+    setMostrarSugestoes(false);
   };
 
   const validarFormulario = (): boolean => {
@@ -164,17 +221,66 @@ export const FormularioOS: React.FC<FormularioOSProps> = ({ onSubmit, dadosInici
               </div>
             )}
 
-            <div>
+            <div style={{ position: 'relative' }}>
               <label style={labelStyle}>
                 CTO:
               </label>
               <input
                 type="text"
                 value={formData.cto}
-                onChange={(e) => handleChange('cto', e.target.value)}
+                onChange={(e) => handleCtoChange(e.target.value)}
+                onBlur={() => setTimeout(() => setMostrarSugestoes(false), 200)}
+                onFocus={() => {
+                  if (formData.cto.trim().length >= 2) {
+                    handleCtoChange(formData.cto);
+                  }
+                }}
                 style={inputStyle}
                 placeholder="Ex: CTO-ABC-001"
+                autoComplete="off"
               />
+              {mostrarSugestoes && ctoSuggestions.length > 0 && (
+                <ul style={{
+                  position: 'absolute',
+                  top: '100%',
+                  left: 0,
+                  right: 0,
+                  backgroundColor: 'var(--bg-card)',
+                  border: '1px solid var(--input-border)',
+                  borderRadius: '4px',
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                  maxHeight: '200px',
+                  overflowY: 'auto',
+                  zIndex: 1000,
+                  listStyle: 'none',
+                  margin: 0,
+                  padding: 0,
+                }}>
+                  {ctoSuggestions.map((suggestion, idx) => (
+                    <li
+                      key={idx}
+                      onClick={() => selecionarCto(suggestion)}
+                      style={{
+                        padding: '10px 12px',
+                        cursor: 'pointer',
+                        borderBottom: '1px solid var(--input-border)',
+                        color: 'var(--text-main)',
+                        fontSize: '13px',
+                        transition: 'background-color 0.2s',
+                        textAlign: 'left',
+                        backgroundColor: hoveredIndex === idx ? 'rgba(0, 123, 255, 0.1)' : 'transparent',
+                      }}
+                      onMouseEnter={() => setHoveredIndex(idx)}
+                      onMouseLeave={() => setHoveredIndex(null)}
+                    >
+                      <div style={{ fontWeight: 'bold' }}>{suggestion.c}</div>
+                      <div style={{ fontSize: '11px', color: '#6c757d', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        📍 {suggestion.e}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
           </div>
 

@@ -53,31 +53,22 @@ class AuthService {
 
   // Registrar novo usuário
   async registrar(email: string, password: string): Promise<AuthUser> {
-    console.log('🚀 INICIANDO REGISTRO:', { email });
-    
     if (!isFirebaseConfigured() || !auth) {
-      console.error('❌ Firebase não configurado');
       throw new Error('Firebase Authentication não configurado');
     }
 
     try {
-      console.log('📝 Criando usuário no Firebase Auth...');
       const userCredential: UserCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
-      
-      console.log('✅ Usuário criado no Firebase Auth:', { uid: user.uid, email: user.email });
-      console.log('📋 Agora criando status no Firestore...');
-      
+
       // Criar registro no Firestore com status pendente
       await userService.criarUsuarioStatus(user.uid, user.email || '', user.displayName || undefined);
-      
-      console.log('✅ Status criado no Firestore com sucesso!');
-      
+
       const authUser: AuthUser = {
         uid: user.uid,
         email: user.email,
         displayName: user.displayName,
-        isApproved: false, // Novo usuário sempre pendente
+        isApproved: false,
         statusInfo: {
           uid: user.uid,
           email: user.email || '',
@@ -86,12 +77,12 @@ class AuthService {
           dataCriacao: new Date()
         }
       };
-      
-      console.log('✅ Usuário registrado com sucesso (pendente aprovação):', authUser.email);
+
       return authUser;
-    } catch (error: any) {
-      console.error('❌ Erro ao registrar usuário:', error);
-      throw new Error(this.getErrorMessage(error.code));
+    } catch (error: unknown) {
+      const code = (error as { code?: string }).code ?? '';
+      console.error('Erro ao registrar usuário:', code);
+      throw new Error(this.getErrorMessage(code));
     }
   }
 
@@ -104,10 +95,10 @@ class AuthService {
     try {
       const userCredential: UserCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
-      
+
       // Verificar status de aprovação
       const statusInfo = await userService.verificarStatusUsuario(user.uid);
-      
+
       const authUser: AuthUser = {
         uid: user.uid,
         email: user.email,
@@ -115,13 +106,12 @@ class AuthService {
         isApproved: statusInfo?.status === 'aprovado',
         statusInfo: statusInfo || undefined
       };
-      
-      console.log('✅ Login realizado com sucesso:', authUser.email);
-      console.log('📋 Status de aprovação:', statusInfo?.status || 'não encontrado');
+
       return authUser;
-    } catch (error: any) {
-      console.error('❌ Erro ao fazer login:', error);
-      throw new Error(this.getErrorMessage(error.code));
+    } catch (error: unknown) {
+      const code = (error as { code?: string }).code ?? '';
+      console.error('Erro ao fazer login:', code);
+      throw new Error(this.getErrorMessage(code));
     }
   }
 
@@ -133,9 +123,8 @@ class AuthService {
 
     try {
       await signOut(auth);
-      console.log('✅ Logout realizado com sucesso');
-    } catch (error: any) {
-      console.error('❌ Erro ao fazer logout:', error);
+    } catch (error: unknown) {
+      console.error('Erro ao fazer logout:', error);
       throw new Error('Erro ao fazer logout');
     }
   }

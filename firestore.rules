@@ -24,7 +24,7 @@ service cloud.firestore {
       return isOwner(userId) || isAdmin();
     }
 
-    // Valida estrutura de um formulário
+    // Valida estrutura de um formulário criado pelo cliente (não via API Admin)
     function isValidFormulario() {
       let data = request.resource.data;
       let requiredFields = ['tipo', 'dados', 'dataCriacao', 'dataModificacao', 'codigoOS', 'criadoPor'];
@@ -50,8 +50,6 @@ service cloud.firestore {
     match /admin_settings/{document} {
       allow read: if isAdmin();
       allow write: if isAdmin();
-      allow create: if isAdmin();
-      allow delete: if isAdmin();
     }
 
     // ==========================================
@@ -68,12 +66,14 @@ service cloud.firestore {
     // COLEÇÃO: formularios
     // ==========================================
     match /formularios/{formularioId} {
-      // Usuário só lê próprios formulários; admin lê todos
+      // Leitura: usuário vê apenas os próprios; admin vê todos
       allow read: if isAuthenticated()
         && (resource.data.criadoPor.uid == request.auth.uid || isAdmin());
 
-      // Criação: autenticado, estrutura válida, criadoPor == próprio uid
-      allow create: if isAuthenticated() && isValidFormulario();
+      // Criação via app cliente: autenticado, estrutura válida, criadoPor == próprio uid
+      // Nota: inserções via API Admin (Firebase Admin SDK) bypassam estas regras por design.
+      allow create: if isAuthenticated()
+        && isValidFormulario();
 
       // Atualização: próprio criador ou admin
       allow update: if isAuthenticated()
@@ -81,9 +81,6 @@ service cloud.firestore {
 
       // Exclusão: apenas admin
       allow delete: if isAdmin();
-
-      // Validação de dados em create/update (exceto admin)
-      allow create, update: if isAdmin() || request.resource.data.criadoPor.uid == request.auth.uid;
     }
 
     // ==========================================
