@@ -4,7 +4,8 @@ import {
   signOut, 
   onAuthStateChanged,
   User,
-  UserCredential 
+  UserCredential,
+  sendPasswordResetEmail
 } from 'firebase/auth';
 import { auth, isFirebaseConfigured } from '../config/firebase';
 import { userService } from './userService';
@@ -126,6 +127,21 @@ class AuthService {
     } catch (error: unknown) {
       console.error('Erro ao fazer logout:', error);
       throw new Error('Erro ao fazer logout');
+    }
+  }
+
+  // Enviar email de redefinição de senha
+  async redefinirSenha(email: string): Promise<void> {
+    if (!isFirebaseConfigured() || !auth) {
+      throw new Error('Firebase Authentication não configurado');
+    }
+
+    try {
+      await sendPasswordResetEmail(auth, email);
+    } catch (error: unknown) {
+      const code = (error as { code?: string }).code ?? '';
+      console.error('Erro ao enviar email de redefinição:', code);
+      throw new Error(this.getErrorMessage(code));
     }
   }
 

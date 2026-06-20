@@ -11,6 +11,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<AuthUser>;
   registrar: (email: string, password: string) => Promise<AuthUser>;
   logout: () => Promise<void>;
+  redefinirSenha: (email: string) => Promise<void>;
   refreshAdminStatus: () => Promise<void>;
 }
 
@@ -104,6 +105,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  const redefinirSenha = async (email: string): Promise<void> => {
+    setIsLoading(true);
+    try {
+      await authService.redefinirSenha(email);
+    } catch (error) {
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const refreshAdminStatus = async () => {
     if (user?.uid) {
       await verificarAdmin(user.uid);
@@ -119,6 +131,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     login,
     registrar,
     logout,
+    redefinirSenha,
     refreshAdminStatus,
   };
 

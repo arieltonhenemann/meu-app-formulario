@@ -3,8 +3,9 @@ import { useAuth } from '../shared/contexts/AuthContext';
 import { toast } from '../shared/components/Toast';
 
 export const Login: React.FC = () => {
-  const { login, registrar, isLoading } = useAuth();
+  const { login, registrar, redefinirSenha, isLoading } = useAuth();
   const [isLoginMode, setIsLoginMode] = useState(true);
+  const [isRecuperarMode, setIsRecuperarMode] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -24,6 +25,30 @@ export const Login: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
+    if (isRecuperarMode) {
+      if (!formData.email) {
+        setError('Por favor, digite seu e-mail.');
+        return;
+      }
+
+      try {
+        await redefinirSenha(formData.email);
+        toast.success(
+          `E-mail de redefinição enviado!\n\n` +
+          `📧 Verifique a caixa de entrada do e-mail: ${formData.email} para criar uma nova senha.`
+        );
+        setIsRecuperarMode(false);
+        setFormData({
+          email: '',
+          password: '',
+          confirmPassword: ''
+        });
+      } catch (error: unknown) {
+        setError((error as Error).message || 'Erro ao enviar e-mail de redefinição.');
+      }
+      return;
+    }
 
     // Validações básicas
     if (!formData.email || !formData.password) {
@@ -61,6 +86,7 @@ export const Login: React.FC = () => {
 
   const toggleMode = () => {
     setIsLoginMode(!isLoginMode);
+    setIsRecuperarMode(false);
     setError('');
     setFormData({
       email: '',
@@ -102,7 +128,9 @@ export const Login: React.FC = () => {
             fontSize: '16px',
             margin: 0
           }}>
-            {isLoginMode ? 'Entre com sua conta' : 'Crie sua conta'}
+            {isRecuperarMode
+              ? 'Recuperar Senha'
+              : (isLoginMode ? 'Entre com sua conta' : 'Crie sua conta')}
           </p>
         </div>
 
@@ -122,20 +150,47 @@ export const Login: React.FC = () => {
           </div>
 
           {/* Senha */}
-          <div style={{ marginBottom: '20px' }}>
-            <label style={labelStyle}>Senha:</label>
-            <input
-              type="password"
-              value={formData.password}
-              onChange={(e) => handleChange('password', e.target.value)}
-              style={inputStyle}
-              placeholder="Sua senha"
-              disabled={isLoading}
-            />
-          </div>
+          {!isRecuperarMode && (
+            <div style={{ marginBottom: isLoginMode ? '10px' : '20px' }}>
+              <label style={labelStyle}>Senha:</label>
+              <input
+                type="password"
+                value={formData.password}
+                onChange={(e) => handleChange('password', e.target.value)}
+                style={inputStyle}
+                placeholder="Sua senha"
+                disabled={isLoading}
+              />
+            </div>
+          )}
+
+          {/* Link Esqueceu a Senha (apenas no login) */}
+          {isLoginMode && !isRecuperarMode && (
+            <div style={{ textAlign: 'right', marginBottom: '20px' }}>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsRecuperarMode(true);
+                  setError('');
+                }}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#2563eb',
+                  fontSize: '14px',
+                  fontWeight: 'bold',
+                  cursor: 'pointer',
+                  textDecoration: 'underline',
+                  padding: 0
+                }}
+              >
+                Esqueceu a senha?
+              </button>
+            </div>
+          )}
 
           {/* Confirmar Senha (apenas no registro) */}
-          {!isLoginMode && (
+          {!isLoginMode && !isRecuperarMode && (
             <div style={{ marginBottom: '20px' }}>
               <label style={labelStyle}>Confirmar Senha:</label>
               <input
@@ -178,37 +233,63 @@ export const Login: React.FC = () => {
             {isLoading ? (
               '⏳ Processando...'
             ) : (
-              isLoginMode ? '🚀 Entrar' : '✨ Criar Conta'
+              isRecuperarMode
+                ? '✉️ Enviar Link'
+                : (isLoginMode ? '🚀 Entrar' : '✨ Criar Conta')
             )}
           </button>
         </form>
 
-        {/* Toggle Login/Registro */}
+        {/* Toggle Login/Registro/Recuperação */}
         <div style={{
           textAlign: 'center',
           marginTop: '25px',
           paddingTop: '25px',
           borderTop: '1px solid #eee'
         }}>
-          <p style={{ color: 'var(--text-muted)', marginBottom: '10px' }}>
-            {isLoginMode ? 'Não tem uma conta?' : 'Já tem uma conta?'}
-          </p>
-          <button
-            type="button"
-            onClick={toggleMode}
-            disabled={isLoading}
-            style={{
-              background: 'none',
-              border: 'none',
-              color: '#2563eb',
-              fontSize: '16px',
-              fontWeight: 'bold',
-              cursor: 'pointer',
-              textDecoration: 'underline'
-            }}
-          >
-            {isLoginMode ? 'Criar uma conta' : 'Fazer login'}
-          </button>
+          {isRecuperarMode ? (
+            <button
+              type="button"
+              onClick={() => {
+                setIsRecuperarMode(false);
+                setError('');
+              }}
+              disabled={isLoading}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: '#2563eb',
+                fontSize: '16px',
+                fontWeight: 'bold',
+                cursor: 'pointer',
+                textDecoration: 'underline'
+              }}
+            >
+              Voltar para o login
+            </button>
+          ) : (
+            <>
+              <p style={{ color: 'var(--text-muted)', marginBottom: '10px' }}>
+                {isLoginMode ? 'Não tem uma conta?' : 'Já tem uma conta?'}
+              </p>
+              <button
+                type="button"
+                onClick={toggleMode}
+                disabled={isLoading}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#2563eb',
+                  fontSize: '16px',
+                  fontWeight: 'bold',
+                  cursor: 'pointer',
+                  textDecoration: 'underline'
+                }}
+              >
+                {isLoginMode ? 'Criar uma conta' : 'Fazer login'}
+              </button>
+            </>
+          )}
         </div>
       </div>
     </div>
