@@ -246,6 +246,22 @@ export const GerenciarFormularios: React.FC<GerenciarFormulariosProps> = ({
     aguardando: formulariosParaEstatistica.filter(f => f.status === 'aguardando').length,
   };
 
+  const formulariosParaEstatisticaTipo = formularios.filter(formulario => {
+    const passaStatus = filtroStatus === 'todos' || formulario.status === filtroStatus;
+    const passaBusca = busca === '' ||
+      formulario.codigoOS.toLowerCase().includes(busca.toLowerCase()) ||
+      formulario.id.toLowerCase().includes(busca.toLowerCase());
+    return passaStatus && passaBusca;
+  });
+
+  const statsTipos = {
+    todos: formulariosParaEstatisticaTipo.length,
+    cto: formulariosParaEstatisticaTipo.filter(f => f.tipo === 'CTO').length,
+    pon: formulariosParaEstatisticaTipo.filter(f => f.tipo === 'PON').length,
+    link: formulariosParaEstatisticaTipo.filter(f => f.tipo === 'LINK').length,
+    adequacao: formulariosParaEstatisticaTipo.filter(f => f.tipo === 'ADEQUACAO').length,
+  };
+
   return (
     <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '20px' }}>
       <div style={{
@@ -317,6 +333,9 @@ export const GerenciarFormularios: React.FC<GerenciarFormulariosProps> = ({
           </div>
         </div>
 
+        <div style={{ fontSize: '0.8rem', fontWeight: 'bold', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '10px' }}>
+          Filtrar por Status
+        </div>
         <div style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
@@ -397,6 +416,111 @@ export const GerenciarFormularios: React.FC<GerenciarFormulariosProps> = ({
           >
             <div style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--text-main)', margin: 0 }}>{statsFiltradas.finalizados}</div>
             <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginTop: '5px' }}>Finalizados</div>
+          </div>
+        </div>
+
+        <div style={{ fontSize: '0.8rem', fontWeight: 'bold', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '10px', marginTop: '10px' }}>
+          Filtrar por Tipo
+        </div>
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+          gap: '15px',
+          marginBottom: '20px'
+        }}>
+          {/* Card Todos os Tipos */}
+          <div
+            onClick={() => setFiltrosTipo([])}
+            onMouseEnter={() => setHoveredCard('tipo-todos')}
+            onMouseLeave={() => setHoveredCard(null)}
+            style={{
+              ...statCardStyle,
+              borderLeftColor: '#6c757d',
+              cursor: 'pointer',
+              transform: hoveredCard === 'tipo-todos' ? 'translateY(-2px)' : 'none',
+              boxShadow: hoveredCard === 'tipo-todos' ? '0 4px 8px rgba(0,0,0,0.15)' : (filtrosTipo.length === 0 ? '0 4px 6px rgba(0,0,0,0.12)' : '0 2px 4px rgba(0,0,0,0.1)'),
+              backgroundColor: filtrosTipo.length === 0 ? 'var(--border-color)' : 'var(--bg-card)',
+              transition: 'all 0.2s ease'
+            }}
+          >
+            <div style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--text-main)', margin: 0 }}>{statsTipos.todos}</div>
+            <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginTop: '5px' }}>Todos os Tipos</div>
+          </div>
+
+          {/* Card CTO */}
+          <div
+            onClick={() => setFiltrosTipo(['CTO'])}
+            onMouseEnter={() => setHoveredCard('tipo-cto')}
+            onMouseLeave={() => setHoveredCard(null)}
+            style={{
+              ...statCardStyle,
+              borderLeftColor: '#007bff',
+              cursor: 'pointer',
+              transform: hoveredCard === 'tipo-cto' ? 'translateY(-2px)' : 'none',
+              boxShadow: hoveredCard === 'tipo-cto' ? '0 4px 8px rgba(0,0,0,0.15)' : (filtrosTipo.includes('CTO') ? '0 4px 6px rgba(0,0,0,0.12)' : '0 2px 4px rgba(0,0,0,0.1)'),
+              backgroundColor: filtrosTipo.includes('CTO') ? 'rgba(0, 123, 255, 0.15)' : 'var(--bg-card)',
+              transition: 'all 0.2s ease'
+            }}
+          >
+            <div style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--text-main)', margin: 0 }}>{statsTipos.cto}</div>
+            <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginTop: '5px' }}>CTO</div>
+          </div>
+
+          {/* Card PON */}
+          <div
+            onClick={() => setFiltrosTipo(['PON'])}
+            onMouseEnter={() => setHoveredCard('tipo-pon')}
+            onMouseLeave={() => setHoveredCard(null)}
+            style={{
+              ...statCardStyle,
+              borderLeftColor: '#28a745',
+              cursor: 'pointer',
+              transform: hoveredCard === 'tipo-pon' ? 'translateY(-2px)' : 'none',
+              boxShadow: hoveredCard === 'tipo-pon' ? '0 4px 8px rgba(0,0,0,0.15)' : (filtrosTipo.includes('PON') ? '0 4px 6px rgba(0,0,0,0.12)' : '0 2px 4px rgba(0,0,0,0.1)'),
+              backgroundColor: filtrosTipo.includes('PON') ? 'rgba(40, 167, 69, 0.15)' : 'var(--bg-card)',
+              transition: 'all 0.2s ease'
+            }}
+          >
+            <div style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--text-main)', margin: 0 }}>{statsTipos.pon}</div>
+            <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginTop: '5px' }}>PON</div>
+          </div>
+
+          {/* Card LINK */}
+          <div
+            onClick={() => setFiltrosTipo(['LINK'])}
+            onMouseEnter={() => setHoveredCard('tipo-link')}
+            onMouseLeave={() => setHoveredCard(null)}
+            style={{
+              ...statCardStyle,
+              borderLeftColor: '#dc3545',
+              cursor: 'pointer',
+              transform: hoveredCard === 'tipo-link' ? 'translateY(-2px)' : 'none',
+              boxShadow: hoveredCard === 'tipo-link' ? '0 4px 8px rgba(0,0,0,0.15)' : (filtrosTipo.includes('LINK') ? '0 4px 6px rgba(0,0,0,0.12)' : '0 2px 4px rgba(0,0,0,0.1)'),
+              backgroundColor: filtrosTipo.includes('LINK') ? 'rgba(220, 53, 69, 0.15)' : 'var(--bg-card)',
+              transition: 'all 0.2s ease'
+            }}
+          >
+            <div style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--text-main)', margin: 0 }}>{statsTipos.link}</div>
+            <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginTop: '5px' }}>LINK</div>
+          </div>
+
+          {/* Card ADEQUACAO */}
+          <div
+            onClick={() => setFiltrosTipo(['ADEQUACAO'])}
+            onMouseEnter={() => setHoveredCard('tipo-adequacao')}
+            onMouseLeave={() => setHoveredCard(null)}
+            style={{
+              ...statCardStyle,
+              borderLeftColor: '#267ecc',
+              cursor: 'pointer',
+              transform: hoveredCard === 'tipo-adequacao' ? 'translateY(-2px)' : 'none',
+              boxShadow: hoveredCard === 'tipo-adequacao' ? '0 4px 8px rgba(0,0,0,0.15)' : (filtrosTipo.includes('ADEQUACAO') ? '0 4px 6px rgba(0,0,0,0.12)' : '0 2px 4px rgba(0,0,0,0.1)'),
+              backgroundColor: filtrosTipo.includes('ADEQUACAO') ? 'rgba(38, 126, 204, 0.15)' : 'var(--bg-card)',
+              transition: 'all 0.2s ease'
+            }}
+          >
+            <div style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--text-main)', margin: 0 }}>{statsTipos.adequacao}</div>
+            <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginTop: '5px' }}>Adequação</div>
           </div>
         </div>
 
