@@ -275,7 +275,7 @@ export const GerenciarFormularios: React.FC<GerenciarFormulariosProps> = ({
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
           <div>
             <h1 style={{ color: 'var(--text-main)', fontSize: '2rem', margin: 0, marginBottom: '8px' }}>
-              Vorx Solutions Tech
+              Codryx Tech
             </h1>
             <p style={{ color: 'var(--text-muted)', margin: 0, fontSize: '0.95rem' }}>
               Gerenciamento de Formulários

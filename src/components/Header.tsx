@@ -58,7 +58,7 @@ export const Header: React.FC = () => {
             margin: 0,
             fontWeight: 'bold'
           }}>
-            Vorx Solutions Tech
+            Codryx Tech
           </h1>
         </div>
 
