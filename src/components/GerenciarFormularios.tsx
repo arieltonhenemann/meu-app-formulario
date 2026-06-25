@@ -20,6 +20,7 @@ export const GerenciarFormularios: React.FC<GerenciarFormulariosProps> = ({
   const [filtrosTipo, setFiltrosTipo] = useState<TipoFormulario[]>([]);
   const [dropdownTipoAberto, setDropdownTipoAberto] = useState(false);
   const dropdownRef = React.useRef<HTMLDivElement>(null);
+  const [filtroUsuario, setFiltroUsuario] = useState<string>('todos');
 
   useEffect(() => {
     const handleClickFora = (event: MouseEvent) => {
@@ -70,6 +71,13 @@ export const GerenciarFormularios: React.FC<GerenciarFormulariosProps> = ({
       console.error('Erro ao carregar formulários:', error);
     }
   };
+  const usuariosUnicosMap = new Map<string, { uid: string; email: string; displayName?: string | null }>();
+  formularios.forEach(f => {
+    if (f.criadoPor && f.criadoPor.uid) {
+      usuariosUnicosMap.set(f.criadoPor.uid, f.criadoPor);
+    }
+  });
+  const usuariosUnicos = Array.from(usuariosUnicosMap.values());
 
   const formulariosFiltrados = formularios.filter(formulario => {
     const passaStatus = filtroStatus === 'todos' || formulario.status === filtroStatus;
@@ -77,8 +85,9 @@ export const GerenciarFormularios: React.FC<GerenciarFormulariosProps> = ({
     const passaBusca = busca === '' ||
       formulario.codigoOS.toLowerCase().includes(busca.toLowerCase()) ||
       formulario.id.toLowerCase().includes(busca.toLowerCase());
+    const passaUsuario = !isAdmin || filtroUsuario === 'todos' || (formulario.criadoPor && formulario.criadoPor.uid === filtroUsuario);
 
-    return passaStatus && passaTipo && passaBusca;
+    return passaStatus && passaTipo && passaBusca && passaUsuario;
   });
 
   const finalizarFormulario = async (id: string) => {
@@ -236,7 +245,8 @@ export const GerenciarFormularios: React.FC<GerenciarFormulariosProps> = ({
     const passaBusca = busca === '' ||
       formulario.codigoOS.toLowerCase().includes(busca.toLowerCase()) ||
       formulario.id.toLowerCase().includes(busca.toLowerCase());
-    return passaTipo && passaBusca;
+    const passaUsuario = !isAdmin || filtroUsuario === 'todos' || (formulario.criadoPor && formulario.criadoPor.uid === filtroUsuario);
+    return passaTipo && passaBusca && passaUsuario;
   });
 
   const statsFiltradas = {
@@ -251,7 +261,8 @@ export const GerenciarFormularios: React.FC<GerenciarFormulariosProps> = ({
     const passaBusca = busca === '' ||
       formulario.codigoOS.toLowerCase().includes(busca.toLowerCase()) ||
       formulario.id.toLowerCase().includes(busca.toLowerCase());
-    return passaStatus && passaBusca;
+    const passaUsuario = !isAdmin || filtroUsuario === 'todos' || (formulario.criadoPor && formulario.criadoPor.uid === filtroUsuario);
+    return passaStatus && passaBusca && passaUsuario;
   });
 
   const statsTipos = {
@@ -620,6 +631,24 @@ export const GerenciarFormularios: React.FC<GerenciarFormulariosProps> = ({
               </div>
             )}
           </div>
+
+          {isAdmin && (
+            <div>
+              <label style={labelStyle}>Usuário:</label>
+              <select
+                value={filtroUsuario}
+                onChange={(e) => setFiltroUsuario(e.target.value)}
+                style={inputStyle}
+              >
+                <option value="todos">Todos os Usuários</option>
+                {usuariosUnicos.map((u) => (
+                  <option key={u.uid} value={u.uid}>
+                    {u.displayName || u.email}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
         </div>
       </div>
 
