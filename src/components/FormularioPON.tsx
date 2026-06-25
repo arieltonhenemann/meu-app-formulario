@@ -48,7 +48,6 @@ export const FormularioPON: React.FC<FormularioPONProps> = ({ onSubmit, dadosIni
 
     try {
       console.log('Dados da O.S PON:', formData);
-      onSubmit?.(formData);
 
       if (formularioId) {
         await firebaseFormularioStorage.atualizar(formularioId, formData);
@@ -81,6 +80,8 @@ export const FormularioPON: React.FC<FormularioPONProps> = ({ onSubmit, dadosIni
 
         limparFormulario();
       }
+
+      onSubmit?.(formData);
     } catch (error) {
       console.error('Erro ao salvar formulário:', error);
       toast.error('Erro ao salvar. Os dados foram salvos localmente e serão sincronizados quando possível.');

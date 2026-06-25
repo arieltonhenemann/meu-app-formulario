@@ -74,7 +74,6 @@ export const FormularioLINK: React.FC<FormularioLINKProps> = ({ onSubmit, dadosI
 
     try {
       console.log('Dados da O.S LINK:', formData);
-      onSubmit?.(formData);
 
       if (formularioId) {
         await firebaseFormularioStorage.atualizar(formularioId, formData);
@@ -105,6 +104,8 @@ export const FormularioLINK: React.FC<FormularioLINKProps> = ({ onSubmit, dadosI
 
         limparFormulario();
       }
+
+      onSubmit?.(formData);
     } catch (error) {
       console.error('Erro ao salvar formulário:', error);
       toast.error('Erro ao salvar. Os dados foram salvos localmente e serão sincronizados quando possível.');

@@ -118,7 +118,6 @@ export const FormularioOS: React.FC<FormularioOSProps> = ({ onSubmit, dadosInici
     if (validarFormulario()) {
       try {
         console.log('Dados da O.S:', formData);
-        onSubmit?.(formData);
 
         if (formularioId) {
           await firebaseFormularioStorage.atualizar(formularioId, formData);
@@ -151,6 +150,8 @@ export const FormularioOS: React.FC<FormularioOSProps> = ({ onSubmit, dadosInici
 
           limparFormulario();
         }
+
+        onSubmit?.(formData);
       } catch (error) {
         console.error('Erro ao salvar formulário:', error);
         toast.error('Erro ao salvar. Os dados foram salvos localmente e serão sincronizados quando possível.');

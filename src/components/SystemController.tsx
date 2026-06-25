@@ -39,9 +39,7 @@ export const SystemController: React.FC = () => {
   };
 
   const handleSubmit = async (_dados: OrdemServico | OrdemServicoPON | OrdemServicoLINK | OrdemServicoAdequacao) => {
-    if (formularioEditando) {
-      voltarParaGerenciar();
-    }
+    voltarParaGerenciar();
   };
 
   const handleFinalizar = async (formularioId: string) => {
