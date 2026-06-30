@@ -10,6 +10,7 @@ import {
 import { auth, isFirebaseConfigured } from '../config/firebase';
 import { userService } from './userService';
 import { UsuarioStatus } from '../types/usuario';
+import { logger } from '../utils/logger';
 
 export interface AuthUser {
   uid: string;
@@ -82,7 +83,7 @@ class AuthService {
       return authUser;
     } catch (error: unknown) {
       const code = (error as { code?: string }).code ?? '';
-      console.error('Erro ao registrar usuário:', code);
+      logger.error('Erro ao registrar usuário:', code);
       throw new Error(this.getErrorMessage(code));
     }
   }
@@ -111,7 +112,7 @@ class AuthService {
       return authUser;
     } catch (error: unknown) {
       const code = (error as { code?: string }).code ?? '';
-      console.error('Erro ao fazer login:', code);
+      logger.error('Erro ao fazer login:', code);
       throw new Error(this.getErrorMessage(code));
     }
   }
@@ -125,7 +126,7 @@ class AuthService {
     try {
       await signOut(auth);
     } catch (error: unknown) {
-      console.error('Erro ao fazer logout:', error);
+      logger.error('Erro ao fazer logout:', error);
       throw new Error('Erro ao fazer logout');
     }
   }
@@ -140,7 +141,7 @@ class AuthService {
       await sendPasswordResetEmail(auth, email);
     } catch (error: unknown) {
       const code = (error as { code?: string }).code ?? '';
-      console.error('Erro ao enviar email de redefinição:', code);
+      logger.error('Erro ao enviar email de redefinição:', code);
       throw new Error(this.getErrorMessage(code));
     }
   }

@@ -1,5 +1,5 @@
 import React from 'react';
-import { useAuth } from '../shared/contexts/AuthContext';
+import { useAuth } from '../../shared/contexts/AuthContext';
 import { Login } from './Login';
 
 interface ProtectedRouteProps {
@@ -122,7 +122,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
           }}>
             <button
               onClick={async () => {
-                const { authService } = await import('../shared/services/authService');
+                const { authService } = await import('../../shared/services/authService');
                 await authService.logout();
                 window.location.reload();
               }}

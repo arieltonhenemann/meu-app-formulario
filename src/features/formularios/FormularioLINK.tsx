@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { OrdemServicoLINK, criarLINKVazia, LinkInfo, criarLinkVazio } from '../shared/types/link';
-import { gerarArquivoLINK } from '../shared/utils/gerarArquivoTxt';
-import { firebaseFormularioStorage } from '../shared/services/firebaseFormularioStorage';
-import { useAuth } from '../shared/contexts/AuthContext';
-import { TxtModal } from './TxtModal';
-import { labelStyle, inputStyle, buttonStyle, formContainerStyle, formCardStyle } from '../shared/styles/forms';
-import { toast } from '../shared/components/Toast';
-import { registrarAcaoAuditoria } from '../shared/utils/auditoriaHelper';
-import { StatusFormulario } from '../shared/types/formularioSalvo';
+import { OrdemServicoLINK, criarLINKVazia, LinkInfo, criarLinkVazio } from '../../shared/types/link';
+import { gerarArquivoLINK } from '../../shared/utils/gerarArquivoTxt';
+import { firebaseFormularioStorage } from '../../shared/services/firebaseFormularioStorage';
+import { useAuth } from '../../shared/contexts/AuthContext';
+import { TxtModal } from '../../shared/components/TxtModal';
+import { labelStyle, inputStyle, buttonStyle, formContainerStyle, formCardStyle } from '../../shared/styles/forms';
+import { toast } from '../../shared/components/Toast';
+import { registrarAcaoAuditoria } from '../../shared/utils/auditoriaHelper';
+import { StatusFormulario } from '../../shared/types/formularioSalvo';
 
 interface FormularioLINKProps {
   onSubmit?: (dados: OrdemServicoLINK) => void;

@@ -1,6 +1,7 @@
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
+import { logger } from "../utils/logger";
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -29,13 +30,14 @@ if (isFirebaseConfigured()) {
     app = initializeApp(firebaseConfig);
     db = getFirestore(app);
     auth = getAuth(app);
-    console.log("✅ Firebase configurado e inicializado com sucesso!");
+    logger.log("✅ Firebase configurado e inicializado com sucesso!");
   } catch (error) {
-    console.warn("⚠️ Erro ao inicializar Firebase:", error);
+    logger.warn("⚠️ Erro ao inicializar Firebase:", error);
   }
 } else {
-  console.log("📝 Firebase não configurado - usando apenas localStorage");
+  logger.log("📝 Firebase não configurado - usando apenas localStorage");
 }
 
 export { db, auth, isFirebaseConfigured };
 export default app;
+

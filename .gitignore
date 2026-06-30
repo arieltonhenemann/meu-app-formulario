@@ -33,3 +33,6 @@ yarn-error.log*
 
 # grandes arquivos de dados brutos
 ctos.csv
+
+*.log
+build_ci*.log

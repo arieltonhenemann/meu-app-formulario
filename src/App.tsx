@@ -1,8 +1,7 @@
 import React from 'react';
-import './App.css';
 import { AuthProvider } from './shared/contexts/AuthContext';
-import { ProtectedRoute } from './components/ProtectedRoute';
-import { SystemController } from './components/SystemController';
+import { ProtectedRoute } from './features/auth/ProtectedRoute';
+import { SystemController } from './features/dashboard/SystemController';
 import { ToastContainer } from './shared/components/Toast';
 import { ErrorBoundary } from './shared/components/ErrorBoundary';
 

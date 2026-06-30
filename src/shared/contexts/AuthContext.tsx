@@ -41,9 +41,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   useEffect(() => {
-    // Ignorar autenticação em ambiente de testes local se bypass estiver ativo
-    if (window.location.search.includes('bypass=true') || localStorage.getItem('bypass') === 'true') {
-      localStorage.setItem('bypass', 'true');
+    // Bypass de autenticação restrito ao ambiente de desenvolvimento local.
+    // NUNCA funcionará em produção pois a variável VITE_DEV_BYPASS não é incluída no build.
+    // Para ativar, adicione VITE_DEV_BYPASS=true no arquivo .env (que está no .gitignore).
+    if (import.meta.env.DEV && import.meta.env.VITE_DEV_BYPASS === 'true') {
       setUser({
         uid: 'bypass-uid',
         email: 'test@example.com',
@@ -75,8 +76,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       const authUser = await authService.login(email, password);
       return authUser;
-    } catch (error) {
-      throw error;
     } finally {
       setIsLoading(false);
     }
@@ -87,8 +86,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       const authUser = await authService.registrar(email, password);
       return authUser;
-    } catch (error) {
-      throw error;
     } finally {
       setIsLoading(false);
     }
@@ -98,8 +95,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setIsLoading(true);
     try {
       await authService.logout();
-    } catch (error) {
-      throw error;
     } finally {
       setIsLoading(false);
     }
@@ -109,8 +104,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setIsLoading(true);
     try {
       await authService.redefinirSenha(email);
-    } catch (error) {
-      throw error;
     } finally {
       setIsLoading(false);
     }

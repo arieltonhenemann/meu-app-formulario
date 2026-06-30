@@ -199,7 +199,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       // Ordenação: omitida quando codigoOS está presente para evitar índices compostos
       if (!codigoOS) {
-        const field = typeof orderField === 'string' ? orderField : 'dataModificacao';
+        const CAMPOS_ORDENACAO_VALIDOS = ['dataModificacao', 'dataCriacao', 'codigoOS', 'status', 'tipo'];
+        const field = typeof orderField === 'string' && CAMPOS_ORDENACAO_VALIDOS.includes(orderField) 
+          ? orderField 
+          : 'dataModificacao';
         query = query.orderBy(field, 'desc');
       }
 

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../shared/contexts/AuthContext';
-import { toast } from '../shared/components/Toast';
+import { useAuth } from '../contexts/AuthContext';
+import { toast } from '../components/Toast';
 
 export const Header: React.FC = () => {
   const { user, logout } = useAuth();

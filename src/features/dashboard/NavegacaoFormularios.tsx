@@ -1,5 +1,5 @@
 import React from 'react';
-import { useAuth } from '../shared/contexts/AuthContext';
+import { useAuth } from '../../shared/contexts/AuthContext';
 
 export type TipoFormulario = 'CTO' | 'PON' | 'LINK' | 'ADEQUACAO';
 export type TelaAtiva = TipoFormulario | 'GERENCIAR' | 'RELATORIOS' | 'LOGS' | 'ADMIN';

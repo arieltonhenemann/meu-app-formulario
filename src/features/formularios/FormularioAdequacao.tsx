@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { OrdemServicoAdequacao, criarAdequacaoVazia } from '../shared/types/adequacao';
-import { gerarArquivoADEQUACAO } from '../shared/utils/gerarArquivoTxt';
-import { firebaseFormularioStorage } from '../shared/services/firebaseFormularioStorage';
-import { useAuth } from '../shared/contexts/AuthContext';
-import { TxtModal } from './TxtModal';
-import { labelStyle, inputStyle, buttonStyle, formContainerStyle, formCardStyle, textareaStyle } from '../shared/styles/forms';
-import { toast } from '../shared/components/Toast';
-import { registrarAcaoAuditoria } from '../shared/utils/auditoriaHelper';
-import { StatusFormulario } from '../shared/types/formularioSalvo';
+import { OrdemServicoAdequacao, criarAdequacaoVazia } from '../../shared/types/adequacao';
+import { gerarArquivoADEQUACAO } from '../../shared/utils/gerarArquivoTxt';
+import { firebaseFormularioStorage } from '../../shared/services/firebaseFormularioStorage';
+import { useAuth } from '../../shared/contexts/AuthContext';
+import { TxtModal } from '../../shared/components/TxtModal';
+import { labelStyle, inputStyle, buttonStyle, formContainerStyle, formCardStyle, textareaStyle } from '../../shared/styles/forms';
+import { toast } from '../../shared/components/Toast';
+import { registrarAcaoAuditoria } from '../../shared/utils/auditoriaHelper';
+import { StatusFormulario } from '../../shared/types/formularioSalvo';
 
 interface FormularioAdequacaoProps {
     onSubmit?: (dados: OrdemServicoAdequacao) => void;

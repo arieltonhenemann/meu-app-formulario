@@ -23,10 +23,11 @@ import { OrdemServico } from "../types/os";
 import { OrdemServicoPON } from "../types/pon";
 import { OrdemServicoLINK } from "../types/link";
 import { OrdemServicoAdequacao } from "../types/adequacao";
+import { logger } from "../utils/logger";
 
 const COLLECTION_NAME = "formularios";
-const STORAGE_KEY = "formularios_salvos";
-const SYNC_KEY = "sync_pendente";
+const STORAGE_KEY = "meuapp_v1_formularios_salvos";
+const SYNC_KEY = "meuapp_v1_sync_pendente";
 
 /** União de todos os tipos de dados de formulário suportados. */
 type DadosFormulario = OrdemServico | OrdemServicoPON | OrdemServicoLINK | OrdemServicoAdequacao;
@@ -58,7 +59,7 @@ class FirebaseFormularioStorageService {
     try {
       return db !== null && typeof db === "object" && isFirebaseConfigured();
     } catch (error) {
-      console.warn("Firebase não está configurado corretamente:", error);
+      logger.warn("Firebase não está configurado corretamente:", error);
       return false;
     }
   }
@@ -87,7 +88,7 @@ class FirebaseFormularioStorageService {
 
         return formularios;
       } catch (error) {
-        console.error(
+        logger.error(
           "Erro ao buscar no Firebase, usando localStorage:",
           error
         );
@@ -132,7 +133,7 @@ class FirebaseFormularioStorageService {
 
         return formularioComId;
       } catch (error) {
-        console.error("Erro ao salvar no Firebase, salvando offline:", error);
+        logger.error("Erro ao salvar no Firebase, salvando offline:", error);
         this.salvarParaSincronizar(formulario);
         return this.salvarNoLocalStorageERetornar(formulario);
       }
@@ -158,7 +159,7 @@ class FirebaseFormularioStorageService {
 
         return true;
       } catch (error) {
-        console.error(
+        logger.error(
           "Erro ao atualizar no Firebase, salvando offline:",
           error
         );
@@ -189,7 +190,7 @@ class FirebaseFormularioStorageService {
 
         return true;
       } catch (error) {
-        console.error(
+        logger.error(
           "Erro ao atualizar status no Firebase, salvando offline:",
           error
         );
@@ -213,7 +214,7 @@ class FirebaseFormularioStorageService {
 
         return true;
       } catch (error) {
-        console.error(
+        logger.error(
           "Erro ao excluir no Firebase, marcando para exclusão:",
           error
         );
@@ -289,9 +290,9 @@ class FirebaseFormularioStorageService {
       // Limpar dados pendentes após sincronização
       localStorage.removeItem(SYNC_KEY);
 
-      console.log("Sincronização concluída com sucesso!");
+      logger.log("Sincronização concluída com sucesso!");
     } catch (error) {
-      console.error("Erro na sincronização:", error);
+      logger.error("Erro na sincronização:", error);
     }
   }
 
@@ -332,7 +333,7 @@ class FirebaseFormularioStorageService {
         callback(formularios);
       },
       (error) => {
-        console.error("Erro ao escutar mudanças, usando cache local:", error);
+        logger.error("Erro ao escutar mudanças, usando cache local:", error);
         const formularios = this.obterDoLocalStorage(uidFilter);
         callback(formularios);
       }
@@ -351,22 +352,33 @@ class FirebaseFormularioStorageService {
   private obterDoLocalStorage(uidFilter?: string): FormularioSalvo[] {
     try {
       const data = localStorage.getItem(STORAGE_KEY);
-      const formularios: FormularioSalvo[] = data ? JSON.parse(data) : [];
+      if (!data) return [];
+      
+      let dataStr;
+      try {
+        dataStr = decodeURIComponent(atob(data));
+      } catch {
+        dataStr = data; // Fallback para versão sem codificação
+      }
+      
+      const formularios: FormularioSalvo[] = JSON.parse(dataStr);
       if (uidFilter) {
         return formularios.filter((f) => f.criadoPor?.uid === uidFilter);
       }
       return formularios;
     } catch (error) {
-      console.error("Erro ao carregar do localStorage:", error);
+      logger.error("Erro ao carregar do localStorage:", error);
       return [];
     }
   }
 
   private salvarNoLocalStorage(formularios: FormularioSalvo[]): void {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(formularios));
+      const dataStr = JSON.stringify(formularios);
+      const encoded = btoa(encodeURIComponent(dataStr));
+      localStorage.setItem(STORAGE_KEY, encoded);
     } catch (error) {
-      console.error("Erro ao salvar no localStorage:", error);
+      logger.error("Erro ao salvar no localStorage:", error);
     }
   }
 
@@ -442,7 +454,7 @@ class FirebaseFormularioStorageService {
       dados: formulario,
       timestamp: Date.now(),
     });
-    localStorage.setItem(SYNC_KEY, JSON.stringify(pendentes));
+    localStorage.setItem(SYNC_KEY, btoa(encodeURIComponent(JSON.stringify(pendentes))));
   }
 
   private salvarAtualizacaoParaSincronizar(id: string, dados: DadosFormulario): void {
@@ -458,7 +470,7 @@ class FirebaseFormularioStorageService {
       timestamp: Date.now(),
     };
     pendentes.push(operacao);
-    localStorage.setItem(SYNC_KEY, JSON.stringify(pendentes));
+    localStorage.setItem(SYNC_KEY, btoa(encodeURIComponent(JSON.stringify(pendentes))));
   }
 
   private salvarAtualizacaoStatusParaSincronizar(
@@ -472,7 +484,7 @@ class FirebaseFormularioStorageService {
       dados: { status, dataModificacao: new Date().toISOString() },
       timestamp: Date.now(),
     });
-    localStorage.setItem(SYNC_KEY, JSON.stringify(pendentes));
+    localStorage.setItem(SYNC_KEY, btoa(encodeURIComponent(JSON.stringify(pendentes))));
   }
 
   private salvarExclusaoParaSincronizar(id: string): void {
@@ -482,15 +494,23 @@ class FirebaseFormularioStorageService {
       id,
       timestamp: Date.now(),
     });
-    localStorage.setItem(SYNC_KEY, JSON.stringify(pendentes));
+    localStorage.setItem(SYNC_KEY, btoa(encodeURIComponent(JSON.stringify(pendentes))));
   }
 
   private obterDadosPendentesParaSincronizar(): OperacaoPendente[] {
     try {
       const data = localStorage.getItem(SYNC_KEY);
-      return data ? JSON.parse(data) : [];
+      if (!data) return [];
+      
+      let dataStr;
+      try {
+        dataStr = decodeURIComponent(atob(data));
+      } catch {
+        dataStr = data; // Fallback
+      }
+      return JSON.parse(dataStr);
     } catch (error) {
-      console.error("Erro ao obter dados pendentes:", error);
+      logger.error("Erro ao obter dados pendentes:", error);
       return [];
     }
   }
@@ -516,7 +536,7 @@ class FirebaseFormularioStorageService {
         );
         await Promise.all(deletePromises);
       } catch (error) {
-        console.error("Erro ao limpar Firebase:", error);
+        logger.error("Erro ao limpar Firebase:", error);
       }
     }
   }

@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../shared/contexts/AuthContext';
-import { userService } from '../shared/services/userService';
-import { UsuarioStatus } from '../shared/types/usuario';
-import { toast } from '../shared/components/Toast';
-import { registrarAcaoAuditoria } from '../shared/utils/auditoriaHelper';
+import { useAuth } from '../../shared/contexts/AuthContext';
+import { userService } from '../../shared/services/userService';
+import { UsuarioStatus } from '../../shared/types/usuario';
+import { toast } from '../../shared/components/Toast';
+import { registrarAcaoAuditoria } from '../../shared/utils/auditoriaHelper';
 
 interface AdminPanelProps {
 }

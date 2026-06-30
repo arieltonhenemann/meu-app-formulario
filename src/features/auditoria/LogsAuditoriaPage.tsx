@@ -5,9 +5,9 @@ import {
   obterIconeAcao,
   obterCorAcao,
   obterDescricaoAcao
-} from '../shared/types/auditoria';
-import { auditoriaService } from '../shared/services/auditoriaService';
-import { formatarData } from '../shared/utils';
+} from '../../shared/types/auditoria';
+import { auditoriaService } from '../../shared/services/auditoriaService';
+import { formatarData } from '../../shared/utils';
 
 export const LogsAuditoriaPage: React.FC = () => {
   const [logs, setLogs] = useState<LogAuditoria[]>([]);

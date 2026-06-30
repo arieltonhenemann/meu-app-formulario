@@ -1,27 +1,27 @@
 import React, { useState, Suspense, lazy } from 'react';
-import { useAuth } from '../shared/contexts/AuthContext';
+import { useAuth } from '../../shared/contexts/AuthContext';
 import { GerenciarFormularios } from './GerenciarFormularios';
 import { NavegacaoFormularios, TelaAtiva } from './NavegacaoFormularios';
-import { Header } from './Header';
+import { Header } from '../../shared/components/Header';
 
-const FormularioOS = lazy(() => import('./FormularioOS').then(m => ({ default: m.FormularioOS })));
-const FormularioPON = lazy(() => import('./FormularioPON').then(m => ({ default: m.FormularioPON })));
-const FormularioLINK = lazy(() => import('./FormularioLINK').then(m => ({ default: m.FormularioLINK })));
-const FormularioAdequacao = lazy(() => import('./FormularioAdequacao').then(m => ({ default: m.FormularioAdequacao })));
-const AdminPanel = lazy(() => import('./AdminPanel').then(m => ({ default: m.AdminPanel })));
-const RelatoriosPage = lazy(() => import('./RelatoriosPage').then(m => ({ default: m.RelatoriosPage })));
-const LogsAuditoriaPage = lazy(() => import('./LogsAuditoriaPage').then(m => ({ default: m.LogsAuditoriaPage })));
+const FormularioOS = lazy(() => import('../formularios/FormularioOS').then(m => ({ default: m.FormularioOS })));
+const FormularioPON = lazy(() => import('../formularios/FormularioPON').then(m => ({ default: m.FormularioPON })));
+const FormularioLINK = lazy(() => import('../formularios/FormularioLINK').then(m => ({ default: m.FormularioLINK })));
+const FormularioAdequacao = lazy(() => import('../formularios/FormularioAdequacao').then(m => ({ default: m.FormularioAdequacao })));
+const AdminPanel = lazy(() => import('../admin/AdminPanel').then(m => ({ default: m.AdminPanel })));
+const RelatoriosPage = lazy(() => import('../relatorios/RelatoriosPage').then(m => ({ default: m.RelatoriosPage })));
+const LogsAuditoriaPage = lazy(() => import('../auditoria/LogsAuditoriaPage').then(m => ({ default: m.LogsAuditoriaPage })));
 
-import { OrdemServico } from '../shared/types/os';
-import { OrdemServicoPON } from '../shared/types/pon';
-import { OrdemServicoLINK } from '../shared/types/link';
-import { OrdemServicoAdequacao } from '../shared/types/adequacao';
-import { FormularioSalvo } from '../shared/types/formularioSalvo';
-import { formatarData } from '../shared/utils';
-import { firebaseFormularioStorage } from '../shared/services/firebaseFormularioStorage';
-import { toast } from '../shared/components/Toast';
-import { registrarAcaoAuditoria } from '../shared/utils/auditoriaHelper';
-import type { TipoFormularioAuditoria } from '../shared/types/auditoria';
+import { OrdemServico } from '../../shared/types/os';
+import { OrdemServicoPON } from '../../shared/types/pon';
+import { OrdemServicoLINK } from '../../shared/types/link';
+import { OrdemServicoAdequacao } from '../../shared/types/adequacao';
+import { FormularioSalvo } from '../../shared/types/formularioSalvo';
+import { formatarData } from '../../shared/utils';
+import { firebaseFormularioStorage } from '../../shared/services/firebaseFormularioStorage';
+import { toast } from '../../shared/components/Toast';
+import { registrarAcaoAuditoria } from '../../shared/utils/auditoriaHelper';
+import type { TipoFormularioAuditoria } from '../../shared/types/auditoria';
 
 export const SystemController: React.FC = () => {
   const { user, isAdmin, checkingAdmin } = useAuth();

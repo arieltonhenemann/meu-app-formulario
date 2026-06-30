@@ -11,6 +11,7 @@ import {
 } from 'firebase/firestore';
 import { db, isFirebaseConfigured } from '../config/firebase';
 import { UsuarioStatus, criarUsuarioStatus } from '../types/usuario';
+import { logger } from '../utils/logger';
 
 class UserService {
   private readonly COLLECTION_USERS = 'users';
@@ -19,7 +20,7 @@ class UserService {
   // Criar registro de usuário após registro Firebase
   async criarUsuarioStatus(uid: string, email: string, displayName?: string): Promise<void> {
     if (!isFirebaseConfigured() || !db) {
-      console.warn('Firebase não configurado - usuário não salvo no Firestore');
+      logger.warn('Firebase não configurado - usuário não salvo no Firestore');
       return;
     }
 
@@ -37,7 +38,7 @@ class UserService {
       // Enviar notificação para admin
       await this.enviarNotificacaoNovoUsuario(usuarioStatus);
     } catch (error) {
-      console.error('Erro ao criar status do usuário:', error);
+      logger.error('Erro ao criar status do usuário:', error);
       throw new Error('Erro interno ao processar registro');
     }
   }
@@ -45,7 +46,7 @@ class UserService {
   // Verificar se usuário está aprovado
   async verificarStatusUsuario(uid: string): Promise<UsuarioStatus | null> {
     if (!isFirebaseConfigured() || !db) {
-      console.warn('Firebase não configurado - assumindo usuário aprovado');
+      logger.warn('Firebase não configurado - assumindo usuário aprovado');
       return null;
     }
 
@@ -59,7 +60,7 @@ class UserService {
       if (!docSnap.exists()) {
         // Se é admin mas não tem status, criar e aprovar automaticamente
         if (ehAdmin) {
-          console.log('👑 Admin detectado sem status - criando e aprovando automaticamente');
+          logger.log('👑 Admin detectado sem status - criando e aprovando automaticamente');
           await this.criarUsuarioStatus(uid, 'admin@sistema.com', 'Administrador');
           await this.aprovarUsuario(uid, 'sistema-auto');
           
@@ -74,7 +75,7 @@ class UserService {
           };
         }
         
-        console.warn('Usuário não encontrado no Firestore');
+        logger.warn('Usuário não encontrado no Firestore');
         return null;
       }
 
@@ -87,7 +88,7 @@ class UserService {
       
       // Se é admin mas ainda não aprovado, aprovar automaticamente
       if (ehAdmin && statusUsuario.status !== 'aprovado') {
-        console.log('👑 Admin detectado pendente - aprovando automaticamente');
+        logger.log('👑 Admin detectado pendente - aprovando automaticamente');
         await this.aprovarUsuario(uid, 'sistema-auto');
         statusUsuario.status = 'aprovado';
         statusUsuario.dataAprovacao = new Date();
@@ -96,7 +97,7 @@ class UserService {
       
       return statusUsuario;
     } catch (error) {
-      console.error('❌ Erro ao verificar status:', error);
+      logger.error('Erro ao verificar status:', error);
       return null;
     }
   }
@@ -104,7 +105,7 @@ class UserService {
   // Listar usuários pendentes (para admin)
   async listarUsuariosPendentes(): Promise<UsuarioStatus[]> {
     if (!isFirebaseConfigured() || !db) {
-      console.warn('Firebase não configurado - retornando lista vazia');
+      logger.warn('Firebase não configurado - retornando lista vazia');
       return [];
     }
 
@@ -127,7 +128,7 @@ class UserService {
 
       return usuarios;
     } catch (error) {
-      console.error('Erro ao listar usuários pendentes:', error);
+      logger.error('Erro ao listar usuários pendentes:', error);
       return [];
     }
   }
@@ -146,9 +147,9 @@ class UserService {
         aprovadoPor
       });
 
-      console.log('✅ Usuário aprovado com sucesso');
+      logger.log('✅ Usuário aprovado com sucesso');
     } catch (error) {
-      console.error('❌ Erro ao aprovar usuário:', error);
+      logger.error('Erro ao aprovar usuário:', error);
       throw new Error('Erro ao aprovar usuário');
     }
   }
@@ -168,9 +169,9 @@ class UserService {
         aprovadoPor: rejeitadoPor
       });
 
-      console.log('✅ Usuário rejeitado com sucesso');
+      logger.log('✅ Usuário rejeitado com sucesso');
     } catch (error) {
-      console.error('❌ Erro ao rejeitar usuário:', error);
+      logger.error('Erro ao rejeitar usuário:', error);
       throw new Error('Erro ao rejeitar usuário');
     }
   }
@@ -192,7 +193,7 @@ class UserService {
       const data = docSnap.data();
       return data.lista?.includes(uid) || false;
     } catch (error) {
-      console.error('❌ Erro ao verificar admin:', error);
+      logger.error('Erro ao verificar admin:', error);
       return false;
     }
   }
@@ -215,7 +216,7 @@ class UserService {
       const listaAdmins = data.lista || [];
       return Array.isArray(listaAdmins) && listaAdmins.length > 0;
     } catch (error) {
-      console.error('❌ Erro ao verificar se há administradores:', error);
+      logger.error('Erro ao verificar se há administradores:', error);
       return false;
     }
   }
@@ -223,10 +224,7 @@ class UserService {
   // Enviar notificação de novo usuário (simulação - você pode integrar com serviço real)
   private async enviarNotificacaoNovoUsuario(usuario: UsuarioStatus): Promise<void> {
     try {
-      console.log('📧 Nova solicitação de acesso recebida:');
-      console.log('- Email:', usuario.email);
-      console.log('- UID:', usuario.uid);
-      console.log('- Data:', usuario.dataCriacao);
+      logger.log('📧 Nova solicitação de acesso recebida — verifique o painel admin.');
 
       // Aqui você pode integrar com:
       // - EmailJS para envio direto
@@ -235,24 +233,10 @@ class UserService {
       // - Telegram Bot
       // - Etc.
 
-      // Exemplo de payload para webhook:
-      const notificationPayload = {
-        type: 'new_user_registration',
-        usuario: {
-          email: usuario.email,
-          uid: usuario.uid,
-          dataCriacao: usuario.dataCriacao.toISOString(),
-        },
-        message: `Novo usuário "${usuario.email}" solicitou acesso ao sistema.`,
-        actionUrl: `${window.location.origin}/admin/usuarios` // URL para aprovar
-      };
-
-      console.log('📤 Payload de notificação:', notificationPayload);
-      
       // TODO: Implementar envio real de email/webhook aqui
       
     } catch (error) {
-      console.error('❌ Erro ao enviar notificação:', error);
+      logger.error('Erro ao enviar notificação:', error);
     }
   }
 }

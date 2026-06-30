@@ -16,6 +16,7 @@ import {
   DetalhesAcao,
   criarLogAuditoria
 } from '../types/auditoria';
+import { logger } from '../utils/logger';
 
 const COLLECTION_NAME = 'logs_auditoria';
 const STORAGE_KEY = 'logs_auditoria_local';
@@ -41,7 +42,7 @@ class AuditoriaService {
     try {
       return db !== null && typeof db === 'object' && isFirebaseConfigured();
     } catch (error) {
-      console.warn('Firebase não configurado para auditoria:', error);
+      logger.warn('Firebase não configurado para auditoria:', error);
       return false;
     }
   }
@@ -62,9 +63,9 @@ class AuditoriaService {
       try {
         const { id, ...logSemId } = log;
         await addDoc(collection(db, COLLECTION_NAME), logSemId);
-        console.log('Log de auditoria salvo:', log.acao, log.detalhes.codigoOS);
+        logger.log('Log de auditoria salvo:', log.acao, log.detalhes.codigoOS);
       } catch (error) {
-        console.error('Erro ao salvar log no Firebase (ficará pendente):', error);
+        logger.error('Erro ao salvar log no Firebase (ficará pendente):', error);
         // Log fica salvo localmente para sincronização posterior
       }
     }
@@ -98,7 +99,7 @@ class AuditoriaService {
         
         return logs;
       } catch (error) {
-        console.error('Erro ao buscar logs no Firebase, usando cache local:', error);
+        logger.error('Erro ao buscar logs no Firebase, usando cache local:', error);
         return this.obterLogsLocais();
       }
     } else {
@@ -132,7 +133,7 @@ class AuditoriaService {
         
         return logs;
       } catch (error) {
-        console.error('Erro ao filtrar logs por usuário:', error);
+        logger.error('Erro ao filtrar logs por usuário:', error);
         // Fallback: filtrar dos logs locais
         const logsLocais = this.obterLogsLocais();
         return logsLocais.filter(log => log.usuario.uid === uid);
@@ -169,7 +170,7 @@ class AuditoriaService {
         
         return logs;
       } catch (error) {
-        console.error('Erro ao filtrar logs por ação:', error);
+        logger.error('Erro ao filtrar logs por ação:', error);
         // Fallback: filtrar dos logs locais
         const logsLocais = this.obterLogsLocais();
         return logsLocais.filter(log => log.acao === acao);
@@ -238,7 +239,7 @@ class AuditoriaService {
       
       localStorage.setItem(STORAGE_KEY, JSON.stringify(logsExistentes));
     } catch (error) {
-      console.error('Erro ao salvar log localmente:', error);
+      logger.error('Erro ao salvar log localmente:', error);
     }
   }
 
@@ -247,7 +248,7 @@ class AuditoriaService {
       const data = localStorage.getItem(STORAGE_KEY);
       return data ? JSON.parse(data) : [];
     } catch (error) {
-      console.error('Erro ao carregar logs locais:', error);
+      logger.error('Erro ao carregar logs locais:', error);
       return [];
     }
   }
@@ -258,7 +259,7 @@ class AuditoriaService {
       const logsCache = logs.slice(0, MAX_LOGS_LOCAIS);
       localStorage.setItem(STORAGE_KEY + '_cache', JSON.stringify(logsCache));
     } catch (error) {
-      console.error('Erro ao salvar cache de logs:', error);
+      logger.error('Erro ao salvar cache de logs:', error);
     }
   }
 
@@ -280,15 +281,15 @@ class AuditoriaService {
           const { id, ...logSemId } = log;
           await addDoc(collection(db, COLLECTION_NAME), logSemId);
         } catch (error) {
-          console.error('Erro ao sincronizar log:', log.id, error);
+          logger.error('Erro ao sincronizar log:', log.id, error);
         }
       }
       
       if (logsParaSincronizar.length > 0) {
-        console.log(`${logsParaSincronizar.length} logs sincronizados com sucesso!`);
+        logger.log(`${logsParaSincronizar.length} logs sincronizados com sucesso!`);
       }
     } catch (error) {
-      console.error('Erro na sincronização de logs:', error);
+      logger.error('Erro na sincronização de logs:', error);
     }
   }
 

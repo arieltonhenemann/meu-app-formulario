@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { OrdemServico, criarOSVazia } from '../shared/types/os';
-import { gerarArquivoCTO } from '../shared/utils/gerarArquivoTxt';
-import { firebaseFormularioStorage } from '../shared/services/firebaseFormularioStorage';
-import { useAuth } from '../shared/contexts/AuthContext';
-import { TxtModal } from './TxtModal';
-import { labelStyle, inputStyle, buttonStyle, formContainerStyle, formCardStyle, textareaStyle } from '../shared/styles/forms';
-import { toast } from '../shared/components/Toast';
-import { registrarAcaoAuditoria } from '../shared/utils/auditoriaHelper';
-import { StatusFormulario } from '../shared/types/formularioSalvo';
+import { OrdemServico, criarOSVazia } from '../../shared/types/os';
+import { gerarArquivoCTO } from '../../shared/utils/gerarArquivoTxt';
+import { firebaseFormularioStorage } from '../../shared/services/firebaseFormularioStorage';
+import { useAuth } from '../../shared/contexts/AuthContext';
+import { TxtModal } from '../../shared/components/TxtModal';
+import { labelStyle, inputStyle, buttonStyle, formContainerStyle, formCardStyle, textareaStyle } from '../../shared/styles/forms';
+import { toast } from '../../shared/components/Toast';
+import { registrarAcaoAuditoria } from '../../shared/utils/auditoriaHelper';
+import { StatusFormulario } from '../../shared/types/formularioSalvo';
 
 interface CtoData {
   c: string; // codigo

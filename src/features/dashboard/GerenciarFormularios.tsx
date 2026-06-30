@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { FormularioSalvo, StatusFormulario, TipoFormulario, obterCorStatus, obterCorTipo } from '../shared/types/formularioSalvo';
-import { firebaseFormularioStorage } from '../shared/services/firebaseFormularioStorage';
-import { formatarData } from '../shared/utils';
-import { useAuth } from '../shared/contexts/AuthContext';
-import { labelStyle, inputStyle, buttonStyle, cardStyle, badgeStyle, statCardStyle } from '../shared/styles/forms';
-import { toast } from '../shared/components/Toast';
-import { registrarAcaoAuditoria } from '../shared/utils/auditoriaHelper';
+import { FormularioSalvo, StatusFormulario, TipoFormulario, obterCorStatus, obterCorTipo } from '../../shared/types/formularioSalvo';
+import { firebaseFormularioStorage } from '../../shared/services/firebaseFormularioStorage';
+import { formatarData } from '../../shared/utils';
+import { useAuth } from '../../shared/contexts/AuthContext';
+import { labelStyle, inputStyle, buttonStyle, cardStyle, badgeStyle, statCardStyle } from '../../shared/styles/forms';
+import { toast } from '../../shared/components/Toast';
+import { registrarAcaoAuditoria } from '../../shared/utils/auditoriaHelper';
 
 interface GerenciarFormulariosProps {
   onEditarFormulario: (formulario: FormularioSalvo) => void;
