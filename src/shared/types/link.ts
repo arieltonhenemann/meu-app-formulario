@@ -9,6 +9,7 @@ export interface LinkInfo {
 
 export interface OrdemServicoLINK {
   codigoOS: string;
+  regiao: string;
   links: LinkInfo[];
   problema: string;
   resolucao: string;
@@ -25,7 +26,8 @@ export const criarLinkVazio = (id?: string): LinkInfo => ({
 
 export const criarLINKVazia = (): OrdemServicoLINK => ({
   codigoOS: '',
-  links: [criarLinkVazio()], // Começa com 1 link
+  regiao: '',
+  links: [criarLinkVazio()],
   problema: '',
   resolucao: '',
   materialUtilizado: ''

@@ -72,8 +72,14 @@ service cloud.firestore {
     // COLEÇÃO: formularios
     // ==========================================
     match /formularios/{formularioId} {
-      // Leitura: usuário aprovado vê apenas os próprios; admin vê todos
-      allow read: if (isAuthenticated() && isApproved() && resource.data.criadoPor.uid == request.auth.uid) || isAdmin();
+      // Leitura de documento único por ID: owner aprovado ou admin
+      allow get: if (isAuthenticated() && isApproved() && resource.data.criadoPor.uid == request.auth.uid) || isAdmin();
+
+      // Listagem via query: a query DEVE incluir where("criadoPor.uid","==",uid) para que
+      // o Firestore valide corretamente. Admin pode listar sem filtro.
+      // Para usuários comuns, resource.data.criadoPor.uid == request.auth.uid garante
+      // que o Firestore só retorna documentos do próprio usuário.
+      allow list: if (isAuthenticated() && isApproved() && resource.data.criadoPor.uid == request.auth.uid) || isAdmin();
 
       // Criação via app cliente: autenticado, estrutura válida, criadoPor == próprio uid
       // Nota: inserções via API Admin (Firebase Admin SDK) bypassam estas regras por design.

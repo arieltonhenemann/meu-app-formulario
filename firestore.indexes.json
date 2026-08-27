@@ -7,6 +7,24 @@
         { "fieldPath": "criadoPor.uid", "order": "ASCENDING" },
         { "fieldPath": "dataModificacao", "order": "DESCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "formularios",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "criadoPor.uid", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "dataModificacao", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "formularios",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "criadoPor.uid", "order": "ASCENDING" },
+        { "fieldPath": "tipo", "order": "ASCENDING" },
+        { "fieldPath": "dataModificacao", "order": "DESCENDING" }
+      ]
     }
   ],
   "fieldOverrides": []

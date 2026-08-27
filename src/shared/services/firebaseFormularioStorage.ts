@@ -3,6 +3,7 @@ import {
   collection,
   addDoc,
   getDocs,
+  getDoc,
   doc,
   updateDoc,
   deleteDoc,
@@ -227,27 +228,43 @@ class FirebaseFormularioStorageService {
     }
   }
 
-  // Obter formulário por ID
+  // Obter formulário por ID — usa getDoc (leitura direta) para evitar
+  // query sem filtro de UID que seria rejeitada pelas Firestore Rules.
   async obterPorId(id: string): Promise<FormularioSalvo | null> {
-    const formularios = await this.obterTodos();
-    return formularios.find((f) => f.id === id) || null;
+    if (this.isOnline && this.isFirebaseConfigured()) {
+      try {
+        const docRef = doc(db, COLLECTION_NAME, id);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          return { id: docSnap.id, ...docSnap.data() } as FormularioSalvo;
+        }
+        return null;
+      } catch (error) {
+        logger.error("Erro ao buscar formulário por ID no Firebase, usando localStorage:", error);
+        const formularios = this.obterDoLocalStorage();
+        return formularios.find((f) => f.id === id) || null;
+      }
+    } else {
+      const formularios = this.obterDoLocalStorage();
+      return formularios.find((f) => f.id === id) || null;
+    }
   }
 
-  // Filtrar por status
-  async filtrarPorStatus(status: StatusFormulario): Promise<FormularioSalvo[]> {
-    const formularios = await this.obterTodos();
+  // Filtrar por status — aceita uidFilter para respeitar as Firestore Rules
+  async filtrarPorStatus(status: StatusFormulario, uidFilter?: string): Promise<FormularioSalvo[]> {
+    const formularios = await this.obterTodos(uidFilter);
     return formularios.filter((f) => f.status === status);
   }
 
-  // Filtrar por tipo
-  async filtrarPorTipo(tipo: TipoFormulario): Promise<FormularioSalvo[]> {
-    const formularios = await this.obterTodos();
+  // Filtrar por tipo — aceita uidFilter para respeitar as Firestore Rules
+  async filtrarPorTipo(tipo: TipoFormulario, uidFilter?: string): Promise<FormularioSalvo[]> {
+    const formularios = await this.obterTodos(uidFilter);
     return formularios.filter((f) => f.tipo === tipo);
   }
 
-  // Obter estatísticas
-  async obterEstatisticas() {
-    const formularios = await this.obterTodos();
+  // Obter estatísticas — aceita uidFilter para respeitar as Firestore Rules
+  async obterEstatisticas(uidFilter?: string) {
+    const formularios = await this.obterTodos(uidFilter);
 
     return {
       total: formularios.length,

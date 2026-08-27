@@ -112,6 +112,7 @@ Data/Hora: ${formatarData(new Date())} - ${new Date().toLocaleTimeString(
 INFORMAÇÕES GERAIS:
 -------------------
 Código da O.S: ${dados.codigoOS || "Não informado"}
+Região: ${dados.regiao || "Não informado"}
 
 LINKS CONFIGURADOS (${dados.links.length}):
 ${linksTexto}

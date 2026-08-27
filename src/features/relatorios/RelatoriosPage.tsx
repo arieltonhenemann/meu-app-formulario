@@ -4,6 +4,7 @@ import { firebaseFormularioStorage } from '../../shared/services/firebaseFormula
 import { exportadorRelatorios } from '../../shared/utils/exportarRelatorios';
 import { toast } from '../../shared/components/Toast';
 import { formatarData } from '../../shared/utils';
+import { useAuth } from '../../shared/contexts/AuthContext';
 
 interface EstadoRelatorios {
   dataInicio: string;
@@ -26,6 +27,7 @@ const obterCorTipo = (tipo: string) => {
 };
 
 export const RelatoriosPage: React.FC = () => {
+  const { user, isAdmin } = useAuth();
   const [estado, setEstado] = useState<EstadoRelatorios>({
     dataInicio: '',
     dataFim: '',
@@ -61,7 +63,10 @@ export const RelatoriosPage: React.FC = () => {
     try {
       setEstado(prev => ({ ...prev, carregando: true }));
 
-      const formularios = await firebaseFormularioStorage.obterTodos();
+      // Usuários comuns só podem ver os próprios formulários.
+      // Admins veem todos.
+      const uidFilter = !isAdmin ? user?.uid : undefined;
+      const formularios = await firebaseFormularioStorage.obterTodos(uidFilter);
       console.log('📊 Formulários carregados:', formularios.length);
 
       setEstado(prev => ({
@@ -473,70 +478,112 @@ export const RelatoriosPage: React.FC = () => {
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr style={{ backgroundColor: 'var(--bg-app)' }}>
-                  <th style={{ padding: '12px', borderBottom: '2px solid var(--border-color)', textAlign: 'left' }}>Tipo</th>
-                  <th style={{ padding: '12px', borderBottom: '2px solid var(--border-color)', textAlign: 'left' }}>Código OS</th>
-                  <th style={{ padding: '12px', borderBottom: '2px solid var(--border-color)', textAlign: 'left' }}>Data</th>
                   <th style={{ padding: '12px', borderBottom: '2px solid var(--border-color)', textAlign: 'left' }}>Região</th>
-                  <th style={{ padding: '12px', borderBottom: '2px solid var(--border-color)', textAlign: 'left' }}>CTO/PON</th>
+                  <th style={{ padding: '12px', borderBottom: '2px solid var(--border-color)', textAlign: 'left' }}>Cto/Link</th>
+                  <th style={{ padding: '12px', borderBottom: '2px solid var(--border-color)', textAlign: 'left' }}>nível antes</th>
+                  <th style={{ padding: '12px', borderBottom: '2px solid var(--border-color)', textAlign: 'left' }}>nível pos</th>
+                  <th style={{ padding: '12px', borderBottom: '2px solid var(--border-color)', textAlign: 'left' }}>código da O.S</th>
                   <th style={{ padding: '12px', borderBottom: '2px solid var(--border-color)', textAlign: 'left' }}>Problema</th>
-                  <th style={{ padding: '12px', borderBottom: '2px solid var(--border-color)', textAlign: 'left' }}>Endereço</th>
+                  <th style={{ padding: '12px', borderBottom: '2px solid var(--border-color)', textAlign: 'left' }}>Resolução</th>
+                  <th style={{ padding: '12px', borderBottom: '2px solid var(--border-color)', textAlign: 'left' }}>data de inicio</th>
+                  <th style={{ padding: '12px', borderBottom: '2px solid var(--border-color)', textAlign: 'left' }}>data de término</th>
+                  <th style={{ padding: '12px', borderBottom: '2px solid var(--border-color)', textAlign: 'left' }}>Material utilizado</th>
                 </tr>
               </thead>
               <tbody>
                 {estado.formulariosFiltrados.map((formulario, index) => {
                   const dados = formulario.dados;
+                  const tipo = formulario.tipo;
+                  const dataFormatada = formulario.dataCriacao ? formatarData(new Date(formulario.dataCriacao)) : 'N/A';
+
+                  const getRegiao = () => {
+                    if ('regiao' in dados) return (dados as any).regiao || 'N/A';
+                    return 'N/A';
+                  };
+
+                  const getCtoLink = () => {
+                    if (tipo === 'CTO' && 'cto' in dados) return (dados as any).cto || 'N/A';
+                    if (tipo === 'PON' && 'pon' in dados) return (dados as any).pon || 'N/A';
+                    if (tipo === 'LINK') return 'Links';
+                    return 'N/A';
+                  };
+
+                  const getNivelAntes = () => {
+                    if (tipo === 'CTO' && 'nivelAntes' in dados) return (dados as any).nivelAntes || 'N/A';
+                    if (tipo === 'LINK' && 'links' in dados && Array.isArray((dados as any).links)) {
+                      return (dados as any).links.map((l: any, i: number) => `L${i + 1}: ${l.nivelAntes || 'N/A'}`).join('; ');
+                    }
+                    return 'N/A';
+                  };
+
+                  const getNivelPos = () => {
+                    if (tipo === 'CTO' && 'nivelPos' in dados) return (dados as any).nivelPos || 'N/A';
+                    if (tipo === 'PON' && 'mediaNivelPos' in dados) return (dados as any).mediaNivelPos || 'N/A';
+                    if (tipo === 'LINK' && 'links' in dados && Array.isArray((dados as any).links)) {
+                      return (dados as any).links.map((l: any, i: number) => `L${i + 1}: ${l.nivelPos || 'N/A'}`).join('; ');
+                    }
+                    return 'N/A';
+                  };
+
+                  const parsearDataDDMMAAAA = (dataStr: string): Date | null => {
+                    const partes = dataStr.split('/');
+                    if (partes.length !== 3) return null;
+                    const [d, m, y] = partes.map(Number);
+                    if (isNaN(d) || isNaN(m) || isNaN(y)) return null;
+                    return new Date(y, m - 1, d);
+                  };
+
+                  const getDataInicio = () => {
+                    if (tipo === 'ADEQUACAO' && 'datainicio' in dados && (dados as any).datainicio) {
+                      const data = parsearDataDDMMAAAA((dados as any).datainicio);
+                      if (data) return formatarData(data);
+                      return (dados as any).datainicio;
+                    }
+                    return dataFormatada;
+                  };
+
+                  const getDataTermino = () => {
+                    if (tipo === 'ADEQUACAO' && 'datatermino' in dados && (dados as any).datatermino) {
+                      const data = parsearDataDDMMAAAA((dados as any).datatermino);
+                      if (data) return formatarData(data);
+                      return (dados as any).datatermino;
+                    }
+                    return 'N/A';
+                  };
+
+                  const getMaterialUtilizado = () => {
+                    if ('materialUtilizado' in dados) return (dados as any).materialUtilizado || 'N/A';
+                    if ('materialutilizado' in dados) return (dados as any).materialutilizado || 'N/A';
+                    return 'N/A';
+                  };
+
                   return (
                     <tr key={formulario.id || index} style={{
                       backgroundColor: index % 2 === 0 ? 'var(--bg-card)' : 'var(--bg-app)'
                     }}>
-                      <td style={{ padding: '12px', borderBottom: '1px solid var(--border-color)' }}>
-                        <span style={{
-                          padding: '4px 8px',
-                          borderRadius: '4px',
-                          fontSize: '12px',
-                          fontWeight: 'bold',
-                          backgroundColor: formulario.tipo === 'CTO' ? '#d4edda' :
-                            formulario.tipo === 'PON' ? '#fff3cd' : '#e2e3e5',
-                          color: formulario.tipo === 'CTO' ? '#155724' :
-                            formulario.tipo === 'PON' ? '#856404' : '#383d41'
-                        }}>
-                          {formulario.tipo}
-                        </span>
-                      </td>
-                      <td style={{ padding: '12px', borderBottom: '1px solid #dee2e6' }}>
-                        {dados.codigoOS || 'N/A'}
-                      </td>
-                      <td style={{ padding: '12px', borderBottom: '1px solid #dee2e6' }}>
-                        {formulario.dataCriacao ? formatarData(new Date(formulario.dataCriacao)) : 'N/A'}
-                      </td>
-                      <td style={{ padding: '12px', borderBottom: '1px solid #dee2e6' }}>
-                        {'regiao' in dados ? dados.regiao : 'N/A'}
-                      </td>
-                      <td style={{ padding: '12px', borderBottom: '1px solid #dee2e6' }}>
-                        {'cto' in dados ? dados.cto : ('pon' in dados ? dados.pon : 'Links')}
-                      </td>
-                      <td style={{ padding: '12px', borderBottom: '1px solid #dee2e6', maxWidth: '200px' }}>
-                        <div
-                          style={{
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            whiteSpace: 'nowrap'
-                          }}
-                          title={dados.problema || 'N/A'}
-                        >
-                          {dados.problema || 'N/A'}
+                      <td style={{ padding: '12px', borderBottom: '1px solid var(--border-color)' }}>{getRegiao()}</td>
+                      <td style={{ padding: '12px', borderBottom: '1px solid var(--border-color)' }}>{getCtoLink()}</td>
+                      <td style={{ padding: '12px', borderBottom: '1px solid var(--border-color)' }}>{getNivelAntes()}</td>
+                      <td style={{ padding: '12px', borderBottom: '1px solid var(--border-color)' }}>{getNivelPos()}</td>
+                      <td style={{ padding: '12px', borderBottom: '1px solid var(--border-color)' }}>{(dados as any).codigoOS || 'N/A'}</td>
+                      <td style={{ padding: '12px', borderBottom: '1px solid var(--border-color)', maxWidth: '200px' }}>
+                        <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                             title={(dados as any).problema || 'N/A'}>
+                          {(dados as any).problema || 'N/A'}
                         </div>
                       </td>
-                      <td style={{ padding: '12px', borderBottom: '1px solid #dee2e6', maxWidth: '200px' }}>
-                        <div
-                          style={{
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            whiteSpace: 'nowrap'
-                          }}
-                          title={'endereco' in dados ? dados.endereco : 'N/A'}
-                        >
-                          {'endereco' in dados ? dados.endereco : 'N/A'}
+                      <td style={{ padding: '12px', borderBottom: '1px solid var(--border-color)', maxWidth: '200px' }}>
+                        <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                             title={'resolucao' in dados ? (dados as any).resolucao || 'N/A' : 'N/A'}>
+                          {'resolucao' in dados ? (dados as any).resolucao || 'N/A' : 'N/A'}
+                        </div>
+                      </td>
+                      <td style={{ padding: '12px', borderBottom: '1px solid var(--border-color)' }}>{getDataInicio()}</td>
+                      <td style={{ padding: '12px', borderBottom: '1px solid var(--border-color)' }}>{getDataTermino()}</td>
+                      <td style={{ padding: '12px', borderBottom: '1px solid var(--border-color)', maxWidth: '200px' }}>
+                        <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                             title={getMaterialUtilizado()}>
+                          {getMaterialUtilizado()}
                         </div>
                       </td>
                     </tr>

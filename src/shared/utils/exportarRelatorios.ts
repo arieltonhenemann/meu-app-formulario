@@ -23,6 +23,12 @@ export interface DadosRelatorio {
   localizacao?: string;
   links?: string;
   observacoes?: string;
+  nivelAntes?: string;
+  nivelPos?: string;
+  materialUtilizado?: string;
+  datainicio?: string;
+  datatermino?: string;
+  ctoLink?: string;
 }
 
 export class ExportadorRelatorios {
@@ -52,6 +58,12 @@ export class ExportadorRelatorios {
             resolucao: (dados as any).resolucao || 'N/A',
             endereco: (dados as any).endereco || 'N/A',
             localizacao: (dados as any).localizacao || 'N/A',
+            nivelAntes: (dados as any).nivelAntes || 'N/A',
+            nivelPos: (dados as any).nivelPos || 'N/A',
+            materialUtilizado: (dados as any).materialUtilizado || 'N/A',
+            datainicio: dataFormatada,
+            datatermino: 'N/A',
+            ctoLink: (dados as any).cto || 'N/A',
           };
         
         case 'PON':
@@ -62,6 +74,12 @@ export class ExportadorRelatorios {
             problema: (dados as any).problema || 'N/A',
             resolucao: (dados as any).resolucao || 'N/A',
             endereco: (dados as any).endereco || 'N/A',
+            nivelAntes: 'N/A',
+            nivelPos: (dados as any).mediaNivelPos || 'N/A',
+            materialUtilizado: (dados as any).materialUtilizado || 'N/A',
+            datainicio: dataFormatada,
+            datatermino: 'N/A',
+            ctoLink: (dados as any).pon || 'N/A',
           };
         
         case 'LINK':
@@ -71,13 +89,54 @@ export class ExportadorRelatorios {
               ).join('; ')
             : 'N/A';
           
+          const niveisAntes = (dados as any).links
+            ? (dados as any).links.map((link: any, i: number) => `L${i + 1}: ${link.nivelAntes || 'N/A'}`).join('; ')
+            : 'N/A';
+          
+          const niveisPos = (dados as any).links
+            ? (dados as any).links.map((link: any, i: number) => `L${i + 1}: ${link.nivelPos || 'N/A'}`).join('; ')
+            : 'N/A';
+          
+          const linksNomes = (dados as any).links
+            ? (dados as any).links.map((link: any) => link.link || 'N/A').join(', ')
+            : 'N/A';
+          
           return {
             ...dadosBase,
-            regiao: 'N/A', // LINK não tem região
+            regiao: (dados as any).regiao || 'N/A',
             links: linksTexto,
             problema: (dados as any).problema || 'N/A',
             resolucao: (dados as any).resolucao || 'N/A',
-            endereco: 'N/A', // LINK não tem endereço
+            endereco: 'N/A',
+            nivelAntes: niveisAntes,
+            nivelPos: niveisPos,
+            materialUtilizado: (dados as any).materialUtilizado || 'N/A',
+            datainicio: dataFormatada,
+            datatermino: 'N/A',
+            ctoLink: linksNomes,
+          };
+        
+        case 'ADEQUACAO':
+          const parsearData = (dataStr: string): string => {
+            if (!dataStr) return 'N/A';
+            const partes = dataStr.split('/');
+            if (partes.length !== 3) return dataStr;
+            const [d, m, y] = partes.map(Number);
+            if (isNaN(d) || isNaN(m) || isNaN(y)) return dataStr;
+            return new Date(y, m - 1, d).toLocaleDateString('pt-BR');
+          };
+
+          return {
+            ...dadosBase,
+            regiao: (dados as any).regiao || 'N/A',
+            problema: (dados as any).problema || 'N/A',
+            resolucao: (dados as any).resolucao || 'N/A',
+            nivelAntes: 'N/A',
+            nivelPos: 'N/A',
+            materialUtilizado: (dados as any).materialutilizado || 'N/A',
+            datainicio: parsearData((dados as any).datainicio),
+            datatermino: parsearData((dados as any).datatermino),
+            ctoLink: 'N/A',
           };
         
         default:
@@ -110,25 +169,29 @@ export class ExportadorRelatorios {
       
       // Preparar dados para tabela
       const colunas = [
-        'Tipo',
-        'Código OS',
-        'Data',
         'Região',
-        'CTO/PON',
+        'Cto/Link',
+        'nível antes',
+        'nível pos',
+        'código da O.S',
         'Problema',
         'Resolução',
-        'Endereço'
+        'data de inicio',
+        'data de término',
+        'Material utilizado'
       ];
       
       const linhas = dadosRelatorio.map(item => [
-        item.tipo,
+        item.regiao || 'N/A',
+        item.ctoLink || item.cto || item.pon || item.links || 'N/A',
+        item.nivelAntes || 'N/A',
+        item.nivelPos || 'N/A',
         item.codigoOS,
-        item.data,
-        item.regiao || item.cto || item.pon || 'N/A',
-        item.cto || item.pon || 'N/A',
         item.problema || 'N/A',
         item.resolucao || 'N/A',
-        item.endereco || 'N/A'
+        item.datainicio || 'N/A',
+        item.datatermino || 'N/A',
+        item.materialUtilizado || 'N/A'
       ]);
       
       // Adicionar tabela
@@ -180,18 +243,16 @@ export class ExportadorRelatorios {
       
       // Preparar dados para Excel
       const dadosExcel = dadosRelatorio.map(item => ({
-        'Tipo': item.tipo,
-        'Código OS': item.codigoOS,
-        'Data': item.data,
         'Região': item.regiao || 'N/A',
-        'CTO': item.cto || 'N/A',
-        'PON': item.pon || 'N/A',
-        'Links': item.links || 'N/A',
+        'Cto/Link': item.ctoLink || item.cto || item.pon || item.links || 'N/A',
+        'nível antes': item.nivelAntes || 'N/A',
+        'nível pos': item.nivelPos || 'N/A',
+        'código da O.S': item.codigoOS,
         'Problema': item.problema || 'N/A',
         'Resolução': item.resolucao || 'N/A',
-        'Endereço': item.endereco || 'N/A',
-        'Localização': item.localizacao || 'N/A',
-        'Observações': item.observacoes || 'N/A'
+        'data de inicio': item.datainicio || 'N/A',
+        'data de término': item.datatermino || 'N/A',
+        'Material utilizado': item.materialUtilizado || 'N/A'
       }));
 
       // Criar planilha
@@ -199,18 +260,16 @@ export class ExportadorRelatorios {
       
       // Ajustar largura das colunas
       const colWidths = [
-        { wch: 8 },  // Tipo
-        { wch: 15 }, // Código OS
-        { wch: 12 }, // Data
         { wch: 15 }, // Região
-        { wch: 12 }, // CTO
-        { wch: 12 }, // PON
-        { wch: 30 }, // Links
+        { wch: 20 }, // Cto/Link
+        { wch: 25 }, // nível antes
+        { wch: 25 }, // nível pos
+        { wch: 18 }, // código da O.S
         { wch: 25 }, // Problema
         { wch: 25 }, // Resolução
-        { wch: 30 }, // Endereço
-        { wch: 20 }, // Localização
-        { wch: 20 }  // Observações
+        { wch: 15 }, // data de inicio
+        { wch: 15 }, // data de término
+        { wch: 30 }  // Material utilizado
       ];
       ws['!cols'] = colWidths;
 

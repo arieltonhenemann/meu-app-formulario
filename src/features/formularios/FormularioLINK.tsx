@@ -141,11 +141,11 @@ export const FormularioLINK: React.FC<FormularioLINKProps> = ({ onSubmit, dadosI
         </h2>
 
         <form onSubmit={handleSubmit}>
-          {/* Código da O.S */}
+          {/* Primeira linha: Código OS, Status Inicial e Região */}
           <div style={{
-            display: !modoGerenciamento ? 'grid' : 'block',
-            gridTemplateColumns: !modoGerenciamento ? '1fr 1fr' : 'none',
-            gap: !modoGerenciamento ? '20px' : 'none',
+            display: 'grid',
+            gridTemplateColumns: !modoGerenciamento ? '1fr 1fr 1fr' : '1fr 1fr',
+            gap: '20px',
             marginBottom: '20px'
           }}>
             <div>
@@ -171,6 +171,16 @@ export const FormularioLINK: React.FC<FormularioLINKProps> = ({ onSubmit, dadosI
                 </select>
               </div>
             )}
+            <div>
+              <label style={labelStyle}>REGIÃO:</label>
+              <input
+                type="text"
+                value={formData.regiao}
+                onChange={(e) => handleChange('regiao', e.target.value)}
+                style={inputStyle}
+                placeholder="Ex: Centro, Norte, Sul"
+              />
+            </div>
           </div>
 
           {/* Seção de Links Dinâmicos */}
