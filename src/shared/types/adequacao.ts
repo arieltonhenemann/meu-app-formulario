@@ -1,5 +1,8 @@
+import { formatarDataHora } from '../utils';
+
 // Tipos específicos para Ordem de Serviço
 export interface OrdemServicoAdequacao {
+  dataHoraAbertura: string;
   codigoOS: string;
   regiao: string;
   tipodeservico: string;
@@ -25,6 +28,7 @@ export interface OrdemServicoAdequacao {
 
 // Função para criar uma O.S. de Adequação vazia
 export const criarAdequacaoVazia = (): OrdemServicoAdequacao => ({
+  dataHoraAbertura: formatarDataHora(),
   codigoOS: "",
   regiao: "",
   tipodeservico: "",

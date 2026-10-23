@@ -4,6 +4,7 @@ import { gerarArquivoADEQUACAO } from '../../shared/utils/gerarArquivoTxt';
 import { firebaseFormularioStorage } from '../../shared/services/firebaseFormularioStorage';
 import { useAuth } from '../../shared/contexts/AuthContext';
 import { TxtModal } from '../../shared/components/TxtModal';
+import { CampoDataHora } from '../../shared/components/CampoDataHora';
 import { labelStyle, inputStyle, buttonStyle, formContainerStyle, formCardStyle, textareaStyle } from '../../shared/styles/forms';
 import { toast } from '../../shared/components/Toast';
 import { registrarAcaoAuditoria } from '../../shared/utils/auditoriaHelper';
@@ -189,6 +190,8 @@ export const FormularioAdequacao: React.FC<FormularioAdequacaoProps> = ({ onSubm
                 </h2>
 
                 <form onSubmit={handleSubmit}>
+                    <CampoDataHora value={formData.dataHoraAbertura} />
+
                     {/* Row 1: Código da O.S + Região (+ Status Inicial) */}
                     <div style={{
                         display: 'grid',

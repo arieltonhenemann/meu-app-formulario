@@ -1,5 +1,8 @@
+import { formatarDataHora } from '../utils';
+
 // Tipos específicos para Ordem de Serviço
 export interface OrdemServico {
+  dataHoraAbertura: string;
   codigoOS: string;
   cto: string;
   regiao: string;
@@ -16,6 +19,7 @@ export interface OrdemServico {
 }
 
 export const criarOSVazia = (): OrdemServico => ({
+  dataHoraAbertura: formatarDataHora(),
   codigoOS: '',
   cto: '',
   regiao: '',

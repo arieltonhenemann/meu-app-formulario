@@ -4,6 +4,7 @@ import { gerarArquivoLINK } from '../../shared/utils/gerarArquivoTxt';
 import { firebaseFormularioStorage } from '../../shared/services/firebaseFormularioStorage';
 import { useAuth } from '../../shared/contexts/AuthContext';
 import { TxtModal } from '../../shared/components/TxtModal';
+import { CampoDataHora } from '../../shared/components/CampoDataHora';
 import { labelStyle, inputStyle, buttonStyle, formContainerStyle, formCardStyle } from '../../shared/styles/forms';
 import { toast } from '../../shared/components/Toast';
 import { registrarAcaoAuditoria } from '../../shared/utils/auditoriaHelper';
@@ -141,6 +142,8 @@ export const FormularioLINK: React.FC<FormularioLINKProps> = ({ onSubmit, dadosI
         </h2>
 
         <form onSubmit={handleSubmit}>
+          <CampoDataHora value={formData.dataHoraAbertura} />
+
           {/* Primeira linha: Código OS, Status Inicial e Região */}
           <div style={{
             display: 'grid',

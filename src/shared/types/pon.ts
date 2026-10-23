@@ -1,5 +1,8 @@
+import { formatarDataHora } from '../utils';
+
 // Tipos para Ordem de Serviço PON
 export interface OrdemServicoPON {
+  dataHoraAbertura: string;
   codigoOS: string;
   pon: string;
   regiao: string;
@@ -15,6 +18,7 @@ export interface OrdemServicoPON {
 }
 
 export const criarPONVazia = (): OrdemServicoPON => ({
+  dataHoraAbertura: formatarDataHora(),
   codigoOS: "",
   pon: "",
   regiao: "",

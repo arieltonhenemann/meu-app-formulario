@@ -1,3 +1,5 @@
+import { formatarDataHora } from '../utils';
+
 // Tipos para Ordem de Serviço LINK
 export interface LinkInfo {
   id: string;
@@ -8,6 +10,7 @@ export interface LinkInfo {
 }
 
 export interface OrdemServicoLINK {
+  dataHoraAbertura: string;
   codigoOS: string;
   regiao: string;
   links: LinkInfo[];
@@ -25,6 +28,7 @@ export const criarLinkVazio = (id?: string): LinkInfo => ({
 });
 
 export const criarLINKVazia = (): OrdemServicoLINK => ({
+  dataHoraAbertura: formatarDataHora(),
   codigoOS: '',
   regiao: '',
   links: [criarLinkVazio()],
