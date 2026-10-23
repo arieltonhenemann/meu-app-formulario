@@ -1,5 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { OrdemServicoAdequacao, criarAdequacaoVazia } from '../../shared/types/adequacao';
+import {
+    OrdemServicoAdequacao,
+    ServicoAdequacao,
+    criarAdequacaoVazia,
+    criarServicoAdequacao,
+    normalizarAdequacao,
+    TIPOS_SERVICO_ADEQUACAO
+} from '../../shared/types/adequacao';
 import { gerarArquivoADEQUACAO } from '../../shared/utils/gerarArquivoTxt';
 import { firebaseFormularioStorage } from '../../shared/services/firebaseFormularioStorage';
 import { useAuth } from '../../shared/contexts/AuthContext';
@@ -21,20 +28,13 @@ interface FormularioAdequacaoProps {
 export const FormularioAdequacao: React.FC<FormularioAdequacaoProps> = ({ onSubmit, dadosIniciais, formularioId, modoGerenciamento, onFinalizar }) => {
     const { user } = useAuth();
     const [status, setStatus] = useState<StatusFormulario>('pendente');
-    const [formData, setFormData] = useState<OrdemServicoAdequacao>(() => {
-        if (dadosIniciais) {
-            return { ...criarAdequacaoVazia(), ...dadosIniciais };
-        }
-        return criarAdequacaoVazia();
-    });
-    const [errors, setErrors] = useState<Partial<Record<keyof OrdemServicoAdequacao, string>>>({});
-
+    const [formData, setFormData] = useState<OrdemServicoAdequacao>(() => normalizarAdequacao(dadosIniciais));
     const [txtModalAberto, setTxtModalAberto] = useState(false);
     const [txtConteudo, setTxtConteudo] = useState('');
 
     useEffect(() => {
         if (dadosIniciais) {
-            setFormData({ ...criarAdequacaoVazia(), ...dadosIniciais });
+            setFormData(normalizarAdequacao(dadosIniciais));
         }
     }, [dadosIniciais]);
 
@@ -43,72 +43,142 @@ export const FormularioAdequacao: React.FC<FormularioAdequacaoProps> = ({ onSubm
             ...prev,
             [field]: value
         }));
-
-        if (errors[field]) {
-            setErrors(prev => ({
-                ...prev,
-                [field]: ''
-            }));
-        }
     };
 
-    const validarData = (data: string): boolean => {
-        if (!data) return false;
-        const partes = data.split('/');
-        if (partes.length !== 3) return false;
-
-        const [dStr, mStr, yStr] = partes;
-        if (!/^\d{1,2}$/.test(dStr) || !/^\d{1,2}$/.test(mStr) || !/^\d{4}$/.test(yStr)) return false;
-
-        const d = parseInt(dStr, 10);
-        const m = parseInt(mStr, 10);
-        const y = parseInt(yStr, 10);
-
-        if (m < 1 || m > 12) return false;
-
-        const diasNoMes = new Date(y, m, 0).getDate();
-        if (d < 1 || d > diasNoMes) return false;
-
-        return true;
+    const handleServicoChange = (
+        servicoId: string,
+        field: keyof Omit<ServicoAdequacao, 'id' | 'tipo'>,
+        value: string
+    ) => {
+        setFormData(prev => ({
+            ...prev,
+            servicos: prev.servicos.map(servico =>
+                servico.id === servicoId
+                    ? { ...servico, [field]: value }
+                    : servico
+            )
+        }));
     };
 
-    const validarFormulario = (requireDates = false): boolean => {
-        const newErrors: Partial<Record<keyof OrdemServicoAdequacao, string>> = {};
+    const alterarTipoServico = (servicoId: string, tipo: ServicoAdequacao['tipo']) => {
+        setFormData(prev => ({
+            ...prev,
+            servicos: prev.servicos.map(servico =>
+                servico.id === servicoId
+                    ? { ...servico, tipo }
+                    : servico
+            )
+        }));
+    };
 
-        if (requireDates) {
-            if (!formData.datainicio || !validarData(formData.datainicio)) {
-                newErrors.datainicio = 'Informe a data de início no formato DD/MM/AAAA (data válida).';
-            }
-            if (!formData.datatermino || !validarData(formData.datatermino)) {
-                newErrors.datatermino = 'Informe a data de término no formato DD/MM/AAAA (data válida).';
-            }
-        } else {
-            if (formData.datainicio && !validarData(formData.datainicio)) {
-                newErrors.datainicio = 'Data de início inválida (DD/MM/AAAA).';
-            }
-            if (formData.datatermino && !validarData(formData.datatermino)) {
-                newErrors.datatermino = 'Data de término inválida (DD/MM/AAAA).';
-            }
+    const adicionarServico = () => {
+        setFormData(prev => ({
+            ...prev,
+            servicos: [...prev.servicos, criarServicoAdequacao()]
+        }));
+    };
+
+    const removerServico = (servicoId: string) => {
+        setFormData(prev => ({
+            ...prev,
+            servicos: prev.servicos.filter(servico => servico.id !== servicoId)
+        }));
+    };
+
+    const campoServico = (
+        label: string,
+        servicoId: string,
+        field: keyof Omit<ServicoAdequacao, 'id' | 'tipo'>,
+        placeholder: string
+    ) => (
+        <div>
+            <label style={labelStyle}>{label}:</label>
+            <input
+                type="text"
+                value={formData.servicos.find(servico => servico.id === servicoId)?.[field] || ''}
+                onChange={(e) => handleServicoChange(servicoId, field, e.target.value)}
+                style={inputStyle}
+                placeholder={placeholder}
+            />
+        </div>
+    );
+
+    const renderCamposServico = (servico: ServicoAdequacao) => {
+        const gradeStyle: React.CSSProperties = {
+            display: 'grid',
+            gridTemplateColumns: '1fr 1fr',
+            gap: '15px'
+        };
+
+        switch (servico.tipo) {
+            case 'LANCAMENTO':
+                return (
+                    <div style={gradeStyle}>
+                        {campoServico('TIPO DE FIBRA', servico.id, 'tipoFibra', 'Ex: FIBRA DE 6fo')}
+                        {campoServico('METRAGEM INICIAL', servico.id, 'metragemInicial', 'Ex: 3KM')}
+                        {campoServico('METRAGEM FINAL', servico.id, 'metragemFinal', 'Ex: 3KM')}
+                        {campoServico('METRAGEM CORDOALHA', servico.id, 'metragemCordoalha', 'Ex: 2KM')}
+                        {campoServico('METRAGEM TOTAL', servico.id, 'metragemTotal', 'Ex: 10KM')}
+                        {campoServico('PONTO A', servico.id, 'pontoA', 'Ex: CTO-001')}
+                        {campoServico('PONTO B', servico.id, 'pontoB', 'Ex: CTO-002')}
+                    </div>
+                );
+            case 'ADEQUACAO_CONDOMINIO':
+                return (
+                    <div style={gradeStyle}>
+                        {campoServico('CONDOMÍNIO', servico.id, 'condominio', 'Ex: Residencial Central')}
+                        {campoServico('QUANTIDADE DE BLOCOS', servico.id, 'quantidadeBlocos', 'Ex: 4')}
+                        {campoServico('METRAGEM INICIAL', servico.id, 'metragemInicial', 'Ex: 3KM')}
+                        {campoServico('METRAGEM FINAL', servico.id, 'metragemFinal', 'Ex: 3KM')}
+                        {campoServico('METRAGEM AÉREA', servico.id, 'metragemAerea', 'Ex: 2KM')}
+                        {campoServico('METRAGEM SUBTERRÂNEA', servico.id, 'metragemSubterranea', 'Ex: 1KM')}
+                    </div>
+                );
+            case 'ADEQUACAO_POSTE':
+                return (
+                    <div style={gradeStyle}>
+                        {campoServico('LOCALIZAÇÃO', servico.id, 'localizacao', 'Ex: Rua das Flores, 120')}
+                        {campoServico('QUANTIDADE DE POSTES', servico.id, 'quantidadePostes', 'Ex: 3')}
+                    </div>
+                );
+            case 'RETIRADA_CABO':
+                return (
+                    <div style={gradeStyle}>
+                        {campoServico('LOCALIZAÇÃO', servico.id, 'localizacao', 'Ex: Rua das Flores, 120')}
+                        {campoServico('PONTO A', servico.id, 'pontoA', 'Ex: CTO-001')}
+                        {campoServico('PONTO B', servico.id, 'pontoB', 'Ex: CTO-002')}
+                        {campoServico('METRAGEM RETIRADA', servico.id, 'metragemRetirada', 'Ex: 500M')}
+                    </div>
+                );
+            case 'ACAO_COPEL':
+                return (
+                    <div style={gradeStyle}>
+                        {campoServico('LOCALIZAÇÃO', servico.id, 'localizacao', 'Ex: Rua das Flores, 120')}
+                        {campoServico('PONTO A', servico.id, 'pontoA', 'Ex: CTO-001')}
+                        {campoServico('PONTO B', servico.id, 'pontoB', 'Ex: CTO-002')}
+                    </div>
+                );
+            case 'TROCA_PLAQUETAS':
+                return (
+                    <div style={gradeStyle}>
+                        {campoServico('QUANTIDADE DE POSTES', servico.id, 'quantidadePostes', 'Ex: 5')}
+                        {campoServico('REGIÃO', servico.id, 'regiao', 'Ex: ATUBA')}
+                    </div>
+                );
+            default:
+                return (
+                    <p style={{ color: 'var(--text-muted)', margin: 0, fontSize: '14px' }}>
+                        Selecione o tipo de serviço para exibir os campos correspondentes.
+                    </p>
+                );
         }
-
-        if (!newErrors.datainicio && !newErrors.datatermino && formData.datainicio && formData.datatermino) {
-            const [d1, m1, y1] = formData.datainicio.split('/').map(Number);
-            const [d2, m2, y2] = formData.datatermino.split('/').map(Number);
-            const dt1 = new Date(y1, m1 - 1, d1);
-            const dt2 = new Date(y2, m2 - 1, d2);
-            if (dt2 < dt1) newErrors.datatermino = 'Data de término não pode ser anterior à data de início.';
-        }
-
-        setErrors(newErrors);
-        return Object.keys(newErrors).length === 0;
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (validarFormulario(false)) {
-            try {
-                console.log('Dados da O.S:', formData);
+        try {
+            console.log('Dados da O.S:', formData);
 
                 if (formularioId) {
                     await firebaseFormularioStorage.atualizar(formularioId, formData);
@@ -141,28 +211,14 @@ export const FormularioAdequacao: React.FC<FormularioAdequacaoProps> = ({ onSubm
                 }
 
                 onSubmit?.(formData);
-            } catch (error) {
-                console.error('Erro ao salvar formulário:', error);
-                toast.error('Erro ao salvar. Os dados foram salvos localmente e serão sincronizados quando possível.');
-            }
+        } catch (error) {
+            console.error('Erro ao salvar formulário:', error);
+            toast.error('Erro ao salvar. Os dados foram salvos localmente e serão sincronizados quando possível.');
         }
     };
 
     const limparFormulario = () => {
         setFormData(criarAdequacaoVazia());
-        setErrors({});
-    };
-
-    const formatarDataInput = (value: string): string => {
-        const somenteDigitos = value.replace(/\D/g, '').slice(0, 8);
-        if (somenteDigitos.length <= 2) return somenteDigitos;
-        if (somenteDigitos.length <= 4) return `${somenteDigitos.slice(0, 2)}/${somenteDigitos.slice(2)}`;
-        return `${somenteDigitos.slice(0, 2)}/${somenteDigitos.slice(2, 4)}/${somenteDigitos.slice(4, 8)}`;
-    };
-
-    const handleDateChange = (field: 'datainicio' | 'datatermino', rawValue: string) => {
-        const formatted = formatarDataInput(rawValue);
-        handleChange(field as keyof OrdemServicoAdequacao, formatted);
     };
 
     const handleGerarTxt = () => {
@@ -222,40 +278,93 @@ export const FormularioAdequacao: React.FC<FormularioAdequacaoProps> = ({ onSubm
                         </div>
                     </div>
 
-                    {/* Row 2: Tipo de Serviço + Tipo de Fibra */}
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
-                        <div>
-                            <label htmlFor="tipodeservico" style={labelStyle}>TIPO DE SERVIÇO:</label>
-                            <input id="tipodeservico" name="tipodeservico" type="text" value={formData.tipodeservico} onChange={(e) => handleChange('tipodeservico', e.target.value)} style={inputStyle} placeholder="Ex: ADEQUAÇÃO, TROCA DE CABO, CORDOALHA" />
+                    {/* Serviços dinâmicos */}
+                    <div style={{ marginBottom: '20px' }}>
+                        <div style={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            marginBottom: '15px',
+                            padding: '15px',
+                            backgroundColor: 'var(--bg-app)',
+                            borderRadius: '8px',
+                            border: '1px solid var(--border-color)'
+                        }}>
+                            <h3 style={{ color: 'var(--text-main)', fontSize: '18px', margin: 0 }}>
+                                🛠️ Serviços Configurados: <span style={{ color: '#17a2b8', fontWeight: 'bold' }}>({formData.servicos.length})</span>
+                            </h3>
+                            <button
+                                type="button"
+                                onClick={adicionarServico}
+                                style={{
+                                    ...buttonStyle,
+                                    backgroundColor: '#17a2b8',
+                                    fontSize: '14px',
+                                    padding: '10px 18px',
+                                    boxShadow: '0 2px 4px rgba(23, 162, 184, 0.3)'
+                                }}
+                            >
+                                ➕ Adicionar Serviço
+                            </button>
                         </div>
-                        <div>
-                            <label htmlFor="tipodefibra" style={labelStyle}>TIPO DE FIBRA:</label>
-                            <input id="tipodefibra" name="tipodefibra" type="text" value={formData.tipodefibra} onChange={(e) => handleChange('tipodefibra', e.target.value)} style={inputStyle} placeholder="Ex: FIBRA DE 6fo" />
-                        </div>
-                    </div>
 
-                    {/* Row 3a: Metragem inicial e final */}
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
-                        <div>
-                            <label htmlFor="metrageminicial" style={labelStyle}>METRAGEM INICIAL:</label>
-                            <input id="metrageminicial" name="metrageminicial" type="text" value={formData.metrageminicial} onChange={(e) => handleChange('metrageminicial', e.target.value)} style={inputStyle} placeholder="Ex: 3KM" />
-                        </div>
-                        <div>
-                            <label htmlFor="metragemfinal" style={labelStyle}>METRAGEM FINAL:</label>
-                            <input id="metragemfinal" name="metragemfinal" type="text" value={formData.metragemfinal} onChange={(e) => handleChange('metragemfinal', e.target.value)} style={inputStyle} placeholder="Ex: 3KM" />
-                        </div>
-                    </div>
+                        {formData.servicos.map((servico, index) => (
+                            <div
+                                key={servico.id}
+                                style={{
+                                    border: '2px solid var(--border-color)',
+                                    borderRadius: '8px',
+                                    padding: '20px',
+                                    marginBottom: '15px',
+                                    backgroundColor: 'var(--bg-app)'
+                                }}
+                            >
+                                <div style={{
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
+                                    alignItems: 'center',
+                                    marginBottom: '15px'
+                                }}>
+                                    <h4 style={{ color: 'var(--text-main)', fontSize: '16px', margin: 0 }}>
+                                        🛠️ SERVIÇO {index + 1}
+                                    </h4>
 
-                    {/* Row 3b: Metragem cordoalha e total */}
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
-                        <div>
-                            <label htmlFor="metragemcordoalha" style={labelStyle}>METRAGEM CORDOALHA:</label>
-                            <input id="metragemcordoalha" name="metragemcordoalha" type="text" value={formData.metragemcordoalha} onChange={(e) => handleChange('metragemcordoalha', e.target.value)} style={inputStyle} placeholder="Ex: 2KM" />
-                        </div>
-                        <div>
-                            <label htmlFor="metragemtotal" style={labelStyle}>METRAGEM TOTAL:</label>
-                            <input id="metragemtotal" name="metragemtotal" type="text" value={formData.metragemtotal} onChange={(e) => handleChange('metragemtotal', e.target.value)} style={inputStyle} placeholder="Ex: 10KM" />
-                        </div>
+                                    {formData.servicos.length > 1 && (
+                                        <button
+                                            type="button"
+                                            onClick={() => removerServico(servico.id)}
+                                            style={{
+                                                ...buttonStyle,
+                                                backgroundColor: '#dc3545',
+                                                fontSize: '12px',
+                                                padding: '5px 10px',
+                                                minWidth: 'auto'
+                                            }}
+                                        >
+                                            ❌ Remover
+                                        </button>
+                                    )}
+                                </div>
+
+                                <div style={{ marginBottom: '15px' }}>
+                                    <label style={labelStyle}>TIPO DE SERVIÇO:</label>
+                                    <select
+                                        value={servico.tipo}
+                                        onChange={(e) => alterarTipoServico(servico.id, e.target.value as ServicoAdequacao['tipo'])}
+                                        style={inputStyle}
+                                    >
+                                        <option value="">Selecione o tipo de serviço...</option>
+                                        {TIPOS_SERVICO_ADEQUACAO.map(tipo => (
+                                            <option key={tipo.valor} value={tipo.valor}>
+                                                {tipo.label}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                {renderCamposServico(servico)}
+                            </div>
+                        ))}
                     </div>
 
                     {/* Problema (textarea) */}
@@ -264,20 +373,6 @@ export const FormularioAdequacao: React.FC<FormularioAdequacaoProps> = ({ onSubm
                         <textarea id="problema" name="problema" value={formData.problema} onChange={(e) => handleChange('problema', e.target.value)} style={textareaStyle} placeholder="Descreva o problema..." rows={3} />
                     </div>
 
-                    {/* Trecho: Ponta A e Ponto B */}
-                    <div style={{ marginBottom: '20px' }}>
-                        <label style={{ ...labelStyle, marginBottom: '10px', display: 'block' }}>TRECHO:</label>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-                            <div>
-                                <label htmlFor="pontoa" style={labelStyle}>PONTA A:</label>
-                                <input id="pontoa" name="pontoa" type="text" value={formData.pontoa} onChange={(e) => handleChange('pontoa', e.target.value)} style={inputStyle} placeholder="Ex: CTO-001" />
-                            </div>
-                            <div>
-                                <label htmlFor="pontob" style={labelStyle}>PONTO B:</label>
-                                <input id="pontob" name="pontob" type="text" value={formData.pontob} onChange={(e) => handleChange('pontob', e.target.value)} style={inputStyle} placeholder="Ex: CTO-002" />
-                            </div>
-                        </div>
-                    </div>
                     {/* Resolução (textarea) */}
                     <div style={{ marginBottom: '20px' }}>
                         <label htmlFor="resolucao" style={labelStyle}>RESOLUÇÃO:</label>
@@ -290,70 +385,10 @@ export const FormularioAdequacao: React.FC<FormularioAdequacaoProps> = ({ onSubm
                         <textarea id="materialutilizado" name="materialutilizado" value={formData.materialutilizado} onChange={(e) => handleChange('materialutilizado', e.target.value)} style={textareaStyle} placeholder="Ex: 01 CORDOALHA" rows={2} />
                     </div>
 
-                    {/* Datas em uma linha */}
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
-                        <div>
-                            <label htmlFor="datainicio" style={labelStyle}>DATA DE INÍCIO:</label>
-                            <input
-                                id="datainicio"
-                                name="datainicio"
-                                type="text"
-                                value={formData.datainicio}
-                                onChange={(e) => handleDateChange('datainicio', e.target.value)}
-                                style={inputStyle}
-                                placeholder="DD/MM/AAAA"
-                                inputMode="numeric"
-                            />
-                            {errors.datainicio && <div style={{ color: '#dc3545', marginTop: 6 }}>{errors.datainicio}</div>}
-                        </div>
-                        <div>
-                            <label htmlFor="datatermino" style={labelStyle}>DATA DE TÉRMINO:</label>
-                            <input
-                                id="datatermino"
-                                name="datatermino"
-                                type="text"
-                                value={formData.datatermino}
-                                onChange={(e) => handleDateChange('datatermino', e.target.value)}
-                                style={inputStyle}
-                                placeholder="DD/MM/AAAA"
-                                inputMode="numeric"
-                            />
-                            {errors.datatermino && <div style={{ color: '#dc3545', marginTop: 6 }}>{errors.datatermino}</div>}
-                        </div>
-                    </div>
-
                     {/* Funcionário (full width) */}
                     <div style={{ marginBottom: '20px' }}>
                         <label htmlFor="funcionario" style={labelStyle}>FUNCIONÁRIO:</label>
                         <input id="funcionario" name="funcionario" type="text" value={formData.funcionario} onChange={(e) => handleChange('funcionario', e.target.value)} style={inputStyle} placeholder="Ex: NILTON" />
-                    </div>
-
-                    {/* Lançamento de fo + Adequação condomínio (Full width each due to long labels) */}
-                    <div style={{ marginBottom: '20px' }}>
-                        <label htmlFor="caboaereo" style={labelStyle}>LANÇAMENTO DE FO INCLUINDO CRUZETA COM CORDOALHA:</label>
-                        <input id="caboaereo" name="caboaereo" type="text" value={formData.caboaereo} onChange={(e) => handleChange('caboaereo', e.target.value)} style={inputStyle} placeholder="Ex: 3KM DE FIBRA 6fo" />
-                    </div>
-
-                    <div style={{ marginBottom: '20px' }}>
-                        <label htmlFor="cabosubterraneo" style={labelStyle}>ADEQUAÇÃO EM CONDOMÍNIO AÉREO E SUBTERRÂNEO:</label>
-                        <input id="cabosubterraneo" name="cabosubterraneo" type="text" value={formData.cabosubterraneo} onChange={(e) => handleChange('cabosubterraneo', e.target.value)} style={inputStyle} placeholder="Ex: 3KM DE FIBRA 6fo" />
-                    </div>
-
-                    {/* Retirada de fo + Lançamento/Espinamento */}
-                    <div style={{ marginBottom: '20px' }}>
-                        <label htmlFor="adequacao" style={labelStyle}>RETIRADA DE FO:</label>
-                        <input id="adequacao" name="adequacao" type="text" value={formData.adequacao} onChange={(e) => handleChange('adequacao', e.target.value)} style={inputStyle} placeholder="Ex: O1 POSTE" />
-                    </div>
-
-                    <div style={{ marginBottom: '20px' }}>
-                        <label htmlFor="cordoalha" style={labelStyle}>LANÇAMENTO E ESPINAMENTO DE CABO E CORDOALHA EM SOBRA TÉCNICA E CTO P/POSTE:</label>
-                        <input id="cordoalha" name="cordoalha" type="text" value={formData.cordoalha} onChange={(e) => handleChange('cordoalha', e.target.value)} style={inputStyle} placeholder="Ex: 01 CORDOALHA" />
-                    </div>
-
-                    {/* Equipagem em troca de poste */}
-                    <div style={{ marginBottom: '20px' }}>
-                        <label htmlFor="equipagem" style={labelStyle}>EQUIPAGEM EM TROCA DE POSTE:</label>
-                        <input id="equipagem" name="equipagem" type="text" value={formData.equipagem} onChange={(e) => handleChange('equipagem', e.target.value)} style={inputStyle} placeholder="Ex: EQUIPAGEM COMPLETA" />
                     </div>
 
                     {/* Botões */}
@@ -368,11 +403,6 @@ export const FormularioAdequacao: React.FC<FormularioAdequacaoProps> = ({ onSubm
                                 type="button"
                                 onClick={async () => {
                                     if (!formularioId) return;
-
-                                    if (!validarFormulario(true)) {
-                                        toast.error('Corrija os erros antes de finalizar a ordem (datas obrigatórias).');
-                                        return;
-                                    }
 
                                     try {
                                         await firebaseFormularioStorage.atualizar(formularioId, formData);

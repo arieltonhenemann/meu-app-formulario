@@ -1,5 +1,5 @@
 // Utilitário para gerar arquivos TXT dos formulários
-import { OrdemServicoAdequacao } from "../types/adequacao";
+import { OrdemServicoAdequacao, ServicoAdequacao, obterLabelTipoServico } from "../types/adequacao";
 import { OrdemServico } from "../types/os";
 import { OrdemServicoPON } from "../types/pon";
 import { OrdemServicoLINK } from "../types/link";
@@ -133,7 +133,74 @@ ${dados.materialUtilizado || "Não informado"}
 
 // Função para gerar arquivo TXT de Ordem de Serviço de Adequação
 
+const valorOuNaoInformado = (valor: string): string => valor || "Não informado";
+
+const descreverServicoAdequacao = (servico: ServicoAdequacao, index: number): string => {
+  const linhas: string[] = [
+    `SERVIÇO ${index + 1}: ${obterLabelTipoServico(servico.tipo) || "Não informado"}`
+  ];
+
+  switch (servico.tipo) {
+    case "LANCAMENTO":
+      linhas.push(
+        `  Tipo de Fibra: ${valorOuNaoInformado(servico.tipoFibra)}`,
+        `  Metragem Inicial: ${valorOuNaoInformado(servico.metragemInicial)}`,
+        `  Metragem Final: ${valorOuNaoInformado(servico.metragemFinal)}`,
+        `  Metragem Cordoalha: ${valorOuNaoInformado(servico.metragemCordoalha)}`,
+        `  Metragem Total: ${valorOuNaoInformado(servico.metragemTotal)}`,
+        `  Ponto A: ${valorOuNaoInformado(servico.pontoA)}`,
+        `  Ponto B: ${valorOuNaoInformado(servico.pontoB)}`
+      );
+      break;
+    case "ADEQUACAO_CONDOMINIO":
+      linhas.push(
+        `  Condomínio: ${valorOuNaoInformado(servico.condominio)}`,
+        `  Quantidade de Blocos: ${valorOuNaoInformado(servico.quantidadeBlocos)}`,
+        `  Metragem Inicial: ${valorOuNaoInformado(servico.metragemInicial)}`,
+        `  Metragem Final: ${valorOuNaoInformado(servico.metragemFinal)}`,
+        `  Metragem Aérea: ${valorOuNaoInformado(servico.metragemAerea)}`,
+        `  Metragem Subterrânea: ${valorOuNaoInformado(servico.metragemSubterranea)}`
+      );
+      break;
+    case "ADEQUACAO_POSTE":
+      linhas.push(
+        `  Localização: ${valorOuNaoInformado(servico.localizacao)}`,
+        `  Quantidade de Postes: ${valorOuNaoInformado(servico.quantidadePostes)}`
+      );
+      break;
+    case "RETIRADA_CABO":
+      linhas.push(
+        `  Localização: ${valorOuNaoInformado(servico.localizacao)}`,
+        `  Ponto A: ${valorOuNaoInformado(servico.pontoA)}`,
+        `  Ponto B: ${valorOuNaoInformado(servico.pontoB)}`,
+        `  Metragem Retirada: ${valorOuNaoInformado(servico.metragemRetirada)}`
+      );
+      break;
+    case "ACAO_COPEL":
+      linhas.push(
+        `  Localização: ${valorOuNaoInformado(servico.localizacao)}`,
+        `  Ponto A: ${valorOuNaoInformado(servico.pontoA)}`,
+        `  Ponto B: ${valorOuNaoInformado(servico.pontoB)}`
+      );
+      break;
+    case "TROCA_PLAQUETAS":
+      linhas.push(
+        `  Quantidade de Postes: ${valorOuNaoInformado(servico.quantidadePostes)}`,
+        `  Região: ${valorOuNaoInformado(servico.regiao)}`
+      );
+      break;
+    default:
+      linhas.push("  Tipo de serviço não selecionado");
+  }
+
+  return linhas.join("\n");
+};
+
 export const gerarArquivoADEQUACAO = (dados: OrdemServicoAdequacao): string => {
+  const servicosTexto = (dados.servicos || [])
+    .map((servico, index) => descreverServicoAdequacao(servico, index))
+    .join("\n\n");
+
   const conteudo = `
 ===========================================
     ORDEM DE SERVIÇO - ADEQUAÇÃO
@@ -145,36 +212,22 @@ Data/Hora: ${formatarData(new Date())} - ${new Date().toLocaleTimeString(
 
 INFORMAÇÕES GERAIS:
 -------------------
-Código da O.S: ${dados.codigoOS || "Não informado"}
-Tipo de Serviço: ${dados.tipodeservico || "Não informado"}
-Tipo de Fibra: ${dados.tipodefibra || "Não informado"}
-Metragem Inicial: ${dados.metrageminicial || "Não informado"}
-Metragem Final: ${dados.metragemfinal || "Não informado"}
-Metragem Cordoalha: ${dados.metragemcordoalha || "Não informado"}
-Metragem Total: ${dados.metragemtotal || "Não informado"}
-Adequação: ${dados.adequacao || "Não informado"}
-Cordoalha: ${dados.cordoalha || "Não informado"}
+Código da O.S: ${valorOuNaoInformado(dados.codigoOS)}
+Região: ${valorOuNaoInformado(dados.regiao)}
+Funcionário: ${valorOuNaoInformado(dados.funcionario)}
+Data/Hora de Abertura: ${valorOuNaoInformado(dados.dataHoraAbertura)}
 
-MEDIÇÕES:
----------
-Lançamento de fo incluindo cruzeta com cordoalha: ${dados.caboaereo || "Não informado"}
-Adequação em condomínio aereo e subterrâneo: ${dados.cabosubterraneo || "Não informado"}
-Retirada de fo: ${dados.adequacao || "Não informado"}
-Lançamento e espinamento de cabo e cordoalha em sobra técnica e cto p/poste: ${dados.cordoalha || "Não informado"}
-Equipagem em troca de poste: ${dados.equipagem || "Não informado"}
+SERVIÇOS CONFIGURADOS (${(dados.servicos || []).length}):
+${servicosTexto}
 
 DESCRIÇÕES:
 -----------
-PROBLEMA: ${dados.problema || "Não informado"}
+PROBLEMA: ${valorOuNaoInformado(dados.problema)}
 
-TRECHO:
-Ponta A: ${dados.pontoa || "Não informado"}
-Ponto B: ${dados.pontob || "Não informado"}
-
-RESOLUÇÃO: ${dados.resolucao || "Não informado"}
+RESOLUÇÃO: ${valorOuNaoInformado(dados.resolucao)}
 
 MATERIAL UTILIZADO:
-${dados.materialutilizado || "Não informado"}
+${valorOuNaoInformado(dados.materialutilizado)}
 
 ===========================================
   `.trim();
