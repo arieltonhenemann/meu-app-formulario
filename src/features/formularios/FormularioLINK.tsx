@@ -171,6 +171,7 @@ export const FormularioLINK: React.FC<FormularioLINKProps> = ({ onSubmit, dadosI
                 >
                   <option value="pendente">⏳ Pendente</option>
                   <option value="aguardando">⏸️ Aguardando</option>
+                  <option value="agendamento">📅 Agendamento</option>
                 </select>
               </div>
             )}

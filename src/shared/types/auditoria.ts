@@ -7,7 +7,8 @@ export type TipoAcaoAuditoria =
   | 'FINALIZAR_FORMULARIO'
   | 'REABRIR_FORMULARIO'
   | 'INICIAR_FORMULARIO'
-  | 'AGUARDAR_FORMULARIO';
+  | 'AGUARDAR_FORMULARIO'
+  | 'AGENDAR_FORMULARIO';
 
 export type TipoFormularioAuditoria = 'CTO' | 'PON' | 'LINK' | 'ADEQUACAO';
 
@@ -73,6 +74,8 @@ export const obterIconeAcao = (acao: TipoAcaoAuditoria): string => {
       return '▶️';
     case 'AGUARDAR_FORMULARIO':
       return '⏸️';
+    case 'AGENDAR_FORMULARIO':
+      return '📅';
     default:
       return '📝';
   }
@@ -95,6 +98,8 @@ export const obterCorAcao = (acao: TipoAcaoAuditoria): string => {
       return '#007bff';
     case 'AGUARDAR_FORMULARIO':
       return '#6c757d';
+    case 'AGENDAR_FORMULARIO':
+      return '#6f42c1';
     default:
       return '#6c757d';
   }
@@ -121,6 +126,8 @@ export const obterDescricaoAcao = (log: LogAuditoria): string => {
       return `Iniciou serviço do formulário ${tipo}: ${codigo}`;
     case 'AGUARDAR_FORMULARIO':
       return `Colocou em aguardo o formulário ${tipo}: ${codigo}`;
+    case 'AGENDAR_FORMULARIO':
+      return `Agendou o formulário ${tipo}: ${codigo}`;
     default:
       return `Ação desconhecida em: ${codigo}`;
   }

@@ -12,6 +12,7 @@
   --status-aguardando: #17a2b8;
   --status-pendente: #ffc107;
   --status-finalizado: #28a745;
+  --status-agendamento: #6f42c1;
 }
 
 [data-theme="dark"] {
@@ -28,6 +29,7 @@
   --status-aguardando: #148f9d;
   --status-pendente: #d39e00;
   --status-finalizado: #1e7e34;
+  --status-agendamento: #9b7ce0;
 }
 
 body {

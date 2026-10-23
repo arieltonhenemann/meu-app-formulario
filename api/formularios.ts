@@ -278,7 +278,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
 
       // Validação de status
-      const statusValidos = ['pendente', 'finalizado', 'aguardando'];
+      const statusValidos = ['pendente', 'finalizado', 'aguardando', 'agendamento'];
       const finalStatus =
         statusParam && typeof statusParam === 'string' && statusValidos.includes(statusParam)
           ? statusParam
@@ -319,6 +319,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         status: finalStatus,
         dataCriacao: agora,
         dataModificacao: agora,
+        dataAlteracaoStatus: agora,
         codigoOS,
         criadoPor,
         dados,

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FormularioSalvo, StatusFormulario, TipoFormulario, obterCorStatus, obterCorTipo } from '../../shared/types/formularioSalvo';
 import { firebaseFormularioStorage } from '../../shared/services/firebaseFormularioStorage';
-import { formatarData } from '../../shared/utils';
+import { formatarData, formatarDataHora } from '../../shared/utils';
 import { useAuth } from '../../shared/contexts/AuthContext';
 import { labelStyle, inputStyle, buttonStyle, cardStyle, badgeStyle, statCardStyle } from '../../shared/styles/forms';
 import { toast } from '../../shared/components/Toast';
@@ -164,6 +164,30 @@ export const GerenciarFormularios: React.FC<GerenciarFormulariosProps> = ({
     }
   };
 
+  const agendarFormulario = async (id: string) => {
+    try {
+      const formulario = formularios.find(f => f.id === id);
+      const sucesso = await firebaseFormularioStorage.atualizarStatus(id, 'agendamento');
+      if (sucesso) {
+        if (user && formulario) {
+          await registrarAcaoAuditoria(user, 'AGENDAR_FORMULARIO', {
+            formularioId: id,
+            codigoOS: formulario.codigoOS,
+            tipoFormulario: formulario.tipo,
+            statusAnterior: formulario.status,
+            statusNovo: 'agendamento'
+          });
+        }
+
+        carregarFormularios();
+        toast.success('Formulário movido para Agendamento!');
+      }
+    } catch (error) {
+      console.error('Erro ao agendar formulário:', error);
+      toast.error('Erro ao alterar status. Tente novamente.');
+    }
+  };
+
   const pausarFormulario = async (id: string) => {
     try {
       const formulario = formularios.find(f => f.id === id);
@@ -237,6 +261,7 @@ export const GerenciarFormularios: React.FC<GerenciarFormulariosProps> = ({
       case 'aguardando': return '⏸️';
       case 'pendente': return '⏳';
       case 'finalizado': return '✅';
+      case 'agendamento': return '📅';
     }
   };
 
@@ -254,6 +279,7 @@ export const GerenciarFormularios: React.FC<GerenciarFormulariosProps> = ({
     pendentes: formulariosParaEstatistica.filter(f => f.status === 'pendente').length,
     finalizados: formulariosParaEstatistica.filter(f => f.status === 'finalizado').length,
     aguardando: formulariosParaEstatistica.filter(f => f.status === 'aguardando').length,
+    agendamento: formulariosParaEstatistica.filter(f => f.status === 'agendamento').length,
   };
 
   const formulariosParaEstatisticaTipo = formularios.filter(formulario => {
@@ -389,6 +415,25 @@ export const GerenciarFormularios: React.FC<GerenciarFormulariosProps> = ({
           >
             <div style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--text-main)', margin: 0 }}>{statsFiltradas.aguardando}</div>
             <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginTop: '5px' }}>Aguardando</div>
+          </div>
+
+          {/* Card Agendamento */}
+          <div
+            onClick={() => setFiltroStatus('agendamento')}
+            onMouseEnter={() => setHoveredCard('agendamento')}
+            onMouseLeave={() => setHoveredCard(null)}
+            style={{
+              ...statCardStyle,
+              borderLeftColor: '#6f42c1',
+              cursor: 'pointer',
+              transform: hoveredCard === 'agendamento' ? 'translateY(-2px)' : 'none',
+              boxShadow: hoveredCard === 'agendamento' ? '0 4px 8px rgba(0,0,0,0.15)' : (filtroStatus === 'agendamento' ? '0 4px 6px rgba(0,0,0,0.12)' : '0 2px 4px rgba(0,0,0,0.1)'),
+              backgroundColor: filtroStatus === 'agendamento' ? 'rgba(111, 66, 193, 0.15)' : 'var(--bg-card)',
+              transition: 'all 0.2s ease'
+            }}
+          >
+            <div style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--text-main)', margin: 0 }}>{statsFiltradas.agendamento}</div>
+            <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginTop: '5px' }}>Agendamento</div>
           </div>
 
           {/* Card Pendentes */}
@@ -560,6 +605,7 @@ export const GerenciarFormularios: React.FC<GerenciarFormulariosProps> = ({
             >
               <option value="todos">Todos</option>
               <option value="aguardando">Aguardando</option>
+              <option value="agendamento">Agendamento</option>
               <option value="pendente">Pendentes</option>
               <option value="finalizado">Finalizados</option>
             </select>
@@ -695,7 +741,10 @@ export const GerenciarFormularios: React.FC<GerenciarFormulariosProps> = ({
                   <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '15px' }}>
                     <div>ID: {formulario.id}</div>
                     <div>Criado: {formatarData(new Date(formulario.dataCriacao))}</div>
-                    <div>Modificado: {formatarData(new Date(formulario.dataModificacao))}</div>
+                    <div>Modificado: {formatarDataHora(new Date(formulario.dataModificacao))}</div>
+                    <div>
+                      Status atualizado: {formatarDataHora(new Date(formulario.dataAlteracaoStatus || formulario.dataModificacao))}
+                    </div>
                     {formulario.criadoPor && (
                       <div style={{ marginTop: '5px', display: 'flex', alignItems: 'center', gap: '5px' }}>
                         <span>👤 Criado por:</span>
@@ -723,7 +772,7 @@ export const GerenciarFormularios: React.FC<GerenciarFormulariosProps> = ({
                     ✏️ Editar
                   </button>
 
-                  {formulario.status === 'aguardando' && (
+                  {(formulario.status === 'aguardando' || formulario.status === 'agendamento') && (
                     <button
                       onClick={() => iniciarFormulario(formulario.id)}
                       style={{
@@ -760,6 +809,17 @@ export const GerenciarFormularios: React.FC<GerenciarFormulariosProps> = ({
                         }}
                       >
                         ⏸️ Aguardar
+                      </button>
+                      <button
+                        onClick={() => agendarFormulario(formulario.id)}
+                        style={{
+                          ...buttonStyle,
+                          backgroundColor: '#6f42c1',
+                          padding: '8px 12px',
+                          fontSize: '14px'
+                        }}
+                      >
+                        📅 Agendar
                       </button>
                     </>
                   )}

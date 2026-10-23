@@ -178,16 +178,19 @@ class FirebaseFormularioStorageService {
     id: string,
     novoStatus: StatusFormulario
   ): Promise<boolean> {
+    const agora = new Date().toISOString();
+
     if (this.isOnline && this.isFirebaseConfigured()) {
       try {
         const docRef = doc(db, COLLECTION_NAME, id);
         await updateDoc(docRef, {
           status: novoStatus,
-          dataModificacao: new Date().toISOString(),
+          dataModificacao: agora,
+          dataAlteracaoStatus: agora,
         });
 
         // Atualizar no localStorage também
-        this.atualizarStatusNoLocalStorage(id, novoStatus);
+        this.atualizarStatusNoLocalStorage(id, novoStatus, agora);
 
         return true;
       } catch (error) {
@@ -195,12 +198,12 @@ class FirebaseFormularioStorageService {
           "Erro ao atualizar status no Firebase, salvando offline:",
           error
         );
-        this.salvarAtualizacaoStatusParaSincronizar(id, novoStatus);
-        return this.atualizarStatusNoLocalStorage(id, novoStatus);
+        this.salvarAtualizacaoStatusParaSincronizar(id, novoStatus, agora);
+        return this.atualizarStatusNoLocalStorage(id, novoStatus, agora);
       }
     } else {
-      this.salvarAtualizacaoStatusParaSincronizar(id, novoStatus);
-      return this.atualizarStatusNoLocalStorage(id, novoStatus);
+      this.salvarAtualizacaoStatusParaSincronizar(id, novoStatus, agora);
+      return this.atualizarStatusNoLocalStorage(id, novoStatus, agora);
     }
   }
 
@@ -271,6 +274,7 @@ class FirebaseFormularioStorageService {
       pendentes: formularios.filter((f) => f.status === "pendente").length,
       finalizados: formularios.filter((f) => f.status === "finalizado").length,
       aguardando: formularios.filter((f) => f.status === "aguardando").length,
+      agendamento: formularios.filter((f) => f.status === "agendamento").length,
       porTipo: {
         CTO: formularios.filter((f) => f.tipo === "CTO").length,
         PON: formularios.filter((f) => f.tipo === "PON").length,
@@ -433,7 +437,8 @@ class FirebaseFormularioStorageService {
 
   private atualizarStatusNoLocalStorage(
     id: string,
-    novoStatus: StatusFormulario
+    novoStatus: StatusFormulario,
+    dataAlteracaoStatus: string = new Date().toISOString()
   ): boolean {
     const formularios = this.obterDoLocalStorage();
     const index = formularios.findIndex((f) => f.id === id);
@@ -443,7 +448,8 @@ class FirebaseFormularioStorageService {
     formularios[index] = {
       ...formularios[index],
       status: novoStatus,
-      dataModificacao: new Date().toISOString(),
+      dataModificacao: dataAlteracaoStatus,
+      dataAlteracaoStatus,
     };
 
     this.salvarNoLocalStorage(formularios);
@@ -492,13 +498,18 @@ class FirebaseFormularioStorageService {
 
   private salvarAtualizacaoStatusParaSincronizar(
     id: string,
-    status: StatusFormulario
+    status: StatusFormulario,
+    dataAlteracaoStatus: string = new Date().toISOString()
   ): void {
     const pendentes = this.obterDadosPendentesParaSincronizar();
     pendentes.push({
       tipo: "atualizar",
       id,
-      dados: { status, dataModificacao: new Date().toISOString() },
+      dados: {
+        status,
+        dataModificacao: dataAlteracaoStatus,
+        dataAlteracaoStatus,
+      },
       timestamp: Date.now(),
     });
     localStorage.setItem(SYNC_KEY, btoa(encodeURIComponent(JSON.stringify(pendentes))));

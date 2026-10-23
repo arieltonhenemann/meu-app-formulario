@@ -4,7 +4,7 @@ import { OrdemServicoPON } from "./pon";
 import { OrdemServicoLINK } from "./link";
 import { OrdemServicoAdequacao } from "./adequacao";
 
-export type StatusFormulario = "pendente" | "finalizado" | "aguardando";
+export type StatusFormulario = "pendente" | "finalizado" | "aguardando" | "agendamento";
 export type TipoFormulario = "CTO" | "PON" | "LINK" | "ADEQUACAO";
 
 export interface FormularioSalvoBase {
@@ -13,6 +13,8 @@ export interface FormularioSalvoBase {
   status: StatusFormulario;
   dataCriacao: string;
   dataModificacao: string;
+  /** Data/hora da última mudança de status (ausente em registros antigos). */
+  dataAlteracaoStatus?: string;
   codigoOS: string;
   criadoPor?: {
     uid: string;
@@ -73,6 +75,7 @@ export const criarFormularioSalvo = <
     status,
     dataCriacao: agora,
     dataModificacao: agora,
+    dataAlteracaoStatus: agora,
     codigoOS: dados.codigoOS || `Sem código - ${id.slice(0, 6)}`,
     criadoPor,
     dados,
@@ -87,6 +90,8 @@ export const obterCorStatus = (status: StatusFormulario): string => {
       return "var(--status-finalizado)";
     case "aguardando":
       return "var(--status-aguardando)";
+    case "agendamento":
+      return "var(--status-agendamento)";
     default:
       return "#6c757d";
   }

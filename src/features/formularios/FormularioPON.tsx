@@ -146,6 +146,7 @@ export const FormularioPON: React.FC<FormularioPONProps> = ({ onSubmit, dadosIni
                 >
                   <option value="pendente">⏳ Pendente</option>
                   <option value="aguardando">⏸️ Aguardando</option>
+                  <option value="agendamento">📅 Agendamento</option>
                 </select>
               </div>
             )}
