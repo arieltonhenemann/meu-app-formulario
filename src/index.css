@@ -191,6 +191,39 @@ button:hover {
   font-size: 0.8rem;
 }
 
+/* ---------- Ações rápidas nos cards ---------- */
+.acao-rapida {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+  width: 40px;
+  overflow: hidden;
+  white-space: nowrap;
+  box-sizing: border-box;
+  transition: width 0.2s ease;
+}
+
+.acao-rapida > span:first-child {
+  flex: 0 0 auto;
+  line-height: 1;
+}
+
+.acao-rapida-texto {
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.acao-rapida:hover,
+.acao-rapida:focus-visible {
+  width: 132px;
+}
+
+.acao-rapida:hover .acao-rapida-texto,
+.acao-rapida:focus-visible .acao-rapida-texto {
+  opacity: 1;
+}
+
 /* Responsividade para mobile */
 @media (max-width: 900px) {
   .app-shell {

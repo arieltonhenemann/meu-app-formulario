@@ -783,97 +783,82 @@ export const GerenciarFormularios: React.FC<GerenciarFormulariosProps> = ({
 
                 <div style={{ display: 'flex', gap: '10px' }}>
                   <button
+                    className="acao-rapida"
+                    title="Editar"
+                    aria-label="Editar"
                     onClick={() => onEditarFormulario(formulario)}
-                    style={{
-                      ...buttonStyle,
-                      backgroundColor: '#17a2b8',
-                      padding: '8px 12px',
-                      fontSize: '14px'
-                    }}
+                    style={{ ...buttonStyle, backgroundColor: '#17a2b8', padding: '8px 10px', fontSize: '14px' }}
                   >
-                    ✏️ Editar
+                    <span>✏️</span><span className="acao-rapida-texto">Editar</span>
                   </button>
 
                   {(formulario.status === 'aguardando' || formulario.status === 'agendamento') && (
                     <button
+                      className="acao-rapida"
+                      title="Iniciar"
+                      aria-label="Iniciar"
                       onClick={() => iniciarFormulario(formulario.id)}
-                      style={{
-                        ...buttonStyle,
-                        backgroundColor: '#007bff',
-                        padding: '8px 12px',
-                        fontSize: '14px'
-                      }}
+                      style={{ ...buttonStyle, backgroundColor: '#007bff', padding: '8px 10px', fontSize: '14px' }}
                     >
-                      ▶️ Iniciar
+                      <span>▶️</span><span className="acao-rapida-texto">Iniciar</span>
                     </button>
                   )}
 
                   {formulario.status === 'pendente' && (
                     <>
                       <button
+                        className="acao-rapida"
+                        title="Finalizar"
+                        aria-label="Finalizar"
                         onClick={() => finalizarFormulario(formulario.id)}
-                        style={{
-                          ...buttonStyle,
-                          backgroundColor: '#28a745',
-                          padding: '8px 12px',
-                          fontSize: '14px'
-                        }}
+                        style={{ ...buttonStyle, backgroundColor: '#28a745', padding: '8px 10px', fontSize: '14px' }}
                       >
-                        ✅ Finalizar
+                        <span>✅</span><span className="acao-rapida-texto">Finalizar</span>
                       </button>
                       <button
+                        className="acao-rapida"
+                        title="Aguardar"
+                        aria-label="Aguardar"
                         onClick={() => pausarFormulario(formulario.id)}
-                        style={{
-                          ...buttonStyle,
-                          backgroundColor: '#6c757d',
-                          padding: '8px 12px',
-                          fontSize: '14px'
-                        }}
+                        style={{ ...buttonStyle, backgroundColor: '#6c757d', padding: '8px 10px', fontSize: '14px' }}
                       >
-                        ⏸️ Aguardar
+                        <span>⏸️</span><span className="acao-rapida-texto">Aguardar</span>
                       </button>
                       <button
+                        className="acao-rapida"
+                        title="Agendar"
+                        aria-label="Agendar"
                         onClick={() => agendarFormulario(formulario.id)}
-                        style={{
-                          ...buttonStyle,
-                          backgroundColor: '#6f42c1',
-                          padding: '8px 12px',
-                          fontSize: '14px'
-                        }}
+                        style={{ ...buttonStyle, backgroundColor: '#6f42c1', padding: '8px 10px', fontSize: '14px' }}
                       >
-                        📅 Agendar
+                        <span>📅</span><span className="acao-rapida-texto">Agendar</span>
                       </button>
                     </>
                   )}
 
                   {formulario.status === 'finalizado' && (
                     <button
+                      className="acao-rapida"
+                      title="Reabrir"
+                      aria-label="Reabrir"
                       onClick={() => reabrirFormulario(formulario.id)}
-                      style={{
-                        ...buttonStyle,
-                        backgroundColor: '#ffc107',
-                        color: '#000',
-                        padding: '8px 12px',
-                        fontSize: '14px'
-                      }}
+                      style={{ ...buttonStyle, backgroundColor: '#ffc107', color: '#000', padding: '8px 10px', fontSize: '14px' }}
                     >
-                      🔄 Reabrir
+                      <span>🔄</span><span className="acao-rapida-texto">Reabrir</span>
                     </button>
                   )}
 
                   <button
+                    className="acao-rapida"
+                    title="Excluir"
+                    aria-label="Excluir"
                     onClick={() => {
                       toast.warning(`Tem certeza que deseja excluir o formulário "${formulario.codigoOS}"?`);
                       setConfirmDelete({ id: formulario.id, codigoOS: formulario.codigoOS });
                     }}
-                    style={{
-                      ...buttonStyle,
-                      backgroundColor: '#dc3545',
-                      padding: '8px 12px',
-                      fontSize: '14px'
-                    }}
+                    style={{ ...buttonStyle, backgroundColor: '#dc3545', padding: '8px 10px', fontSize: '14px' }}
                   >
-                    🗑️ Excluir
+                    <span>🗑️</span><span className="acao-rapida-texto">Excluir</span>
                   </button>
                 </div>
               </div>
