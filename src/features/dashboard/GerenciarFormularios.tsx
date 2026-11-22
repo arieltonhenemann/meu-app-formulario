@@ -247,6 +247,14 @@ export const GerenciarFormularios: React.FC<GerenciarFormulariosProps> = ({
     }
   };
 
+  const limparFiltros = () => {
+    setBusca('');
+    setFiltroStatus('pendente');
+    setFiltrosTipo([]);
+    setFiltroUsuario('todos');
+    setDropdownTipoAberto(false);
+  };
+
   const obterIconeTipo = (tipo: TipoFormulario) => {
     switch (tipo) {
       case 'CTO': return '🏢';
@@ -689,6 +697,26 @@ export const GerenciarFormularios: React.FC<GerenciarFormulariosProps> = ({
               </select>
             </div>
           )}
+
+          <div>
+            <label style={labelStyle}>&nbsp;</label>
+            <button
+              type="button"
+              onClick={limparFiltros}
+              style={{
+                ...buttonStyle,
+                width: '100%',
+                padding: '10px',
+                fontSize: '14px',
+                backgroundColor: 'var(--bg-app)',
+                color: 'var(--text-main)',
+                border: '1px solid var(--border-color)'
+              }}
+              title="Restaurar os filtros padrão"
+            >
+              🧹 Limpar filtro
+            </button>
+          </div>
         </div>
       </div>
 
