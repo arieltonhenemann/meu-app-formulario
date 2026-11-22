@@ -173,7 +173,6 @@ export const SystemController: React.FC = () => {
           <main>{renderTelaAtiva()}</main>
 
           <footer className="app-footer">
-            <span>Codryx Tech · Sistema de Ordem de Serviço</span>
             <span>📅 {formatarData(new Date())}</span>
           </footer>
         </div>
