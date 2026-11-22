@@ -2,6 +2,7 @@ import React, { useState, Suspense, lazy } from 'react';
 import { useAuth } from '../../shared/contexts/AuthContext';
 import { GerenciarFormularios } from './GerenciarFormularios';
 import { NavegacaoFormularios, TelaAtiva } from './NavegacaoFormularios';
+import { ListaLateralFormularios } from './ListaLateralFormularios';
 import { Header } from '../../shared/components/Header';
 
 const FormularioOS = lazy(() => import('../formularios/FormularioOS').then(m => ({ default: m.FormularioOS })));
@@ -170,7 +171,19 @@ export const SystemController: React.FC = () => {
         />
 
         <div className="app-content">
-          <main>{renderTelaAtiva()}</main>
+          <main>
+            {['CTO', 'PON', 'LINK', 'ADEQUACAO'].includes(telaAtiva) ? (
+              <div className="form-com-lista">
+                <div className="form-area">{renderTelaAtiva()}</div>
+                <ListaLateralFormularios
+                  onSelecionar={editarFormulario}
+                  formularioAtualId={formularioEditando?.id}
+                />
+              </div>
+            ) : (
+              renderTelaAtiva()
+            )}
+          </main>
 
           <footer className="app-footer">
             <span>📅 {formatarData(new Date())}</span>

@@ -191,6 +191,127 @@ button:hover {
   font-size: 0.8rem;
 }
 
+/* ---------- Lista lateral nos formulários ---------- */
+.form-com-lista {
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+}
+
+.form-area {
+  flex: 1;
+  min-width: 0;
+}
+
+.lista-lateral {
+  width: 280px;
+  flex: 0 0 280px;
+  position: sticky;
+  top: 20px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+  padding: 16px;
+}
+
+.lista-lateral-titulo {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--text-main);
+}
+
+.lista-lateral-contador {
+  background: var(--bg-app);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 2px 9px;
+  font-size: 0.75rem;
+}
+
+.lista-lateral-subtitulo {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  margin: 5px 0 12px;
+}
+
+.lista-lateral-itens {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: calc(100vh - 190px);
+  overflow-y: auto;
+}
+
+.lista-lateral-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  text-align: left;
+  padding: 9px 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background: var(--bg-app);
+  color: var(--text-main);
+  cursor: pointer;
+}
+
+.lista-lateral-item:hover,
+.lista-lateral-item.ativo {
+  border-color: #007bff;
+  background: rgba(0, 123, 255, 0.08);
+}
+
+.lista-lateral-icone {
+  font-size: 18px;
+  flex: 0 0 auto;
+  line-height: 1;
+}
+
+.lista-lateral-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.lista-lateral-info strong {
+  font-size: 0.82rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lista-lateral-info small {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+.lista-lateral-vazio {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  padding: 12px 0;
+}
+
+@media (max-width: 1200px) {
+  .form-com-lista {
+    flex-direction: column;
+  }
+
+  .lista-lateral {
+    position: static;
+    width: 100%;
+    flex: none;
+  }
+
+  .lista-lateral-itens {
+    max-height: 260px;
+  }
+}
+
 /* ---------- Ações rápidas nos cards ---------- */
 .acao-rapida {
   display: inline-flex;
