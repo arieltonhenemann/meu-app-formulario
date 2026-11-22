@@ -2,6 +2,7 @@ import React, { useState, Suspense, lazy } from 'react';
 import { useAuth } from '../../shared/contexts/AuthContext';
 import { GerenciarFormularios } from './GerenciarFormularios';
 import { NavegacaoFormularios, TelaAtiva } from './NavegacaoFormularios';
+import { ListaLateralFormularios } from './ListaLateralFormularios';
 import { Header } from '../../shared/components/Header';
 
 const FormularioOS = lazy(() => import('../formularios/FormularioOS').then(m => ({ default: m.FormularioOS })));
@@ -16,7 +17,7 @@ import { OrdemServico } from '../../shared/types/os';
 import { OrdemServicoPON } from '../../shared/types/pon';
 import { OrdemServicoLINK } from '../../shared/types/link';
 import { OrdemServicoAdequacao } from '../../shared/types/adequacao';
-import { FormularioSalvo } from '../../shared/types/formularioSalvo';
+import { FormularioSalvo, TipoFormulario } from '../../shared/types/formularioSalvo';
 import { formatarData } from '../../shared/utils';
 import { firebaseFormularioStorage } from '../../shared/services/firebaseFormularioStorage';
 import { toast } from '../../shared/components/Toast';
@@ -157,67 +158,39 @@ export const SystemController: React.FC = () => {
     }}>
       <Header />
 
-      <header style={{
-        textAlign: 'center',
-        marginBottom: '20px',
-        padding: '20px'
-      }}>
-        <h1 style={{
-          color: 'var(--btn-primary, #007bff)',
-          fontSize: '2.5rem',
-          marginBottom: '10px',
-          textShadow: '2px 2px 4px rgba(0,0,0,0.05)'
-        }}>
-          🔧 Sistema de Ordem de Serviço
-        </h1>
-        <p style={{
-          color: 'var(--text-muted)',
-          fontSize: '1.1rem',
-          maxWidth: '600px',
-          margin: '0 auto'
-        }}>
-          Registre e gerencie ordens de serviço técnico de forma eficiente
-        </p>
-        <p style={{
-          fontSize: '0.9rem',
-          color: 'var(--text-muted)',
-          marginTop: '10px'
-        }}>
-          📅 {formatarData(new Date())}
-        </p>
-      </header>
+      <div className="app-shell">
+        <NavegacaoFormularios
+          telaAtiva={telaAtiva}
+          onMudarTela={(tela) => {
+            setFormularioEditando(null);
+            setTelaAtiva(tela);
+          }}
+          modoEdicao={!!formularioEditando}
+          onVoltar={formularioEditando ? voltarParaGerenciar : undefined}
+          codigoEdicao={formularioEditando?.codigoOS}
+        />
 
-      <NavegacaoFormularios
-        telaAtiva={telaAtiva}
-        onMudarTela={(tela) => {
-          setFormularioEditando(null);
-          setTelaAtiva(tela);
-        }}
-        modoEdicao={!!formularioEditando}
-        onVoltar={formularioEditando ? voltarParaGerenciar : undefined}
-      />
+        <div className="app-content">
+          <main>
+            {['CTO', 'PON', 'LINK', 'ADEQUACAO'].includes(telaAtiva) ? (
+              <div className="form-com-lista">
+                <div className="form-area">{renderTelaAtiva()}</div>
+                <ListaLateralFormularios
+                  onSelecionar={editarFormulario}
+                  formularioAtualId={formularioEditando?.id}
+                  tipo={telaAtiva as TipoFormulario}
+                />
+              </div>
+            ) : (
+              renderTelaAtiva()
+            )}
+          </main>
 
-      <main>
-        {renderTelaAtiva()}
-      </main>
-
-
-
-      <footer style={{
-        textAlign: 'center',
-        padding: '40px 20px 20px',
-        color: 'var(--text-muted)',
-        fontSize: '0.9rem'
-      }}>
-        <p style={{ marginTop: '5px', fontSize: '0.8rem' }}>
-          Tela ativa: <strong>{telaAtiva}</strong>
-          {formularioEditando && (
-            <span style={{ marginLeft: '10px', color: 'var(--status-pendente)' }}>
-              (Editando: {formularioEditando.codigoOS})
-            </span>
-          )}
-        </p>
-      </footer>
+          <footer className="app-footer">
+            <span>📅 {formatarData(new Date())}</span>
+          </footer>
+        </div>
+      </div>
     </div>
   );
 };

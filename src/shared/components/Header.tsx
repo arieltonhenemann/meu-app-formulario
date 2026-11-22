@@ -54,11 +54,12 @@ export const Header: React.FC = () => {
           <div style={{ fontSize: '24px' }}>📋</div>
           <h1 style={{
             color: 'var(--text-main)',
-            fontSize: '24px',
+            fontSize: 'clamp(16px, 2vw, 22px)',
             margin: 0,
-            fontWeight: 'bold'
+            fontWeight: 'bold',
+            whiteSpace: 'nowrap'
           }}>
-            Codryx Tech
+            Codryx Tech - Gerenciamento de O.S
           </h1>
         </div>
 

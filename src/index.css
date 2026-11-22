@@ -78,7 +78,339 @@ button:hover {
   transform: translateY(-1px);
 }
 
+/* ---------- Layout: sidebar + conteúdo ---------- */
+.app-shell {
+  display: flex;
+  align-items: stretch;
+  min-height: calc(100vh - 68px);
+}
+
+.app-sidebar {
+  width: 250px;
+  flex: 0 0 250px;
+  background: var(--bg-card);
+  border-right: 1px solid var(--border-color);
+  padding: 20px 14px;
+  position: sticky;
+  top: 0;
+  align-self: flex-start;
+  height: calc(100vh - 68px);
+  overflow-y: auto;
+}
+
+.app-sidebar button:hover {
+  transform: none;
+  opacity: 1;
+}
+
+.nav-group + .nav-group {
+  margin-top: 24px;
+}
+
+.nav-group-title {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 800;
+  color: var(--text-muted);
+  padding: 0 14px 8px;
+}
+
+.app-sidebar .nav-group > button {
+  margin-bottom: 2px;
+}
+
+.nav-edicao {
+  margin-top: 28px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-color);
+}
+
+.nav-breadcrumb {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 0 14px 12px;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.nav-breadcrumb strong {
+  color: var(--text-main);
+}
+
+.nav-breadcrumb-sep {
+  opacity: 0.5;
+}
+
+.nav-voltar {
+  width: calc(100% - 28px);
+  margin: 0 14px 10px;
+  padding: 9px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background: var(--bg-app);
+  color: var(--text-main);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.nav-edit-badge {
+  margin: 0 14px;
+  padding: 7px 10px;
+  border-radius: 6px;
+  background: rgba(255, 193, 7, 0.14);
+  color: var(--status-pendente);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.app-content {
+  flex: 1;
+  min-width: 0;
+  padding: 24px clamp(16px, 3vw, 40px) 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-content main {
+  flex: 1;
+}
+
+.app-footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 24px 0 20px;
+  margin-top: 32px;
+  border-top: 1px solid var(--border-color);
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
+
+/* ---------- Lista lateral nos formulários ---------- */
+.form-com-lista {
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+}
+
+.form-area {
+  flex: 1;
+  min-width: 0;
+}
+
+.lista-lateral {
+  width: 280px;
+  flex: 0 0 280px;
+  position: sticky;
+  top: 20px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+  padding: 16px;
+}
+
+.lista-lateral-titulo {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--text-main);
+}
+
+.lista-lateral-contador {
+  background: var(--bg-app);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 2px 9px;
+  font-size: 0.75rem;
+}
+
+.lista-lateral-subtitulo {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  margin: 5px 0 12px;
+}
+
+.lista-lateral-grupo + .lista-lateral-grupo {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-color);
+}
+
+.lista-lateral-grupo-titulo {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+}
+
+.lista-lateral-itens {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 190px;
+  overflow-y: auto;
+}
+
+.lista-lateral-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  text-align: left;
+  padding: 9px 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background: var(--bg-app);
+  color: var(--text-main);
+  cursor: pointer;
+}
+
+.lista-lateral-item:hover,
+.lista-lateral-item.ativo {
+  border-color: #007bff;
+  background: rgba(0, 123, 255, 0.08);
+}
+
+.lista-lateral-icone {
+  font-size: 18px;
+  flex: 0 0 auto;
+  line-height: 1;
+}
+
+.lista-lateral-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.lista-lateral-info strong {
+  font-size: 0.82rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lista-lateral-info small {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+.lista-lateral-vazio {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  padding: 12px 0;
+}
+
+@media (max-width: 1200px) {
+  .form-com-lista {
+    flex-direction: column;
+  }
+
+  .lista-lateral {
+    position: static;
+    width: 100%;
+    flex: none;
+  }
+
+  .lista-lateral-itens {
+    max-height: 160px;
+  }
+}
+
+/* ---------- Ações rápidas nos cards ---------- */
+.acao-rapida {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+  width: 40px;
+  overflow: hidden;
+  white-space: nowrap;
+  box-sizing: border-box;
+  transition: width 0.2s ease;
+}
+
+.acao-rapida > span:first-child {
+  flex: 0 0 auto;
+  line-height: 1;
+}
+
+.acao-rapida-texto {
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.acao-rapida:hover,
+.acao-rapida:focus-visible {
+  width: 132px;
+}
+
+.acao-rapida:hover .acao-rapida-texto,
+.acao-rapida:focus-visible .acao-rapida-texto {
+  opacity: 1;
+}
+
 /* Responsividade para mobile */
+@media (max-width: 900px) {
+  .app-shell {
+    flex-direction: column;
+  }
+
+  .app-sidebar {
+    width: 100%;
+    flex: none;
+    position: static;
+    height: auto;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 16px;
+    border-right: none;
+    border-bottom: 1px solid var(--border-color);
+    padding: 12px 16px;
+  }
+
+  .nav-group {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .nav-group + .nav-group {
+    margin-top: 0;
+  }
+
+  .nav-group-title {
+    width: 100%;
+    padding: 4px 0 0;
+  }
+
+  .app-sidebar .nav-group > button {
+    width: auto;
+  }
+
+  .nav-edicao {
+    margin-top: 8px;
+    padding-top: 8px;
+    width: 100%;
+  }
+
+  .app-content {
+    padding: 16px 12px 0;
+  }
+}
+
 @media (max-width: 768px) {
   .grid-2-cols {
     grid-template-columns: 1fr !important;
