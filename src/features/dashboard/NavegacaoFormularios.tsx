@@ -9,99 +9,126 @@ interface NavegacaoFormulariosProps {
   onMudarTela: (tela: TelaAtiva) => void;
   modoEdicao?: boolean;
   onVoltar?: () => void;
+  codigoEdicao?: string;
 }
+
+interface ItemNav {
+  tipo: TelaAtiva;
+  label: string;
+  icone: string;
+  cor: string;
+}
+
+const itemStyle: React.CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: '12px',
+  width: '100%',
+  padding: '10px 14px',
+  border: 'none',
+  borderLeft: '3px solid transparent',
+  borderRadius: '6px',
+  fontSize: '14px',
+  fontWeight: 600,
+  textAlign: 'left',
+  cursor: 'pointer',
+  background: 'transparent',
+  color: 'var(--text-main)',
+  transition: 'background-color 0.18s ease, color 0.18s ease'
+};
 
 export const NavegacaoFormularios: React.FC<NavegacaoFormulariosProps> = ({
   telaAtiva,
   onMudarTela,
   modoEdicao = false,
-  onVoltar
+  onVoltar,
+  codigoEdicao
 }) => {
   const { isAdmin } = useAuth();
 
-  const botoesBasicos = [
-    { tipo: 'GERENCIAR' as TelaAtiva, label: '📋 Gerenciar', cor: '#6f42c1' },
-    { tipo: 'CTO' as TipoFormulario, label: '🏢 CTO', cor: '#007bff' },
-    { tipo: 'PON' as TipoFormulario, label: '📡 PON', cor: '#28a745' },
-    { tipo: 'LINK' as TipoFormulario, label: '🔗 LINK', cor: '#dc3545' },
-    { tipo: 'ADEQUACAO' as TipoFormulario, label: '🔧 ADEQUAÇÃO', cor: '#d4a30eff' }
+  const itensOperacao: ItemNav[] = [
+    { tipo: 'GERENCIAR', label: 'Gerenciar', icone: '📋', cor: '#6f42c1' },
+    { tipo: 'CTO', label: 'CTO', icone: '🏢', cor: '#007bff' },
+    { tipo: 'PON', label: 'PON', icone: '📡', cor: '#28a745' },
+    { tipo: 'LINK', label: 'LINK', icone: '🔗', cor: '#dc3545' },
+    { tipo: 'ADEQUACAO', label: 'Adequação', icone: '🔧', cor: '#b8860b' }
   ];
 
-  const botoesAdmin = [
-    { tipo: 'RELATORIOS' as TelaAtiva, label: '📈 Relatórios', cor: '#20c997' },
-    { tipo: 'LOGS' as TelaAtiva, label: '📋 Logs', cor: '#17a2b8' },
-    { tipo: 'ADMIN' as TelaAtiva, label: '🛡️ Admin', cor: '#fd7e14' }
+  const itensAnalise: ItemNav[] = [
+    { tipo: 'RELATORIOS', label: 'Relatórios', icone: '📈', cor: '#20c997' },
+    { tipo: 'LOGS', label: 'Logs', icone: '📜', cor: '#17a2b8' }
   ];
 
-  const botoes = isAdmin ? [...botoesBasicos, ...botoesAdmin] : botoesBasicos;
+  const itensSistema: ItemNav[] = [
+    { tipo: 'ADMIN', label: 'Admin', icone: '🛡️', cor: '#fd7e14' }
+  ];
+
+  const renderItem = (item: ItemNav) => {
+    const ativo = telaAtiva === item.tipo;
+    return (
+      <button
+        key={item.tipo}
+        onClick={() => onMudarTela(item.tipo)}
+        title={item.label}
+        style={{
+          ...itemStyle,
+          borderLeftColor: ativo ? item.cor : 'transparent',
+          backgroundColor: ativo ? `${item.cor}1f` : 'transparent',
+          color: ativo ? item.cor : 'var(--text-main)'
+        }}
+      >
+        <span style={{ fontSize: '18px', lineHeight: 1 }}>{item.icone}</span>
+        <span>{item.label}</span>
+      </button>
+    );
+  };
+
+  const labelAtiva = [...itensOperacao, ...itensAnalise, ...itensSistema]
+    .find(item => item.tipo === telaAtiva)?.label ?? telaAtiva;
 
   return (
-    <div style={{
-      display: 'flex',
-      justifyContent: 'center',
-      gap: '10px',
-      margin: '20px 0 30px 0',
-      flexWrap: 'wrap',
-      alignItems: 'center'
-    }}>
-      {modoEdicao && onVoltar && (
-        <button
-          onClick={onVoltar}
-          style={{
-            padding: '12px 20px',
-            border: '2px solid #6c757d',
-            borderRadius: '8px',
-            backgroundColor: '#6c757d',
-            color: '#fff',
-            fontSize: '16px',
-            fontWeight: 'bold',
-            cursor: 'pointer',
-            transition: 'all 0.3s ease',
-            marginRight: '20px'
-          }}
-        >
-          ← Voltar
-        </button>
-      )}
+    <nav className="app-sidebar" aria-label="Navegação principal">
+      <div className="nav-group">
+        <div className="nav-group-title">Operação</div>
+        {itensOperacao.map(renderItem)}
+      </div>
 
-      {botoes.map((botao) => (
-        <button
-          key={botao.tipo}
-          onClick={() => onMudarTela(botao.tipo)}
-          style={{
-            padding: '12px 24px',
-            border: telaAtiva === botao.tipo ? `3px solid ${botao.cor}` : '2px solid var(--border-color)',
-            borderRadius: '8px',
-            backgroundColor: telaAtiva === botao.tipo ? botao.cor : 'var(--bg-card)',
-            color: telaAtiva === botao.tipo ? '#fff' : 'var(--text-main)',
-            fontSize: '16px',
-            fontWeight: 'bold',
-            cursor: 'pointer',
-            transition: 'all 0.3s ease',
-            minWidth: '120px',
-            boxShadow: telaAtiva === botao.tipo
-              ? `0 4px 12px ${botao.cor}40`
-              : '0 2px 4px rgba(0,0,0,0.05)'
-          }}
-        >
-          {botao.label}
-        </button>
-      ))}
+      {isAdmin && (
+        <>
+          <div className="nav-group">
+            <div className="nav-group-title">Análise</div>
+            {itensAnalise.map(renderItem)}
+          </div>
+
+          <div className="nav-group">
+            <div className="nav-group-title">Sistema</div>
+            {itensSistema.map(renderItem)}
+          </div>
+        </>
+      )}
 
       {modoEdicao && (
-        <div style={{
-          marginLeft: '20px',
-          padding: '8px 16px',
-          backgroundColor: 'rgba(255, 193, 7, 0.15)',
-          border: '1px solid var(--status-pendente)',
-          borderRadius: '6px',
-          color: 'var(--status-pendente)',
-          fontSize: '14px',
-          fontWeight: 'bold'
-        }}>
-          ✏️ Modo Edição
+        <div className="nav-edicao">
+          <div className="nav-group-title">Em edição</div>
+          <div className="nav-breadcrumb" title={`Gerenciar › ${labelAtiva}${codigoEdicao ? ` › ${codigoEdicao}` : ''}`}>
+            <span>Gerenciar</span>
+            <span className="nav-breadcrumb-sep">›</span>
+            <strong>{labelAtiva}</strong>
+            {codigoEdicao && (
+              <>
+                <span className="nav-breadcrumb-sep">›</span>
+                <span>{codigoEdicao}</span>
+              </>
+            )}
+          </div>
+          {onVoltar && (
+            <button onClick={onVoltar} className="nav-voltar">
+              ← Voltar para a lista
+            </button>
+          )}
+          <div className="nav-edit-badge">✏️ Modo Edição</div>
         </div>
       )}
-    </div>
+    </nav>
   );
 };

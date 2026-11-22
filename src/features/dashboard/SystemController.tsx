@@ -157,67 +157,27 @@ export const SystemController: React.FC = () => {
     }}>
       <Header />
 
-      <header style={{
-        textAlign: 'center',
-        marginBottom: '20px',
-        padding: '20px'
-      }}>
-        <h1 style={{
-          color: 'var(--btn-primary, #007bff)',
-          fontSize: '2.5rem',
-          marginBottom: '10px',
-          textShadow: '2px 2px 4px rgba(0,0,0,0.05)'
-        }}>
-          🔧 Sistema de Ordem de Serviço
-        </h1>
-        <p style={{
-          color: 'var(--text-muted)',
-          fontSize: '1.1rem',
-          maxWidth: '600px',
-          margin: '0 auto'
-        }}>
-          Registre e gerencie ordens de serviço técnico de forma eficiente
-        </p>
-        <p style={{
-          fontSize: '0.9rem',
-          color: 'var(--text-muted)',
-          marginTop: '10px'
-        }}>
-          📅 {formatarData(new Date())}
-        </p>
-      </header>
+      <div className="app-shell">
+        <NavegacaoFormularios
+          telaAtiva={telaAtiva}
+          onMudarTela={(tela) => {
+            setFormularioEditando(null);
+            setTelaAtiva(tela);
+          }}
+          modoEdicao={!!formularioEditando}
+          onVoltar={formularioEditando ? voltarParaGerenciar : undefined}
+          codigoEdicao={formularioEditando?.codigoOS}
+        />
 
-      <NavegacaoFormularios
-        telaAtiva={telaAtiva}
-        onMudarTela={(tela) => {
-          setFormularioEditando(null);
-          setTelaAtiva(tela);
-        }}
-        modoEdicao={!!formularioEditando}
-        onVoltar={formularioEditando ? voltarParaGerenciar : undefined}
-      />
+        <div className="app-content">
+          <main>{renderTelaAtiva()}</main>
 
-      <main>
-        {renderTelaAtiva()}
-      </main>
-
-
-
-      <footer style={{
-        textAlign: 'center',
-        padding: '40px 20px 20px',
-        color: 'var(--text-muted)',
-        fontSize: '0.9rem'
-      }}>
-        <p style={{ marginTop: '5px', fontSize: '0.8rem' }}>
-          Tela ativa: <strong>{telaAtiva}</strong>
-          {formularioEditando && (
-            <span style={{ marginLeft: '10px', color: 'var(--status-pendente)' }}>
-              (Editando: {formularioEditando.codigoOS})
-            </span>
-          )}
-        </p>
-      </footer>
+          <footer className="app-footer">
+            <span>Codryx Tech · Sistema de Ordem de Serviço</span>
+            <span>📅 {formatarData(new Date())}</span>
+          </footer>
+        </div>
+      </div>
     </div>
   );
 };
