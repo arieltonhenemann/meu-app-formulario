@@ -7,7 +7,13 @@
   --text-muted: #666666;
   --input-bg: #ffffff;
   --input-border: #dddddd;
-  
+
+  /* Sidebar escura */
+  --sidebar-bg: #1e1e1e;
+  --sidebar-text: #f1f3f5;
+  --sidebar-muted: #a0a6ad;
+  --sidebar-border: #333333;
+
   /* Status Colors */
   --status-aguardando: #17a2b8;
   --status-pendente: #ffc107;
@@ -24,6 +30,11 @@
   --text-muted: #a0a0a0;
   --input-bg: #2d2d2d;
   --input-border: #444444;
+
+  --sidebar-bg: #2d2d2d;
+  --sidebar-text: #f8f9fa;
+  --sidebar-muted: #b0b6bd;
+  --sidebar-border: #3d3d3d;
 
   /* Adjust status colors slightly for better contrast on dark backgrounds if needed */
   --status-aguardando: #148f9d;
@@ -88,8 +99,9 @@ button:hover {
 .app-sidebar {
   width: 250px;
   flex: 0 0 250px;
-  background: var(--bg-card);
-  border-right: 1px solid var(--border-color);
+  background: var(--sidebar-bg);
+  color: var(--sidebar-text);
+  border-right: 1px solid var(--sidebar-border);
   padding: 20px 14px;
   position: sticky;
   top: 0;
@@ -112,7 +124,7 @@ button:hover {
   text-transform: uppercase;
   letter-spacing: 1px;
   font-weight: 800;
-  color: var(--text-muted);
+  color: var(--sidebar-muted);
   padding: 0 14px 8px;
 }
 
@@ -123,7 +135,7 @@ button:hover {
 .nav-edicao {
   margin-top: 28px;
   padding-top: 16px;
-  border-top: 1px solid var(--border-color);
+  border-top: 1px solid var(--sidebar-border);
 }
 
 .nav-breadcrumb {
@@ -133,11 +145,11 @@ button:hover {
   gap: 6px;
   padding: 0 14px 12px;
   font-size: 0.75rem;
-  color: var(--text-muted);
+  color: var(--sidebar-muted);
 }
 
 .nav-breadcrumb strong {
-  color: var(--text-main);
+  color: var(--sidebar-text);
 }
 
 .nav-breadcrumb-sep {
@@ -148,10 +160,10 @@ button:hover {
   width: calc(100% - 28px);
   margin: 0 14px 10px;
   padding: 9px 12px;
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--sidebar-border);
   border-radius: 6px;
-  background: var(--bg-app);
-  color: var(--text-main);
+  background: #2a2a2a;
+  color: var(--sidebar-text);
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
@@ -162,7 +174,7 @@ button:hover {
   padding: 7px 10px;
   border-radius: 6px;
   background: rgba(255, 193, 7, 0.14);
-  color: var(--status-pendente);
+  color: #ffc107;
   font-size: 12px;
   font-weight: 700;
 }
@@ -239,7 +251,7 @@ button:hover {
     flex-wrap: wrap;
     gap: 8px 16px;
     border-right: none;
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--sidebar-border);
     padding: 12px 16px;
   }
 

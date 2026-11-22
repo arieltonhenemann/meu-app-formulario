@@ -33,7 +33,7 @@ const itemStyle: React.CSSProperties = {
   textAlign: 'left',
   cursor: 'pointer',
   background: 'transparent',
-  color: 'var(--text-main)',
+  color: 'var(--sidebar-text, var(--text-main))',
   transition: 'background-color 0.18s ease, color 0.18s ease'
 };
 
