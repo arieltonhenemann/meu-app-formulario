@@ -7,13 +7,21 @@ import {
 } from '../../shared/types/formularioSalvo';
 import { firebaseFormularioStorage } from '../../shared/services/firebaseFormularioStorage';
 import { useAuth } from '../../shared/contexts/AuthContext';
+import { formatarDataHora } from '../../shared/utils';
 
 interface ListaLateralFormulariosProps {
   onSelecionar: (formulario: FormularioSalvo) => void;
   formularioAtualId?: string;
+  tipo: TipoFormulario;
 }
 
 const STATUS_EM_ABERTO: StatusFormulario[] = ['pendente', 'aguardando', 'agendamento'];
+
+const GRUPOS_STATUS: Array<{ status: StatusFormulario; titulo: string; icone: string }> = [
+  { status: 'pendente', titulo: 'Pendentes', icone: '⏳' },
+  { status: 'aguardando', titulo: 'Aguardando', icone: '⏸️' },
+  { status: 'agendamento', titulo: 'Agendados', icone: '📅' }
+];
 
 const obterIconeTipo = (tipo: TipoFormulario): string => {
   switch (tipo) {
@@ -24,27 +32,10 @@ const obterIconeTipo = (tipo: TipoFormulario): string => {
   }
 };
 
-const obterIconeStatus = (status: StatusFormulario): string => {
-  switch (status) {
-    case 'pendente': return '⏳';
-    case 'aguardando': return '⏸️';
-    case 'agendamento': return '📅';
-    case 'finalizado': return '✅';
-  }
-};
-
-const obterLabelStatus = (status: StatusFormulario): string => {
-  switch (status) {
-    case 'pendente': return 'Pendente';
-    case 'aguardando': return 'Aguardando';
-    case 'agendamento': return 'Agendamento';
-    case 'finalizado': return 'Finalizado';
-  }
-};
-
 export const ListaLateralFormularios: React.FC<ListaLateralFormulariosProps> = ({
   onSelecionar,
-  formularioAtualId
+  formularioAtualId,
+  tipo
 }) => {
   const { user, isAdmin } = useAuth();
   const [formularios, setFormularios] = useState<FormularioSalvo[]>([]);
@@ -61,7 +52,9 @@ export const ListaLateralFormularios: React.FC<ListaLateralFormulariosProps> = (
 
         setFormularios(
           todos
-            .filter(formulario => STATUS_EM_ABERTO.includes(formulario.status))
+            .filter(formulario =>
+              formulario.tipo === tipo && STATUS_EM_ABERTO.includes(formulario.status)
+            )
             .sort((a, b) =>
               (b.dataAlteracaoStatus || b.dataModificacao).localeCompare(
                 a.dataAlteracaoStatus || a.dataModificacao
@@ -82,42 +75,57 @@ export const ListaLateralFormularios: React.FC<ListaLateralFormulariosProps> = (
       ativo = false;
       window.removeEventListener('online', carregar);
     };
-  }, [isAdmin, user?.uid]);
+  }, [isAdmin, user?.uid, tipo]);
 
   return (
-    <aside className="lista-lateral" aria-label="Ordem de serviço em aberto">
+    <aside className="lista-lateral" aria-label={`Ordem de serviço ${tipo} em aberto`}>
       <div className="lista-lateral-titulo">
-        <span>📌 Em aberto</span>
+        <span>📌 {tipo} em aberto</span>
         <span className="lista-lateral-contador">{formularios.length}</span>
       </div>
-      <div className="lista-lateral-subtitulo">Pendente · Aguardando · Agendamento</div>
+      <div className="lista-lateral-subtitulo">Pendentes · Aguardando · Agendados</div>
 
       {carregando ? (
         <div className="lista-lateral-vazio">Carregando...</div>
-      ) : formularios.length === 0 ? (
-        <div className="lista-lateral-vazio">Nenhuma O.S. em aberto.</div>
       ) : (
-        <div className="lista-lateral-itens">
-          {formularios.map(formulario => (
-            <button
-              key={formulario.id}
-              type="button"
-              className={`lista-lateral-item${formulario.id === formularioAtualId ? ' ativo' : ''}`}
-              onClick={() => onSelecionar(formulario)}
-              title={`Abrir ${formulario.codigoOS} para edição`}
-            >
-              <span className="lista-lateral-icone" style={{ color: obterCorTipo(formulario.tipo) }}>
-                {obterIconeTipo(formulario.tipo)}
-              </span>
-              <span className="lista-lateral-info">
-                <strong>{formulario.codigoOS}</strong>
-                <small>
-                  {formulario.tipo} · {obterIconeStatus(formulario.status)} {obterLabelStatus(formulario.status)}
-                </small>
-              </span>
-            </button>
-          ))}
-        </div>
+        GRUPOS_STATUS.map(grupo => {
+          const itens = formularios.filter(formulario => formulario.status === grupo.status);
+
+          return (
+            <section key={grupo.status} className="lista-lateral-grupo">
+              <div className="lista-lateral-grupo-titulo">
+                <span>{grupo.icone} {grupo.titulo}</span>
+                <span className="lista-lateral-contador">{itens.length}</span>
+              </div>
+
+              {itens.length === 0 ? (
+                <div className="lista-lateral-vazio">Nenhuma</div>
+              ) : (
+                <div className="lista-lateral-itens">
+                  {itens.map(formulario => (
+                    <button
+                      key={formulario.id}
+                      type="button"
+                      className={`lista-lateral-item${formulario.id === formularioAtualId ? ' ativo' : ''}`}
+                      onClick={() => onSelecionar(formulario)}
+                      title={`Abrir ${formulario.codigoOS} para edição`}
+                    >
+                      <span className="lista-lateral-icone" style={{ color: obterCorTipo(formulario.tipo) }}>
+                        {obterIconeTipo(formulario.tipo)}
+                      </span>
+                      <span className="lista-lateral-info">
+                        <strong>{formulario.codigoOS}</strong>
+                        <small>
+                          Atualizado: {formatarDataHora(new Date(formulario.dataAlteracaoStatus || formulario.dataModificacao))}
+                        </small>
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </section>
+          );
+        })
       )}
     </aside>
   );

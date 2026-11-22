@@ -238,11 +238,27 @@ button:hover {
   margin: 5px 0 12px;
 }
 
+.lista-lateral-grupo + .lista-lateral-grupo {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-color);
+}
+
+.lista-lateral-grupo-titulo {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+}
+
 .lista-lateral-itens {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  max-height: calc(100vh - 190px);
+  max-height: 190px;
   overflow-y: auto;
 }
 
@@ -308,7 +324,7 @@ button:hover {
   }
 
   .lista-lateral-itens {
-    max-height: 260px;
+    max-height: 160px;
   }
 }
 

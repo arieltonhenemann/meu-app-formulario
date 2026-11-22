@@ -17,7 +17,7 @@ import { OrdemServico } from '../../shared/types/os';
 import { OrdemServicoPON } from '../../shared/types/pon';
 import { OrdemServicoLINK } from '../../shared/types/link';
 import { OrdemServicoAdequacao } from '../../shared/types/adequacao';
-import { FormularioSalvo } from '../../shared/types/formularioSalvo';
+import { FormularioSalvo, TipoFormulario } from '../../shared/types/formularioSalvo';
 import { formatarData } from '../../shared/utils';
 import { firebaseFormularioStorage } from '../../shared/services/firebaseFormularioStorage';
 import { toast } from '../../shared/components/Toast';
@@ -178,6 +178,7 @@ export const SystemController: React.FC = () => {
                 <ListaLateralFormularios
                   onSelecionar={editarFormulario}
                   formularioAtualId={formularioEditando?.id}
+                  tipo={telaAtiva as TipoFormulario}
                 />
               </div>
             ) : (
