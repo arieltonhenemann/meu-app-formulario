@@ -61,13 +61,22 @@ export const GerenciarFormularios: React.FC<GerenciarFormulariosProps> = ({
       setIsOnline(false);
     };
 
+    // Reforço: se a aba voltar a ficar visível, recarrega na hora.
+    const recarregarAoVoltar = () => {
+      if (document.visibilityState === 'visible') carregarFormularios();
+    };
+
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
+    document.addEventListener('visibilitychange', recarregarAoVoltar);
+    const intervaloRecarga = window.setInterval(carregarFormularios, 15000);
 
     return () => {
       unsubscribe();
+      window.clearInterval(intervaloRecarga);
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
+      document.removeEventListener('visibilitychange', recarregarAoVoltar);
     };
   }, [isAdmin, user?.uid]);
 
