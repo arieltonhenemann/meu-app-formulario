@@ -43,11 +43,11 @@ export const ListaLateralFormularios: React.FC<ListaLateralFormulariosProps> = (
 
   useEffect(() => {
     let ativo = true;
+    const uid = !isAdmin ? user?.uid : undefined;
 
-    const carregar = async () => {
-      try {
-        const uid = !isAdmin ? user?.uid : undefined;
-        const todos = await firebaseFormularioStorage.obterTodos(uid);
+    // Também acompanha mudanças feitas pelo admin em tempo real.
+    const unsubscribe = firebaseFormularioStorage.escutarMudancas(
+      (todos) => {
         if (!ativo) return;
 
         setFormularios(
@@ -61,19 +61,14 @@ export const ListaLateralFormularios: React.FC<ListaLateralFormulariosProps> = (
               )
             )
         );
-      } catch (error) {
-        console.error('Erro ao carregar a lista lateral de formulários:', error);
-      } finally {
-        if (ativo) setCarregando(false);
-      }
-    };
-
-    carregar();
-    window.addEventListener('online', carregar);
+        setCarregando(false);
+      },
+      uid
+    );
 
     return () => {
       ativo = false;
-      window.removeEventListener('online', carregar);
+      unsubscribe();
     };
   }, [isAdmin, user?.uid, tipo]);
 

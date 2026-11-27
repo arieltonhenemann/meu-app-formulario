@@ -39,7 +39,18 @@ export const GerenciarFormularios: React.FC<GerenciarFormulariosProps> = ({
   const [hoveredCard, setHoveredCard] = useState<string | null>(null);
 
   useEffect(() => {
-    carregarFormularios();
+    const uid = !isAdmin ? user?.uid : undefined;
+
+    // Atualiza a tela em tempo real quando outro usuário (ex.: admin)
+    // altera o status de uma O.S. deste usuário.
+    const unsubscribe = firebaseFormularioStorage.escutarMudancas(
+      (formulariosCarregados) => {
+        setFormularios(formulariosCarregados);
+        setIsOnline(firebaseFormularioStorage.estaOnline());
+        setTemDadosPendentes(firebaseFormularioStorage.temDadosPendentes());
+      },
+      uid
+    );
 
     const handleOnline = () => {
       setIsOnline(true);
@@ -54,10 +65,11 @@ export const GerenciarFormularios: React.FC<GerenciarFormulariosProps> = ({
     window.addEventListener('offline', handleOffline);
 
     return () => {
+      unsubscribe();
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
     };
-  }, []);
+  }, [isAdmin, user?.uid]);
 
   const carregarFormularios = async () => {
     try {

@@ -45,41 +45,25 @@ export const RelatoriosPage: React.FC = () => {
 
   const [hoveredCard, setHoveredCard] = useState<string | null>(null);
 
-  // Carregar todos os formulários ao iniciar
+  // Acompanha alterações em tempo real (ex.: admin finalizando uma O.S.)
   useEffect(() => {
-    carregarFormularios();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    const uidFilter = !isAdmin ? user?.uid : undefined;
+
+    const unsubscribe = firebaseFormularioStorage.escutarMudancas(
+      (formularios) => {
+        setEstado(prev => ({ ...prev, formularios, carregando: false }));
+      },
+      uidFilter
+    );
+
+    return unsubscribe;
+  }, [isAdmin, user?.uid]);
 
   // Aplicar filtros sempre que mudarem
   useEffect(() => {
     aplicarFiltros();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [estado.dataInicio, estado.dataFim, estado.formularios, estado.filtroTipo]);
-
-  const carregarFormularios = async () => {
-    console.log('📊 [RelatoriosPage] Carregando formulários para relatórios');
-
-    try {
-      setEstado(prev => ({ ...prev, carregando: true }));
-
-      // Usuários comuns só podem ver os próprios formulários.
-      // Admins veem todos.
-      const uidFilter = !isAdmin ? user?.uid : undefined;
-      const formularios = await firebaseFormularioStorage.obterTodos(uidFilter);
-      console.log('📊 Formulários carregados:', formularios.length);
-
-      setEstado(prev => ({
-        ...prev,
-        formularios,
-        carregando: false
-      }));
-
-    } catch (error) {
-      console.error('❌ Erro ao carregar formulários:', error);
-      setEstado(prev => ({ ...prev, carregando: false }));
-    }
-  };
 
   const aplicarFiltros = () => {
     console.log('🔍 [RelatoriosPage] Aplicando filtros:', {

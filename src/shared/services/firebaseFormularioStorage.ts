@@ -324,11 +324,16 @@ class FirebaseFormularioStorageService {
   ): () => void {
     this.listeners.push(callback);
 
+    const removerListener = () => {
+      const index = this.listeners.indexOf(callback);
+      if (index >= 0) this.listeners.splice(index, 1);
+    };
+
     if (!this.isOnline || !this.isFirebaseConfigured()) {
       // Se offline, usar dados do localStorage
       const formularios = this.obterDoLocalStorage(uidFilter);
       callback(formularios);
-      return () => {};
+      return removerListener;
     }
 
     const constraints: any[] = [orderBy("dataModificacao", "desc")];
@@ -360,7 +365,10 @@ class FirebaseFormularioStorageService {
       }
     );
 
-    return unsubscribe;
+    return () => {
+      unsubscribe();
+      removerListener();
+    };
   }
 
   // Status da conexão
