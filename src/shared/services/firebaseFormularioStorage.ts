@@ -317,19 +317,28 @@ class FirebaseFormularioStorageService {
     }
   }
 
-  // Escutar mudanças em tempo real (opcional)
+  // Escutar mudanças em tempo real
   escutarMudancas(
     callback: (formularios: FormularioSalvo[]) => void,
     uidFilter?: string
   ): () => void {
     this.listeners.push(callback);
 
+    const removerListener = () => {
+      const index = this.listeners.indexOf(callback);
+      if (index >= 0) this.listeners.splice(index, 1);
+    };
+
     if (!this.isOnline || !this.isFirebaseConfigured()) {
-      // Se offline, usar dados do localStorage
       const formularios = this.obterDoLocalStorage(uidFilter);
       callback(formularios);
-      return () => {};
+      return removerListener;
     }
+
+    logger.log(
+      "🔄 [Firestore] Escutando mudanças em tempo real:",
+      uidFilter ? `usuário ${uidFilter}` : "todos os usuários"
+    );
 
     const constraints: any[] = [orderBy("dataModificacao", "desc")];
     if (uidFilter) {
@@ -337,30 +346,49 @@ class FirebaseFormularioStorageService {
     }
     const q = query(collection(db, COLLECTION_NAME), ...constraints);
 
+    let unsubscribesPorDoc: Array<() => void> = [];
+
     const unsubscribe = onSnapshot(
       q,
       (querySnapshot) => {
         const formularios: FormularioSalvo[] = [];
-        querySnapshot.forEach((doc) => {
+        querySnapshot.forEach((documento) => {
           formularios.push({
-            id: doc.id,
-            ...doc.data(),
+            id: documento.id,
+            ...documento.data(),
           } as FormularioSalvo);
         });
 
-        // Salvar no localStorage como cache
+        logger.log("📥 [Firestore] Lista atualizada:", formularios.length, "O.S.");
         this.salvarNoLocalStorage(formularios);
-
         callback(formularios);
       },
       (error) => {
-        logger.error("Erro ao escutar mudanças, usando cache local:", error);
+        logger.error("Erro ao escutar a lista no Firestore, usando cache local:", error);
         const formularios = this.obterDoLocalStorage(uidFilter);
         callback(formularios);
+
+        // Fallback: escuta cada O.S. do cache diretamente pelo ID, sem depender
+        // da consulta com filtro/ordenação (que pode ser negada pelas regras).
+        unsubscribesPorDoc = formularios.map(formulario =>
+          onSnapshot(doc(db, COLLECTION_NAME, formulario.id), (docSnap) => {
+            if (!docSnap.exists()) return;
+            const atualizado = { id: docSnap.id, ...docSnap.data() } as FormularioSalvo;
+            const listaAtual = this.obterDoLocalStorage(uidFilter).map(f =>
+              f.id === atualizado.id ? atualizado : f
+            );
+            this.salvarNoLocalStorage(listaAtual);
+            callback(listaAtual);
+          })
+        );
       }
     );
 
-    return unsubscribe;
+    return () => {
+      unsubscribe();
+      unsubscribesPorDoc.forEach(parar => parar());
+      removerListener();
+    };
   }
 
   // Status da conexão
