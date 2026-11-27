@@ -503,7 +503,15 @@ export const RelatoriosPage: React.FC = () => {
 
                   const getCtoLink = () => {
                     if (tipo === 'CTO' && 'cto' in dados) return (dados as any).cto || 'N/A';
-                    if (tipo === 'PON' && 'pon' in dados) return (dados as any).pon || 'N/A';
+                    if (tipo === 'PON') {
+                      const pontos = (dados as any).pontos;
+                      if (Array.isArray(pontos) && pontos.length > 0) {
+                        return pontos
+                          .map((ponto: any, i: number) => `P${i + 1}: ${ponto.pon || 'N/A'} / ${ponto.placa || 'N/A'} / ${ponto.porta || 'N/A'}`)
+                          .join('; ');
+                      }
+                      if ('pon' in dados) return (dados as any).pon || 'N/A';
+                    }
                     if (tipo === 'LINK') return 'Links';
                     return 'N/A';
                   };

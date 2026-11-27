@@ -1,5 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { OrdemServicoPON, criarPONVazia } from '../../shared/types/pon';
+import {
+  OrdemServicoPON,
+  PontoPON,
+  criarPONVazia,
+  criarPontoPONVazio,
+  normalizarPON
+} from '../../shared/types/pon';
 import { gerarArquivoPON } from '../../shared/utils/gerarArquivoTxt';
 import { firebaseFormularioStorage } from '../../shared/services/firebaseFormularioStorage';
 import { useAuth } from '../../shared/contexts/AuthContext';
@@ -21,26 +27,50 @@ interface FormularioPONProps {
 export const FormularioPON: React.FC<FormularioPONProps> = ({ onSubmit, dadosIniciais, formularioId, modoGerenciamento, onFinalizar }) => {
   const { user } = useAuth();
   const [status, setStatus] = useState<StatusFormulario>('pendente');
-  const [formData, setFormData] = useState<OrdemServicoPON>(() => {
-    if (dadosIniciais) {
-      return { ...criarPONVazia(), ...dadosIniciais };
-    }
-    return criarPONVazia();
-  });
+  const [formData, setFormData] = useState<OrdemServicoPON>(() => normalizarPON(dadosIniciais));
 
   const [txtModalAberto, setTxtModalAberto] = useState(false);
   const [txtConteudo, setTxtConteudo] = useState('');
+  const [isHovered, setIsHovered] = useState(false);
 
   useEffect(() => {
     if (dadosIniciais) {
-      setFormData({ ...criarPONVazia(), ...dadosIniciais });
+      setFormData(normalizarPON(dadosIniciais));
     }
   }, [dadosIniciais]);
 
-  const handleChange = (field: keyof OrdemServicoPON, value: string) => {
+  const handleChange = (
+    field: keyof Omit<OrdemServicoPON, 'pontos' | 'pon' | 'placa' | 'porta'>,
+    value: string
+  ) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
+    }));
+  };
+
+  const handlePontoChange = (pontoId: string, field: keyof Omit<PontoPON, 'id'>, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      pontos: prev.pontos.map(ponto =>
+        ponto.id === pontoId
+          ? { ...ponto, [field]: value }
+          : ponto
+      )
+    }));
+  };
+
+  const adicionarPonto = () => {
+    setFormData(prev => ({
+      ...prev,
+      pontos: [...prev.pontos, criarPontoPONVazio()]
+    }));
+  };
+
+  const removerPonto = (pontoId: string) => {
+    setFormData(prev => ({
+      ...prev,
+      pontos: prev.pontos.filter(ponto => ponto.id !== pontoId)
     }));
   };
 
@@ -152,18 +182,7 @@ export const FormularioPON: React.FC<FormularioPONProps> = ({ onSubmit, dadosIni
             )}
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
-            <div>
-              <label style={labelStyle}>PON:</label>
-              <input
-                type="text"
-                value={formData.pon}
-                onChange={(e) => handleChange('pon', e.target.value)}
-                style={inputStyle}
-                placeholder="Ex: AT 505"
-              />
-            </div>
-
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '20px', marginBottom: '20px' }}>
             <div>
               <label style={labelStyle}>REGIÃO:</label>
               <input
@@ -176,27 +195,116 @@ export const FormularioPON: React.FC<FormularioPONProps> = ({ onSubmit, dadosIni
             </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
-            <div>
-              <label style={labelStyle}>PLACA:</label>
-              <input
-                type="text"
-                value={formData.placa}
-                onChange={(e) => handleChange('placa', e.target.value)}
-                style={inputStyle}
-                placeholder="Ex: Placa 1"
-              />
+          {/* Seção de Pontos PON Dinâmicos */}
+          <div style={{ marginBottom: '20px' }}>
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: '15px',
+              padding: '15px',
+              backgroundColor: 'var(--bg-app)',
+              borderRadius: '8px',
+              border: '1px solid var(--border-color)'
+            }}>
+              <h3 style={{ color: 'var(--text-main)', fontSize: '18px', margin: 0 }}>
+                📡 Pontos PON: <span style={{ color: '#28a745', fontWeight: 'bold' }}>({formData.pontos.length})</span>
+              </h3>
+              <button
+                type="button"
+                onClick={adicionarPonto}
+                onMouseEnter={() => setIsHovered(true)}
+                onMouseLeave={() => setIsHovered(false)}
+                style={{
+                  ...buttonStyle,
+                  backgroundColor: isHovered ? '#218838' : '#28a745',
+                  fontSize: '14px',
+                  padding: '10px 18px',
+                  boxShadow: '0 2px 4px rgba(40, 167, 69, 0.3)',
+                  transform: isHovered ? 'scale(1.05)' : 'scale(1)',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                ➕ Adicionar PON
+              </button>
             </div>
-            <div>
-              <label style={labelStyle}>PORTA:</label>
-              <input
-                type="text"
-                value={formData.porta}
-                onChange={(e) => handleChange('porta', e.target.value)}
-                style={inputStyle}
-                placeholder="Ex: Porta 1"
-              />
-            </div>
+
+            {formData.pontos.map((ponto, index) => (
+              <div key={ponto.id} style={{
+                border: '2px solid var(--border-color)',
+                borderRadius: '8px',
+                padding: '20px',
+                marginBottom: '15px',
+                backgroundColor: 'var(--bg-app)',
+                position: 'relative'
+              }}>
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  marginBottom: '15px'
+                }}>
+                  <h4 style={{
+                    color: 'var(--text-main)',
+                    fontSize: '16px',
+                    margin: 0
+                  }}>
+                    📡 PON {index + 1}
+                  </h4>
+
+                  {formData.pontos.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => removerPonto(ponto.id)}
+                      style={{
+                        ...buttonStyle,
+                        backgroundColor: '#dc3545',
+                        fontSize: '12px',
+                        padding: '5px 10px',
+                        minWidth: 'auto'
+                      }}
+                    >
+                      ❌ Remover
+                    </button>
+                  )}
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '15px' }}>
+                  <div>
+                    <label style={labelStyle}>PON:</label>
+                    <input
+                      type="text"
+                      value={ponto.pon}
+                      onChange={(e) => handlePontoChange(ponto.id, 'pon', e.target.value)}
+                      style={inputStyle}
+                      placeholder="Ex: AT 505"
+                    />
+                  </div>
+
+                  <div>
+                    <label style={labelStyle}>PLACA:</label>
+                    <input
+                      type="text"
+                      value={ponto.placa}
+                      onChange={(e) => handlePontoChange(ponto.id, 'placa', e.target.value)}
+                      style={inputStyle}
+                      placeholder="Ex: Placa 1"
+                    />
+                  </div>
+
+                  <div>
+                    <label style={labelStyle}>PORTA:</label>
+                    <input
+                      type="text"
+                      value={ponto.porta}
+                      onChange={(e) => handlePontoChange(ponto.id, 'porta', e.target.value)}
+                      style={inputStyle}
+                      placeholder="Ex: Porta 1"
+                    />
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
