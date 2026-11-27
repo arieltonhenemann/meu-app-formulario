@@ -1,7 +1,7 @@
 // Utilitário para gerar arquivos TXT dos formulários
 import { OrdemServicoAdequacao, ServicoAdequacao, obterLabelTipoServico } from "../types/adequacao";
 import { OrdemServico } from "../types/os";
-import { OrdemServicoPON } from "../types/pon";
+import { OrdemServicoPON, normalizarPON } from "../types/pon";
 import { OrdemServicoLINK } from "../types/link";
 import { formatarData } from "./index";
 
@@ -48,7 +48,20 @@ Localização: ${dados.localizacao || "Não informado"}
   return conteudo;
 };
 
-export const gerarArquivoPON = (dados: OrdemServicoPON): string => {
+export const gerarArquivoPON = (dadosBrutos: OrdemServicoPON): string => {
+  const dados = normalizarPON(dadosBrutos);
+
+  const pontosTexto = dados.pontos
+    .map(
+      (ponto, index) => `
+PON ${index + 1}:
+  PON: ${ponto.pon || "Não informado"}
+  Placa: ${ponto.placa || "Não informado"}
+  Porta: ${ponto.porta || "Não informado"}
+  `
+    )
+    .join("\n");
+
   const conteudo = `
 ===========================================
     ORDEM DE SERVIÇO - PON
@@ -61,12 +74,12 @@ Data/Hora: ${formatarData(new Date())} - ${new Date().toLocaleTimeString(
 INFORMAÇÕES GERAIS:
 -------------------
 Código da O.S: ${dados.codigoOS || "Não informado"}
-PON: ${dados.pon || "Não informado"}
 Região: ${dados.regiao || "Não informado"}
-Placa: ${dados.placa || "Não informado"}
-Porta: ${dados.porta || "Não informado"}
 Clientes Afetados: ${dados.clientesAfetados || "Não informado"}
 Média de Nível Pos: ${dados.mediaNivelPos || "Não informado"}
+
+PONTOS PON (${dados.pontos.length}):
+${pontosTexto}
 
 DESCRIÇÕES:
 -----------

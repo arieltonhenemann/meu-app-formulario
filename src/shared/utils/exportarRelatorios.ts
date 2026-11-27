@@ -66,11 +66,18 @@ export class ExportadorRelatorios {
             ctoLink: (dados as any).cto || 'N/A',
           };
         
-        case 'PON':
+        case 'PON': {
+          const pontosBrutos = (dados as any).pontos;
+          const ponTexto = Array.isArray(pontosBrutos) && pontosBrutos.length > 0
+            ? pontosBrutos
+                .map((ponto: any, index: number) => `P${index + 1}: ${ponto.pon || 'N/A'} / ${ponto.placa || 'N/A'} / ${ponto.porta || 'N/A'}`)
+                .join('; ')
+            : (dados as any).pon || 'N/A';
+
           return {
             ...dadosBase,
             regiao: (dados as any).regiao || 'N/A',
-            pon: (dados as any).pon || 'N/A',
+            pon: ponTexto,
             problema: (dados as any).problema || 'N/A',
             resolucao: (dados as any).resolucao || 'N/A',
             endereco: (dados as any).endereco || 'N/A',
@@ -79,8 +86,9 @@ export class ExportadorRelatorios {
             materialUtilizado: (dados as any).materialUtilizado || 'N/A',
             datainicio: dataFormatada,
             datatermino: 'N/A',
-            ctoLink: (dados as any).pon || 'N/A',
+            ctoLink: ponTexto,
           };
+        }
         
         case 'LINK':
           const linksTexto = (dados as any).links 
