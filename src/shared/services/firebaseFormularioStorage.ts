@@ -93,7 +93,11 @@ class FirebaseFormularioStorageService {
     return formularios.map((formulario) => ({
       ...formulario,
       criadoPor: formulario.criadoPor
-        ? { uid: formulario.criadoPor.uid, email: "" }
+        ? {
+            uid: formulario.criadoPor.uid,
+            email: "",
+            displayName: formulario.criadoPor.displayName,
+          }
         : undefined,
     })) as FormularioSalvo[];
   }

@@ -42,7 +42,7 @@ Sistema web desenvolvido para o registro de Ordens de Serviço de infraestrutura
 
 ## Pré-requisitos
 
-- [Node.js](https://nodejs.org) 18+
+- [Node.js](https://nodejs.org) 20+
 - [Vercel CLI](https://vercel.com/docs/cli) (para rodar a API localmente)
 - Conta no [Firebase](https://firebase.google.com)
 - Conta na [Vercel](https://vercel.com)
@@ -171,12 +171,16 @@ curl -X POST "https://meu-app-formulario.vercel.app/api/formularios" \
 ## Segurança
 
 - **Autenticação da API**: Token via header `x-api-key` com comparação em tempo constante (proteção contra timing attacks)
-- **CORS configurável**: Origens permitidas definidas via variável de ambiente `ALLOWED_ORIGINS`
-- **Limite de payload**: Requisições POST com body acima de 50 KB são rejeitadas
+- **Rate limit**: 60 requisições por minuto, por IP e chave de API
+- **CORS configurável**: Origens permitidas definidas via variável de ambiente `ALLOWED_ORIGINS` (sem curing único/`null`)
+- **Limite de payload**: Requisições POST com body acima de 50 KB são rejeitadas; estruturas aninhadas são sanitizadas
+- **Autoria na API**: `criadoPor` é derivado das variáveis `API_IDENTIDADE_*`; o valor enviado no corpo é ignorado
 - **Erros opacos**: Detalhes de erro interno não são expostos em produção
-- **Regras do Firestore**: Usuários só leem/escrevem os próprios formulários; admins têm acesso total
-- **Aprovação de usuários**: Novos cadastros ficam pendentes até aprovação manual pelo administrador
-- **Logs de auditoria**: Todas as ações relevantes são registradas na coleção `logs_auditoria`
+- **Regras do Firestore**: Usuários só leem/escrevem os próprios formulários; admins têm acesso total; troca de autor/tipo é bloqueada
+- **Aprovação de usuários**: Novos cadastros ficam pendentes; apenas UIDs presentes em `admin_settings/admins` podem se autoaprovar no bootstrap
+- **Auditoria**: Logs vinculam `usuarioId`/`usuarioEmail` à sessão e não podem ser alterados/excluídos pelo cliente
+- **Cache local**: e-mail/nome não ficam em `localStorage`, e os dados são isolados por uid
+- **Guarda de dependências**: `npm run check:seguranca` falha se `firebase-admin` for importado pelo cliente
 
 ---
 
@@ -188,7 +192,17 @@ O projeto é implantado automaticamente na Vercel a cada push na branch principa
 
 1. Acesse o painel do projeto em [vercel.com](https://vercel.com)
 2. Vá em **Settings → Environment Variables**
-3. Adicione todas as variáveis listadas acima (seção Variáveis de Ambiente)
+3. Adicione todas as variáveis listadas acima (seção Variáveis de Ambiente), incluindo `API_IDENTIDADE_UID`, `API_IDENTIDADE_EMAIL` e `API_IDENTIDADE_NOME` se desejar personalizar a autoria das O.S. criadas pela API
+
+### Publicar as regras do Firestore
+
+Alterações em `firestore.rules` **não** são publicadas automaticamente pela Vercel. Após mesclar na branch principal:
+
+```bash
+firebase deploy --only firestore:rules --project <seu-projeto>
+```
+
+> Sem esse passo, a produção continua usando as regras antigas, mesmo com o código novo publicado.
 
 ### Build manual
 

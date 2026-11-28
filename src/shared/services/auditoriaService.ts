@@ -8,7 +8,7 @@ import {
   where,
   limit
 } from 'firebase/firestore';
-import { db, isFirebaseConfigured } from '../config/firebase';
+import { db, auth, isFirebaseConfigured } from '../config/firebase';
 import { 
   LogAuditoria, 
   TipoAcaoAuditoria, 
@@ -19,12 +19,39 @@ import {
 import { logger } from '../utils/logger';
 
 const COLLECTION_NAME = 'logs_auditoria';
-const STORAGE_KEY = 'logs_auditoria_local';
+const STORAGE_KEY_BASE = 'logs_auditoria_local';
 const MAX_LOGS_LOCAIS = 500; // Limitar logs locais para não sobrecarregar
 
 class AuditoriaService {
   private isOnline = navigator.onLine;
-  
+
+  private chaveLogs(): string {
+    return `${STORAGE_KEY_BASE}_${auth?.currentUser?.uid || 'anonimo'}`;
+  }
+
+  private chaveCache(): string {
+    return `${this.chaveLogs()}_cache`;
+  }
+
+  /** Não mantém e-mail em localStorage; o Firestore continua com o dado completo. */
+  private prepararParaCache(log: LogAuditoria): LogAuditoria {
+    return {
+      ...log,
+      usuarioEmail: '',
+      usuario: { ...log.usuario, email: '' },
+    };
+  }
+
+  /** Restaura o e-mail mínimo exigido pelas regras antes de sincronizar. */
+  private reidratarLog(log: LogAuditoria): LogAuditoria {
+    const email = log.usuarioEmail || log.usuario.email || auth?.currentUser?.email || '';
+    return {
+      ...log,
+      usuarioEmail: email,
+      usuario: { ...log.usuario, email },
+    };
+  }
+
   constructor() {
     // Monitorar status de conexão
     window.addEventListener('online', () => {
@@ -230,14 +257,14 @@ class AuditoriaService {
   private salvarLogLocal(log: LogAuditoria): void {
     try {
       const logsExistentes = this.obterLogsLocais();
-      logsExistentes.unshift(log); // Adicionar no início
+      logsExistentes.unshift(this.prepararParaCache(log)); // Adicionar no início
       
       // Limitar o número de logs locais
       if (logsExistentes.length > MAX_LOGS_LOCAIS) {
         logsExistentes.splice(MAX_LOGS_LOCAIS);
       }
       
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(logsExistentes));
+      localStorage.setItem(this.chaveLogs(), JSON.stringify(logsExistentes));
     } catch (error) {
       logger.error('Erro ao salvar log localmente:', error);
     }
@@ -245,7 +272,7 @@ class AuditoriaService {
 
   private obterLogsLocais(): LogAuditoria[] {
     try {
-      const data = localStorage.getItem(STORAGE_KEY);
+      const data = localStorage.getItem(this.chaveLogs());
       return data ? JSON.parse(data) : [];
     } catch (error) {
       logger.error('Erro ao carregar logs locais:', error);
@@ -256,8 +283,8 @@ class AuditoriaService {
   private salvarCacheLocal(logs: LogAuditoria[]): void {
     try {
       // Manter apenas os mais recentes para cache
-      const logsCache = logs.slice(0, MAX_LOGS_LOCAIS);
-      localStorage.setItem(STORAGE_KEY + '_cache', JSON.stringify(logsCache));
+      const logsCache = logs.slice(0, MAX_LOGS_LOCAIS).map(log => this.prepararParaCache(log));
+      localStorage.setItem(this.chaveCache(), JSON.stringify(logsCache));
     } catch (error) {
       logger.error('Erro ao salvar cache de logs:', error);
     }
@@ -278,7 +305,7 @@ class AuditoriaService {
       // Sincronizar logs pendentes
       for (const log of logsParaSincronizar) {
         try {
-          const { id, ...logSemId } = log;
+          const { id, ...logSemId } = this.reidratarLog(log);
           await addDoc(collection(db, COLLECTION_NAME), logSemId);
         } catch (error) {
           logger.error('Erro ao sincronizar log:', log.id, error);
@@ -295,7 +322,7 @@ class AuditoriaService {
 
   private obterCacheLocal(): LogAuditoria[] {
     try {
-      const data = localStorage.getItem(STORAGE_KEY + '_cache');
+      const data = localStorage.getItem(this.chaveCache());
       return data ? JSON.parse(data) : [];
     } catch (error) {
       return [];

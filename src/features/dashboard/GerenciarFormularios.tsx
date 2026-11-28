@@ -793,9 +793,9 @@ export const GerenciarFormularios: React.FC<GerenciarFormulariosProps> = ({
                       <div style={{ marginTop: '5px', display: 'flex', alignItems: 'center', gap: '5px' }}>
                         <span>👤 Criado por:</span>
                         <span style={{ fontWeight: 'bold', color: 'var(--text-main)' }}>
-                          {formulario.criadoPor.displayName || formulario.criadoPor.email}
+                          {formulario.criadoPor.displayName || formulario.criadoPor.email || 'Usuário'}
                         </span>
-                        {formulario.criadoPor.displayName && (
+                        {formulario.criadoPor.displayName && formulario.criadoPor.email && (
                           <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>({formulario.criadoPor.email})</span>
                         )}
                       </div>
