@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import admin from 'firebase-admin';
-import { randomUUID, timingSafeEqual } from 'crypto';
+import { createHash, randomUUID, timingSafeEqual } from 'crypto';
 
 // ============================================================
 // Configuração do Firebase Admin SDK (inicialização preguiçosa)
@@ -23,7 +23,7 @@ const initializeFirebaseAdmin = () => {
   }
 
   // Opção 2: Variáveis individuais
-  const projectId = process.env.FIREBASE_PROJECT_ID || process.env.VITE_FIREBASE_PROJECT_ID;
+  const projectId = process.env.FIREBASE_PROJECT_ID;
   const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
   const privateKey = process.env.FIREBASE_PRIVATE_KEY;
 
@@ -90,14 +90,11 @@ const setCorsHeaders = (req: VercelRequest, res: VercelResponse): void => {
 
   if (origin && allowedOrigins.includes(origin)) {
     res.setHeader('Access-Control-Allow-Origin', origin);
-  } else if (!origin) {
-    // Requisições server-to-server (sem header Origin) são permitidas —
-    // a autenticação via API Key é o controle de acesso real nesses casos.
-    res.setHeader('Access-Control-Allow-Origin', 'null');
   }
 
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-api-key');
+  res.setHeader('Access-Control-Max-Age', '600');
   res.setHeader('Vary', 'Origin');
 };
 
@@ -115,6 +112,90 @@ const isPayloadTooLarge = (body: unknown): boolean => {
 /** Retorna detalhes de erro somente em ambiente de desenvolvimento. */
 const safeErrorDetails = (message: string): string | undefined => {
   return process.env.NODE_ENV === 'development' ? message : undefined;
+};
+
+/**
+ * Identidade da integração: derivada do servidor, nunca do corpo da requisição.
+ * A API usa o Admin SDK e ignora as regras do Firestore, então confiar em
+ * `criadoPor` enviado pelo cliente permitiria falsificar autoria.
+ */
+const getIdentidadeIntegracao = () => ({
+  uid: process.env.API_IDENTIDADE_UID || 'api_system',
+  email: process.env.API_IDENTIDADE_EMAIL || 'api_system@internal.app',
+  displayName: process.env.API_IDENTIDADE_NOME || 'API System',
+});
+
+/** Rate limit simples em memória (por instância da função). */
+const RATE_WINDOW_MS = 60_000;
+const RATE_MAX = 60;
+const rateBuckets = new Map<string, { count: number; resetAt: number }>();
+
+const aplicarRateLimit = (chave: string): boolean => {
+  const agora = Date.now();
+  const atual = rateBuckets.get(chave);
+
+  if (!atual || agora >= atual.resetAt) {
+    rateBuckets.set(chave, { count: 1, resetAt: agora + RATE_WINDOW_MS });
+    return true;
+  }
+  if (atual.count >= RATE_MAX) return false;
+  atual.count += 1;
+  return true;
+};
+
+const chaveCliente = (req: VercelRequest, providedKey: string): string => {
+  const encaminhado = req.headers['x-forwarded-for'];
+  const ip = (typeof encaminhado === 'string' ? encaminhado.split(',')[0]?.trim() : '')
+    || req.socket?.remoteAddress
+    || 'ip-desconhecido';
+  const hash = createHash('sha256').update(providedKey).digest('hex').slice(0, 16);
+  return `${ip}:${hash}`;
+};
+
+/** Remove PII das respostas e mantém só o UID do criador. */
+const projetarFormulario = (d: admin.firestore.DocumentData, id: string) => ({
+  id,
+  tipo: d.tipo,
+  status: d.status,
+  codigoOS: d.codigoOS,
+  dataCriacao: d.dataCriacao,
+  dataModificacao: d.dataModificacao,
+  criadoPor: d.criadoPor ? { uid: d.criadoPor.uid } : undefined,
+  dados: d.dados,
+});
+
+/** Aceita apenas estruturas simples e bloqueia chaves de prototype pollution. */
+const CHAVES_PROIBIDAS = new Set(['__proto__', 'constructor', 'prototype']);
+
+const sanitizarDados = (valor: unknown, profundidade = 0): unknown => {
+  if (profundidade > 3) throw new Error('estrutura muito profunda');
+
+  if (valor === null || typeof valor === 'boolean' || typeof valor === 'number') return valor;
+
+  if (typeof valor === 'string') {
+    if (valor.length > 2000) throw new Error('texto muito longo');
+    return valor;
+  }
+
+  if (Array.isArray(valor)) {
+    if (valor.length > 200) throw new Error('lista muito grande');
+    return valor.map(item => sanitizarDados(item, profundidade + 1));
+  }
+
+  if (typeof valor === 'object') {
+    const entrada = valor as Record<string, unknown>;
+    const chaves = Object.keys(entrada);
+    if (chaves.length > 100) throw new Error('objeto muito grande');
+
+    const saida: Record<string, unknown> = {};
+    for (const chave of chaves) {
+      if (CHAVES_PROIBIDAS.has(chave)) continue;
+      saida[chave] = sanitizarDados(entrada[chave], profundidade + 1);
+    }
+    return saida;
+  }
+
+  throw new Error('tipo de dado inválido');
 };
 
 // ============================================================
@@ -151,6 +232,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
   }
 
+  if (!aplicarRateLimit(chaveCliente(req, providedKey))) {
+    return res.status(429).json({
+      error: 'Muitas Requisições',
+      message: 'Limite de requisições excedido. Tente novamente em instantes.',
+    });
+  }
+
   // 3. Inicializar Firebase Admin
   let db: admin.firestore.Firestore;
   try {
@@ -181,7 +269,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         if (!doc.exists) {
           return res.status(200).json([]);
         }
-        return res.status(200).json([{ id: doc.id, ...doc.data() }]);
+        return res.status(200).json([projetarFormulario(doc.data(), doc.id)]);
       }
 
       let query: admin.firestore.Query = collectionRef;
@@ -207,15 +295,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
 
       // Limite (Padrão: 50, Máximo: 100)
-      const parsedLimit = limit ? parseInt(limit.toString(), 10) : 50;
-      const finalLimit = Math.min(Math.max(parsedLimit, 1), 100);
+      const parsedLimit = Number.parseInt(String(limit ?? '50'), 10);
+      const finalLimit = Number.isFinite(parsedLimit)
+        ? Math.min(Math.max(parsedLimit, 1), 100)
+        : 50;
       query = query.limit(finalLimit);
 
       const snapshot = await query.get();
       const docs: admin.firestore.DocumentData[] = [];
 
       snapshot.forEach(doc => {
-        docs.push({ id: doc.id, ...doc.data() });
+        docs.push(projetarFormulario(doc.data(), doc.id));
       });
 
       return res.status(200).json(docs);
@@ -253,11 +343,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         });
       }
 
-      const { tipo, dados, status: statusParam, criadoPor: criadoPorParam } = body as {
+      const { tipo, dados, status: statusParam } = body as {
         tipo: unknown;
         dados: unknown;
         status?: unknown;
-        criadoPor?: unknown;
       };
 
       // Validação do tipo
@@ -277,6 +366,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         });
       }
 
+      let dadosSanitizados: Record<string, unknown>;
+      try {
+        dadosSanitizados = sanitizarDados(dados) as Record<string, unknown>;
+      } catch {
+        return res.status(400).json({
+          error: 'Dados Inválidos',
+          message: 'A estrutura de dados contém campos ou valores não aceitos.',
+        });
+      }
+
       // Validação de status
       const statusValidos = ['pendente', 'finalizado', 'aguardando', 'agendamento'];
       const finalStatus =
@@ -284,33 +383,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           ? statusParam
           : 'pendente';
 
-      // Identidade do criador
-      const isValidCriadoPor =
-        criadoPorParam &&
-        typeof criadoPorParam === 'object' &&
-        !Array.isArray(criadoPorParam) &&
-        typeof (criadoPorParam as Record<string, unknown>).uid === 'string' &&
-        typeof (criadoPorParam as Record<string, unknown>).email === 'string';
-
-      const criadoPor = isValidCriadoPor
-        ? {
-            uid: (criadoPorParam as Record<string, unknown>).uid as string,
-            email: (criadoPorParam as Record<string, unknown>).email as string,
-            displayName: ((criadoPorParam as Record<string, unknown>).displayName as string) || null,
-          }
-        : {
-            uid: 'api_system',
-            email: 'api_system@internal.app',
-            displayName: 'API System',
-          };
+      // Identidade do criador: sempre derivada da configuração do servidor.
+      // O campo `criadoPor` enviado pelo cliente é ignorado.
+      const criadoPor = getIdentidadeIntegracao();
 
       // Gerar UUID e timestamps
       const id = randomUUID();
       const agora = new Date().toISOString();
-      const dadosObj = dados as Record<string, unknown>;
       const codigoOS =
-        typeof dadosObj.codigoOS === 'string' && dadosObj.codigoOS
-          ? dadosObj.codigoOS
+        typeof dadosSanitizados.codigoOS === 'string' && dadosSanitizados.codigoOS
+          ? dadosSanitizados.codigoOS
           : `Sem código - ${id.slice(0, 6)}`;
 
       const novoFormulario = {
@@ -322,13 +404,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         dataAlteracaoStatus: agora,
         codigoOS,
         criadoPor,
-        dados,
+        dados: dadosSanitizados,
       };
 
       // Salvar no Firestore usando o mesmo UUID como ID do documento
       await collectionRef.doc(id).set(novoFormulario);
 
-      return res.status(201).json(novoFormulario);
+      return res.status(201).json(projetarFormulario(novoFormulario, id));
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : String(error);
       console.error('Erro ao inserir formulário:', message);

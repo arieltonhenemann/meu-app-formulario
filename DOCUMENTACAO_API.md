@@ -39,8 +39,10 @@ sequenceDiagram
 Para que a API funcione corretamente em produção, você precisa adicionar as seguintes **variáveis de ambiente (Environment Variables)** no painel do seu projeto na Vercel:
 
 ### 1. Autenticação da API
-* **`API_SECRET_TOKEN`**: A chave/token secreto que você escolher para proteger a sua API contra acessos não autorizados. Os clientes deverão fornecer este token nas requisições.
-  * *Exemplo:* `meu-token-secreto-super-seguro-123`
+* **`API_SECRET_TOKEN`**: A chave/token secreto que protege a API. Os clientes devem fornecer este token nas requisições.
+  * *Gere com:* `openssl rand -hex 32` (nunca reutilize um valor de exemplo).
+* **`API_IDENTIDADE_UID`**, **`API_IDENTIDADE_EMAIL`**, **`API_IDENTIDADE_NOME`** (opcionais): identidade fixa usada como `criadoPor` nas O.S. criadas pela API. Padrão: `api_system`. O campo `criadoPor` enviado no corpo da requisição é **ignorado**.
+* A API aplica um limite de **60 requisições por minuto** por IP/chave.
 
 ### 2. Credenciais do Firebase Admin
 Como a API roda no lado do servidor (Serverless), ela precisa de acesso administrativo para interagir com o Firestore sem passar pelas regras de segurança de cliente. Você pode configurar as credenciais de duas maneiras na Vercel:
@@ -173,9 +175,7 @@ Retorna um array JSON com os formulários correspondentes. Se nenhum for encontr
     "dataCriacao": "2026-06-01T22:30:00.000Z",
     "dataModificacao": "2026-06-01T22:30:00.000Z",
     "criadoPor": {
-      "uid": "api_system",
-      "email": "api_system@internal.app",
-      "displayName": "API System"
+      "uid": "api_system"
     },
     "dados": {
       "codigoOS": "OS-99882",
@@ -205,8 +205,8 @@ Cria um novo formulário no Firestore. O ID do formulário e as datas de criaç�
 #### Corpo da Requisição (JSON)
 * `tipo` (obrigatório): `CTO`, `PON`, `LINK` ou `ADEQUACAO`.
 * `dados` (obrigatório): Objeto contendo os campos específicos do formulário. A propriedade `codigoOS` deve estar incluída no nó `dados`.
-* `status` (opcional): `pendente`, `finalizado` ou `aguardando`. (Padrão: `pendente`).
-* `criadoPor` (opcional): Objeto contendo dados de identificação do autor (`uid` e `email` são obrigatórios se fornecido).
+* `status` (opcional): `pendente`, `finalizado`, `aguardando` ou `agendamento`. (Padrão: `pendente`).
+* `criadoPor`: **não é aceito**. A autoria é sempre definida no servidor pelas variáveis `API_IDENTIDADE_*`, para evitar falsificação.
 
 #### Estrutura dos Dados por Tipo de Formulário
 
@@ -392,7 +392,7 @@ else:
 ```
 
 #### Resposta de Sucesso (`201 Created`)
-Retorna o objeto criado com as propriedades geradas automaticamente (`id`, `dataCriacao`, `dataModificacao`, `status`, `criadoPor`).
+Retorna o objeto criado com as propriedades geradas automaticamente (`id`, `dataCriacao`, `dataModificacao`, `status`, `criadoPor`). Por privacidade, `criadoPor` contém apenas `uid` — e-mail e nome não são devolvidos.
 ```json
 {
   "id": "e2f47a61-9c12-40db-9087-fc068e1467ea",
@@ -402,9 +402,7 @@ Retorna o objeto criado com as propriedades geradas automaticamente (`id`, `data
   "dataModificacao": "2026-06-01T22:31:40.123Z",
   "codigoOS": "OS-99882",
   "criadoPor": {
-    "uid": "api_system",
-    "email": "api_system@internal.app",
-    "displayName": "API System"
+    "uid": "api_system"
   },
   "dados": {
     "codigoOS": "OS-99882",
