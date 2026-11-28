@@ -31,6 +31,10 @@ export interface DetalhesAcao {
 export interface LogAuditoria {
   id: string;
   acao: TipoAcaoAuditoria;
+  // Campos no topo são exigidos pelas regras do Firestore e vinculam o log
+  // à sessão autenticada (evitam log forjado com autoria de outro usuário).
+  usuarioId: string;
+  usuarioEmail: string;
   usuario: UsuarioAuditoria;
   timestamp: string;
   detalhes: DetalhesAcao;
@@ -49,6 +53,8 @@ export const criarLogAuditoria = (
   return {
     id,
     acao,
+    usuarioId: usuario.uid,
+    usuarioEmail: usuario.email,
     usuario,
     timestamp: new Date().toISOString(),
     detalhes,

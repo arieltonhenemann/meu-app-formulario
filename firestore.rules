@@ -16,6 +16,9 @@ service cloud.firestore {
         && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.status == 'aprovado';
     }
 
+    // O UID precisa estar na lista admin_settings/admins.
+    // Não exigimos isApproved() aqui para não quebrar o bootstrap do primeiro
+    // administrador, que se aprova automaticamente ao detectar a lista.
     function isAdmin() {
       return isAuthenticated()
         && exists(/databases/$(database)/documents/admin_settings/admins)
@@ -35,19 +38,23 @@ service cloud.firestore {
       let data = request.resource.data;
       let requiredFields = ['tipo', 'dados', 'dataCriacao', 'dataModificacao', 'codigoOS', 'criadoPor'];
       let validTypes = ['CTO', 'PON', 'LINK', 'ADEQUACAO'];
+      let validStatus = ['pendente', 'finalizado', 'aguardando', 'agendamento'];
       return data is map
         && data.keys().hasAll(requiredFields)
         && data.tipo in validTypes
+        && data.status in validStatus
         && data.criadoPor is map
         && data.criadoPor.keys().hasAll(['uid', 'email'])
         && data.criadoPor.uid == request.auth.uid;
     }
 
-    // Valida estrutura de um log de auditoria
+    // Valida estrutura de um log de auditoria e vincula a autoria à sessão
     function isValidAuditoriaLog() {
       let data = request.resource.data;
       return data is map
-        && data.keys().hasAll(['acao', 'usuarioId', 'usuarioEmail', 'timestamp']);
+        && data.keys().hasAll(['acao', 'usuarioId', 'usuarioEmail', 'timestamp'])
+        && data.usuarioId == request.auth.uid
+        && data.usuarioEmail == request.auth.token.email;
     }
 
     // ==========================================
@@ -63,8 +70,20 @@ service cloud.firestore {
     // ==========================================
     match /users/{userId} {
       allow read: if isOwnerOrAdmin(userId);
-      allow create: if isOwner(userId);
-      allow update: if isOwnerOrAdmin(userId);
+
+      // Usuário só pode se cadastrar como "pendente" e com o próprio UID.
+      allow create: if isOwner(userId)
+        && request.resource.data.uid == userId
+        && request.resource.data.status == 'pendente'
+        && request.resource.data.keys().hasAll(['uid', 'email', 'status', 'dataCriacao', 'displayName']);
+
+      // Aprovação/rejeição só por admin; o dono pode alterar apenas displayName.
+      allow update: if isAdmin() || (
+        isOwner(userId)
+        && request.resource.data.diff(resource.data).affectedKeys()
+             .hasOnly(['displayName', 'dataAtualizacao'])
+      );
+
       allow delete: if false;
     }
 
@@ -75,10 +94,8 @@ service cloud.firestore {
       // Leitura de documento único por ID: owner aprovado ou admin
       allow get: if (isAuthenticated() && isApproved() && resource.data.criadoPor.uid == request.auth.uid) || isAdmin();
 
-      // Listagem via query: a query DEVE incluir where("criadoPor.uid","==",uid) para que
-      // o Firestore valide corretamente. Admin pode listar sem filtro.
-      // Para usuários comuns, resource.data.criadoPor.uid == request.auth.uid garante
-      // que o Firestore só retorna documentos do próprio usuário.
+      // Listagem via query: a query DEVE incluir where("criadoPor.uid","==",uid)
+      // para que o Firestore valide corretamente. Admin pode listar sem filtro.
       allow list: if (isAuthenticated() && isApproved() && resource.data.criadoPor.uid == request.auth.uid) || isAdmin();
 
       // Criação via app cliente: autenticado, estrutura válida, criadoPor == próprio uid
@@ -87,8 +104,18 @@ service cloud.firestore {
         && isApproved()
         && isValidFormulario();
 
-      // Atualização: próprio criador (se aprovado) ou admin
-      allow update: if (isAuthenticated() && isApproved() && resource.data.criadoPor.uid == request.auth.uid) || isAdmin();
+      // Atualização: próprio criador (se aprovado) ou admin.
+      // Proíbe trocar autor, tipo ou campos de controle fora da whitelist.
+      allow update: if isAdmin() || (
+        isAuthenticated()
+        && isApproved()
+        && resource.data.criadoPor.uid == request.auth.uid
+        && request.resource.data.criadoPor == resource.data.criadoPor
+        && request.resource.data.tipo == resource.data.tipo
+        && request.resource.data.status in ['pendente', 'finalizado', 'aguardando', 'agendamento']
+        && request.resource.data.diff(resource.data).affectedKeys()
+             .hasOnly(['dados', 'codigoOS', 'status', 'dataModificacao', 'dataAlteracaoStatus'])
+      );
 
       // Exclusão: apenas admin
       allow delete: if isAdmin();
@@ -98,7 +125,9 @@ service cloud.firestore {
     // COLEÇÃO: logs_auditoria
     // ==========================================
     match /logs_auditoria/{logId} {
-      allow create: if isAuthenticated() && isValidAuditoriaLog();
+      allow create: if isAuthenticated()
+        && isApproved()
+        && isValidAuditoriaLog();
       allow read: if isAdmin();
       allow update, delete: if false;
     }
