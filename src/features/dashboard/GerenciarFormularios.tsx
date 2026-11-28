@@ -1,3 +1,4 @@
+import { logger } from '../../shared/utils/logger';
 import React, { useState, useEffect } from 'react';
 import { FormularioSalvo, StatusFormulario, TipoFormulario, obterCorStatus, obterCorTipo } from '../../shared/types/formularioSalvo';
 import { firebaseFormularioStorage } from '../../shared/services/firebaseFormularioStorage';
@@ -89,7 +90,7 @@ export const GerenciarFormularios: React.FC<GerenciarFormulariosProps> = ({
       setIsOnline(firebaseFormularioStorage.estaOnline());
       setTemDadosPendentes(firebaseFormularioStorage.temDadosPendentes());
     } catch (error) {
-      console.error('Erro ao carregar formulários:', error);
+      logger.error('Erro ao carregar formulários:', error);
     }
   };
   const usuariosUnicosMap = new Map<string, { uid: string; email: string; displayName?: string | null }>();
@@ -131,7 +132,7 @@ export const GerenciarFormularios: React.FC<GerenciarFormulariosProps> = ({
         toast.success('Formulário finalizado com sucesso!');
       }
     } catch (error) {
-      console.error('Erro ao finalizar formulário:', error);
+      logger.error('Erro ao finalizar formulário:', error);
       toast.error('Erro ao finalizar formulário. Tente novamente.');
     }
   };
@@ -156,7 +157,7 @@ export const GerenciarFormularios: React.FC<GerenciarFormulariosProps> = ({
         toast.success('Formulário reaberto com sucesso!');
       }
     } catch (error) {
-      console.error('Erro ao reabrir formulário:', error);
+      logger.error('Erro ao reabrir formulário:', error);
       toast.error('Erro ao reabrir formulário. Tente novamente.');
     }
   };
@@ -180,7 +181,7 @@ export const GerenciarFormularios: React.FC<GerenciarFormulariosProps> = ({
         toast.success('Serviço iniciado! Status alterado para Pendente.');
       }
     } catch (error) {
-      console.error('Erro ao iniciar serviço:', error);
+      logger.error('Erro ao iniciar serviço:', error);
       toast.error('Erro ao iniciar serviço. Tente novamente.');
     }
   };
@@ -204,7 +205,7 @@ export const GerenciarFormularios: React.FC<GerenciarFormulariosProps> = ({
         toast.success('Formulário movido para Agendamento!');
       }
     } catch (error) {
-      console.error('Erro ao agendar formulário:', error);
+      logger.error('Erro ao agendar formulário:', error);
       toast.error('Erro ao alterar status. Tente novamente.');
     }
   };
@@ -228,7 +229,7 @@ export const GerenciarFormularios: React.FC<GerenciarFormulariosProps> = ({
         toast.success('Serviço colocado em Aguardando!');
       }
     } catch (error) {
-      console.error('Erro ao colocar serviço em aguardando:', error);
+      logger.error('Erro ao colocar serviço em aguardando:', error);
       toast.error('Erro ao alterar status. Tente novamente.');
     }
   };
@@ -252,7 +253,7 @@ export const GerenciarFormularios: React.FC<GerenciarFormulariosProps> = ({
         toast.success('Formulário excluído com sucesso!');
       }
     } catch (error) {
-      console.error('Erro ao excluir formulário:', error);
+      logger.error('Erro ao excluir formulário:', error);
       toast.error('Erro ao excluir formulário. Tente novamente.');
     }
   };
@@ -263,7 +264,7 @@ export const GerenciarFormularios: React.FC<GerenciarFormulariosProps> = ({
       carregarFormularios();
       toast.success('Sincronização concluída!');
     } catch (error) {
-      console.error('Erro na sincronização:', error);
+      logger.error('Erro na sincronização:', error);
       toast.error('Erro na sincronização. Verifique sua conexão.');
     }
   };

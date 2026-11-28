@@ -1,3 +1,4 @@
+import { logger } from './logger';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import * as XLSX from 'xlsx';
@@ -33,7 +34,7 @@ export interface DadosRelatorio {
 
 export class ExportadorRelatorios {
   private formatarDadosParaRelatorio(formularios: FormularioSalvo[]): DadosRelatorio[] {
-    console.log('📊 [ExportadorRelatorios] Formatando dados para relatório:', formularios.length, 'formulários');
+    logger.log('📊 [ExportadorRelatorios] Formatando dados para relatório:', formularios.length, 'formulários');
     
     return formularios.map(formulario => {
       const dados = formulario.dados;
@@ -158,7 +159,7 @@ export class ExportadorRelatorios {
     dataInicio: string, 
     dataFim: string
   ): Promise<void> {
-    console.log('📄 [ExportadorRelatorios] Iniciando exportação para PDF');
+    logger.log('📄 [ExportadorRelatorios] Iniciando exportação para PDF');
     
     try {
       const dadosRelatorio = this.formatarDadosParaRelatorio(formularios);
@@ -232,9 +233,9 @@ export class ExportadorRelatorios {
       const nomeArquivo = `relatorio-os-${dataInicio}-${dataFim}.pdf`;
       doc.save(nomeArquivo);
       
-      console.log('✅ [ExportadorRelatorios] PDF gerado com sucesso:', nomeArquivo);
+      logger.log('✅ [ExportadorRelatorios] PDF gerado com sucesso:', nomeArquivo);
     } catch (error) {
-      console.error('❌ [ExportadorRelatorios] Erro ao gerar PDF:', error);
+      logger.error('❌ [ExportadorRelatorios] Erro ao gerar PDF:', error);
       throw new Error('Erro ao gerar relatório PDF');
     }
   }
@@ -244,7 +245,7 @@ export class ExportadorRelatorios {
     dataInicio: string, 
     dataFim: string
   ): Promise<void> {
-    console.log('📊 [ExportadorRelatorios] Iniciando exportação para Excel');
+    logger.log('📊 [ExportadorRelatorios] Iniciando exportação para Excel');
     
     try {
       const dadosRelatorio = this.formatarDadosParaRelatorio(formularios);
@@ -305,9 +306,9 @@ export class ExportadorRelatorios {
       const nomeArquivo = `relatorio-os-${dataInicio}-${dataFim}.xlsx`;
       XLSX.writeFile(wb, nomeArquivo);
       
-      console.log('✅ [ExportadorRelatorios] Excel gerado com sucesso:', nomeArquivo);
+      logger.log('✅ [ExportadorRelatorios] Excel gerado com sucesso:', nomeArquivo);
     } catch (error) {
-      console.error('❌ [ExportadorRelatorios] Erro ao gerar Excel:', error);
+      logger.error('❌ [ExportadorRelatorios] Erro ao gerar Excel:', error);
       throw new Error('Erro ao gerar relatório Excel');
     }
   }
@@ -329,16 +330,16 @@ export class ExportadorRelatorios {
     dataInicio: string, 
     dataFim: string
   ): FormularioSalvo[] {
-    console.log('📅 [ExportadorRelatorios] Filtrando por data:', { dataInicio, dataFim, total: formularios.length });
+    logger.log('📅 [ExportadorRelatorios] Filtrando por data:', { dataInicio, dataFim, total: formularios.length });
     
     if (!dataInicio && !dataFim) {
-      console.log('📅 Sem filtros de data, retornando todos os formulários');
+      logger.log('📅 Sem filtros de data, retornando todos os formulários');
       return formularios;
     }
 
     const filtrados = formularios.filter(formulario => {
       if (!formulario.dataCriacao) {
-        console.log('⚠️ Formulário sem data de criação, incluindo na busca');
+        logger.log('⚠️ Formulário sem data de criação, incluindo na busca');
         return true;
       }
 
@@ -362,7 +363,7 @@ export class ExportadorRelatorios {
       return dentroDoIntervalo;
     });
 
-    console.log(`📅 Filtrado: ${filtrados.length} de ${formularios.length} formulários`);
+    logger.log(`📅 Filtrado: ${filtrados.length} de ${formularios.length} formulários`);
     return filtrados;
   }
 

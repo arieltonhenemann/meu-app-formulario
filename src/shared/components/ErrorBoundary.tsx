@@ -1,3 +1,4 @@
+import { logger } from '../utils/logger';
 import React from 'react';
 
 interface ErrorBoundaryProps {
@@ -20,7 +21,7 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error('Erro não capturado:', error, errorInfo);
+    logger.error('Erro não capturado:', error, errorInfo);
   }
 
   render() {
@@ -47,9 +48,10 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
               Algo deu errado
             </h2>
             <p style={{ color: '#666', marginBottom: '20px', lineHeight: '1.6' }}>
-              Ocorreu um erro inesperado. Tente recarregar a página.
+              Ocorreu um erro inesperado. Tente recarregar a página. Se o problema
+              persistir, contate o administrador informando o horário e a ação realizada.
             </p>
-            {this.state.error && (
+            {import.meta.env.DEV && this.state.error && (
               <pre style={{
                 backgroundColor: '#f8f9fa',
                 padding: '10px',

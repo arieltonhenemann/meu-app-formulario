@@ -1,3 +1,4 @@
+import { logger } from '../../shared/utils/logger';
 import React, { useState, useEffect } from 'react';
 import { OrdemServico, criarOSVazia } from '../../shared/types/os';
 import { gerarArquivoCTO } from '../../shared/utils/gerarArquivoTxt';
@@ -60,7 +61,7 @@ export const FormularioOS: React.FC<FormularioOSProps> = ({ onSubmit, dadosInici
           setAllCtos(data);
         }
       } catch (err) {
-        console.error('Erro ao carregar banco de dados de CTOs:', err);
+        logger.error('Erro ao carregar banco de dados de CTOs:', err);
       }
     };
     carregarBancoCtos();
@@ -118,7 +119,7 @@ export const FormularioOS: React.FC<FormularioOSProps> = ({ onSubmit, dadosInici
 
     if (validarFormulario()) {
       try {
-        console.log('Dados da O.S:', formData);
+        logger.log('Dados da O.S:', formData);
 
         if (formularioId) {
           await firebaseFormularioStorage.atualizar(formularioId, formData);
@@ -154,7 +155,7 @@ export const FormularioOS: React.FC<FormularioOSProps> = ({ onSubmit, dadosInici
 
         onSubmit?.(formData);
       } catch (error) {
-        console.error('Erro ao salvar formulário:', error);
+        logger.error('Erro ao salvar formulário:', error);
         toast.error('Erro ao salvar. Os dados foram salvos localmente e serão sincronizados quando possível.');
       }
     }
@@ -171,7 +172,7 @@ export const FormularioOS: React.FC<FormularioOSProps> = ({ onSubmit, dadosInici
       setTxtConteudo(conteudo);
       setTxtModalAberto(true);
     } catch (err) {
-      console.error('Erro ao gerar TXT:', err);
+      logger.error('Erro ao gerar TXT:', err);
       toast.error('Erro ao gerar arquivo TXT.');
     }
   };
@@ -449,7 +450,7 @@ export const FormularioOS: React.FC<FormularioOSProps> = ({ onSubmit, dadosInici
 
                     onFinalizar && onFinalizar(formularioId);
                   } catch (error) {
-                    console.error('Erro ao salvar antes de finalizar:', error);
+                    logger.error('Erro ao salvar antes de finalizar:', error);
                     toast.error('Erro ao salvar alterações. Tente novamente.');
                   }
                 }}

@@ -1,3 +1,4 @@
+import { logger } from '../../shared/utils/logger';
 import React, { useState, useEffect } from 'react';
 import { OrdemServicoLINK, criarLINKVazia, LinkInfo, criarLinkVazio } from '../../shared/types/link';
 import { gerarArquivoLINK } from '../../shared/utils/gerarArquivoTxt';
@@ -74,7 +75,7 @@ export const FormularioLINK: React.FC<FormularioLINKProps> = ({ onSubmit, dadosI
     e.preventDefault();
 
     try {
-      console.log('Dados da O.S LINK:', formData);
+      logger.log('Dados da O.S LINK:', formData);
 
       if (formularioId) {
         await firebaseFormularioStorage.atualizar(formularioId, formData);
@@ -108,7 +109,7 @@ export const FormularioLINK: React.FC<FormularioLINKProps> = ({ onSubmit, dadosI
 
       onSubmit?.(formData);
     } catch (error) {
-      console.error('Erro ao salvar formulário:', error);
+      logger.error('Erro ao salvar formulário:', error);
       toast.error('Erro ao salvar. Os dados foram salvos localmente e serão sincronizados quando possível.');
     }
   };
@@ -119,7 +120,7 @@ export const FormularioLINK: React.FC<FormularioLINKProps> = ({ onSubmit, dadosI
       setTxtConteudo(conteudo);
       setTxtModalAberto(true);
     } catch (err) {
-      console.error('Erro ao gerar TXT:', err);
+      logger.error('Erro ao gerar TXT:', err);
       toast.error('Erro ao gerar arquivo TXT.');
     }
   };
@@ -383,7 +384,7 @@ export const FormularioLINK: React.FC<FormularioLINKProps> = ({ onSubmit, dadosI
 
                     onFinalizar && onFinalizar(formularioId);
                   } catch (error) {
-                    console.error('Erro ao salvar antes de finalizar:', error);
+                    logger.error('Erro ao salvar antes de finalizar:', error);
                     toast.error('Erro ao salvar alterações. Tente novamente.');
                   }
                 }}

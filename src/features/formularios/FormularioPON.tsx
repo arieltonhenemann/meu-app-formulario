@@ -1,3 +1,4 @@
+import { logger } from '../../shared/utils/logger';
 import React, { useState, useEffect } from 'react';
 import {
   OrdemServicoPON,
@@ -78,7 +79,7 @@ export const FormularioPON: React.FC<FormularioPONProps> = ({ onSubmit, dadosIni
     e.preventDefault();
 
     try {
-      console.log('Dados da O.S PON:', formData);
+      logger.log('Dados da O.S PON:', formData);
 
       if (formularioId) {
         await firebaseFormularioStorage.atualizar(formularioId, formData);
@@ -114,7 +115,7 @@ export const FormularioPON: React.FC<FormularioPONProps> = ({ onSubmit, dadosIni
 
       onSubmit?.(formData);
     } catch (error) {
-      console.error('Erro ao salvar formulário:', error);
+      logger.error('Erro ao salvar formulário:', error);
       toast.error('Erro ao salvar. Os dados foram salvos localmente e serão sincronizados quando possível.');
     }
   };
@@ -125,7 +126,7 @@ export const FormularioPON: React.FC<FormularioPONProps> = ({ onSubmit, dadosIni
       setTxtConteudo(conteudo);
       setTxtModalAberto(true);
     } catch (err) {
-      console.error('Erro ao gerar TXT:', err);
+      logger.error('Erro ao gerar TXT:', err);
       toast.error('Erro ao gerar arquivo TXT.');
     }
   };
@@ -416,7 +417,7 @@ export const FormularioPON: React.FC<FormularioPONProps> = ({ onSubmit, dadosIni
 
                     onFinalizar && onFinalizar(formularioId);
                   } catch (error) {
-                    console.error('Erro ao salvar antes de finalizar:', error);
+                    logger.error('Erro ao salvar antes de finalizar:', error);
                     toast.error('Erro ao salvar alterações. Tente novamente.');
                   }
                 }}

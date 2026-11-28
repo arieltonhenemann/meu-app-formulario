@@ -1,3 +1,4 @@
+import { logger } from '../../shared/utils/logger';
 import React, { useState, useEffect } from 'react';
 import {
     OrdemServicoAdequacao,
@@ -178,7 +179,7 @@ export const FormularioAdequacao: React.FC<FormularioAdequacaoProps> = ({ onSubm
         e.preventDefault();
 
         try {
-            console.log('Dados da O.S:', formData);
+            logger.log('Dados da O.S:', formData);
 
                 if (formularioId) {
                     await firebaseFormularioStorage.atualizar(formularioId, formData);
@@ -212,7 +213,7 @@ export const FormularioAdequacao: React.FC<FormularioAdequacaoProps> = ({ onSubm
 
                 onSubmit?.(formData);
         } catch (error) {
-            console.error('Erro ao salvar formulário:', error);
+            logger.error('Erro ao salvar formulário:', error);
             toast.error('Erro ao salvar. Os dados foram salvos localmente e serão sincronizados quando possível.');
         }
     };
@@ -227,7 +228,7 @@ export const FormularioAdequacao: React.FC<FormularioAdequacaoProps> = ({ onSubm
             setTxtConteudo(conteudo);
             setTxtModalAberto(true);
         } catch (err) {
-            console.error('Erro ao gerar TXT:', err);
+            logger.error('Erro ao gerar TXT:', err);
             toast.error('Erro ao gerar arquivo TXT.');
         }
     };
@@ -418,7 +419,7 @@ export const FormularioAdequacao: React.FC<FormularioAdequacaoProps> = ({ onSubm
                                         onFinalizar && onFinalizar(formularioId);
                                         toast.success('Ordem finalizada com sucesso!');
                                     } catch (error) {
-                                        console.error('Erro ao salvar antes de finalizar:', error);
+                                        logger.error('Erro ao salvar antes de finalizar:', error);
                                         toast.error('Erro ao salvar alterações. Tente novamente.');
                                     }
                                 }}

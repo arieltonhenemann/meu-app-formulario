@@ -1,21 +1,22 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import admin from 'firebase-admin';
+import { cert, getApp, getApps, initializeApp, type App } from 'firebase-admin/app';
+import { getFirestore, type DocumentData, type Firestore, type Query } from 'firebase-admin/firestore';
 import { createHash, randomUUID, timingSafeEqual } from 'crypto';
 
 // ============================================================
 // Configuração do Firebase Admin SDK (inicialização preguiçosa)
 // ============================================================
-const initializeFirebaseAdmin = () => {
-  if (admin.apps.length > 0) {
-    return admin.app();
+const initializeFirebaseAdmin = (): App => {
+  if (getApps().length > 0) {
+    return getApp();
   }
 
   // Opção 1: JSON completo da conta de serviço (recomendado)
   if (process.env.FIREBASE_SERVICE_ACCOUNT) {
     try {
       const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
-      return admin.initializeApp({
-        credential: admin.credential.cert(serviceAccount),
+      return initializeApp({
+        credential: cert(serviceAccount),
       });
     } catch (error) {
       console.error('Erro ao inicializar Firebase com FIREBASE_SERVICE_ACCOUNT:', error);
@@ -30,8 +31,8 @@ const initializeFirebaseAdmin = () => {
   if (projectId && clientEmail && privateKey) {
     try {
       const formattedPrivateKey = privateKey.replace(/\\n/g, '\n');
-      return admin.initializeApp({
-        credential: admin.credential.cert({
+      return initializeApp({
+        credential: cert({
           projectId,
           clientEmail,
           privateKey: formattedPrivateKey,
@@ -153,7 +154,7 @@ const chaveCliente = (req: VercelRequest, providedKey: string): string => {
 };
 
 /** Remove PII das respostas e mantém só o UID do criador. */
-const projetarFormulario = (d: admin.firestore.DocumentData, id: string) => ({
+const projetarFormulario = (d: DocumentData, id: string) => ({
   id,
   tipo: d.tipo,
   status: d.status,
@@ -240,10 +241,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   // 3. Inicializar Firebase Admin
-  let db: admin.firestore.Firestore;
+  let db: Firestore;
   try {
-    initializeFirebaseAdmin();
-    db = admin.firestore();
+    db = getFirestore(initializeFirebaseAdmin());
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : String(error);
     console.error('Erro ao conectar ao Firebase:', message);
@@ -269,10 +269,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         if (!doc.exists) {
           return res.status(200).json([]);
         }
-        return res.status(200).json([projetarFormulario(doc.data(), doc.id)]);
+        return res.status(200).json([projetarFormulario(doc.data() || {}, doc.id)]);
       }
 
-      let query: admin.firestore.Query = collectionRef;
+      let query: Query = collectionRef;
 
       // Filtros opcionais
       if (codigoOS) {
@@ -302,7 +302,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       query = query.limit(finalLimit);
 
       const snapshot = await query.get();
-      const docs: admin.firestore.DocumentData[] = [];
+      const docs: DocumentData[] = [];
 
       snapshot.forEach(doc => {
         docs.push(projetarFormulario(doc.data(), doc.id));

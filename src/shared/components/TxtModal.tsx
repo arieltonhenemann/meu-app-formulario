@@ -1,3 +1,4 @@
+import { logger } from '../utils/logger';
 import React, { useState } from 'react';
 
 interface TxtModalProps {
@@ -23,7 +24,7 @@ export const TxtModal: React.FC<TxtModalProps> = ({
             setCopiado(true);
             setTimeout(() => setCopiado(false), 2000);
         } catch (err) {
-            console.error('Erro ao copiar texto: ', err);
+            logger.error('Erro ao copiar texto: ', err);
             alert('Não foi possível copiar o texto automaticamente.');
         }
     };

@@ -1,3 +1,4 @@
+import { logger } from '../../shared/utils/logger';
 import React, { useState, Suspense, lazy } from 'react';
 import { useAuth } from '../../shared/contexts/AuthContext';
 import { GerenciarFormularios } from './GerenciarFormularios';
@@ -61,7 +62,7 @@ export const SystemController: React.FC = () => {
         voltarParaGerenciar();
       }
     } catch (error) {
-      console.error('Erro ao finalizar formulário:', error);
+      logger.error('Erro ao finalizar formulário:', error);
       toast.error('Erro ao finalizar. Tente novamente.');
     }
   };

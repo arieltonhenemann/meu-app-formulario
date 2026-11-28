@@ -1,3 +1,4 @@
+import { logger } from '../utils/logger';
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { toast } from '../components/Toast';
@@ -23,7 +24,7 @@ export const Header: React.FC = () => {
       await logout();
       toast.info('Sessão encerrada.');
     } catch (error) {
-      console.error('Erro ao fazer logout:', error);
+      logger.error('Erro ao fazer logout:', error);
       toast.error('Erro ao fazer logout. Tente novamente.');
     }
   };

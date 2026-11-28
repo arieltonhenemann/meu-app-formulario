@@ -1,3 +1,4 @@
+import { logger } from '../../shared/utils/logger';
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../shared/contexts/AuthContext';
 import { userService } from '../../shared/services/userService';
@@ -31,7 +32,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = () => {
       const pendentes = await userService.listarUsuariosPendentes();
       setUsuariosPendentes(pendentes);
     } catch (error) {
-      console.error('Erro ao carregar usuários:', error);
+      logger.error('Erro ao carregar usuários:', error);
     } finally {
       setIsLoading(false);
     }
@@ -51,7 +52,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = () => {
       await carregarUsuariosPendentes();
       toast.success('Usuário aprovado com sucesso!');
     } catch (error) {
-      console.error('Erro ao aprovar:', error);
+      logger.error('Erro ao aprovar:', error);
       toast.error('Erro ao aprovar usuário. Tente novamente.');
     } finally {
       setProcessando(null);
@@ -73,7 +74,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = () => {
       await carregarUsuariosPendentes();
       toast.success('Usuário rejeitado.');
     } catch (error) {
-      console.error('Erro ao rejeitar:', error);
+      logger.error('Erro ao rejeitar:', error);
       toast.error('Erro ao rejeitar usuário. Tente novamente.');
     } finally {
       setProcessando(null);

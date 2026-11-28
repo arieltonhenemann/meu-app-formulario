@@ -1,3 +1,4 @@
+import { logger } from './logger';
 import { auditoriaService } from '../services/auditoriaService';
 import type { TipoAcaoAuditoria, UsuarioAuditoria } from '../types/auditoria';
 
@@ -21,6 +22,6 @@ export const registrarAcaoAuditoria = async (
   try {
     await auditoriaService.registrarAcao(acao, usuario, detalhes);
   } catch (error) {
-    console.error('Erro ao registrar auditoria:', error);
+    logger.error('Erro ao registrar auditoria:', error);
   }
 };

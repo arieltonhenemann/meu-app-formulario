@@ -1,3 +1,4 @@
+import { logger } from '../../shared/utils/logger';
 import React, { useState, useEffect } from 'react';
 import { FormularioSalvo } from '../../shared/types/formularioSalvo';
 import { firebaseFormularioStorage } from '../../shared/services/firebaseFormularioStorage';
@@ -66,7 +67,7 @@ export const RelatoriosPage: React.FC = () => {
   }, [estado.dataInicio, estado.dataFim, estado.formularios, estado.filtroTipo]);
 
   const aplicarFiltros = () => {
-    console.log('🔍 [RelatoriosPage] Aplicando filtros:', {
+    logger.log('🔍 [RelatoriosPage] Aplicando filtros:', {
       dataInicio: estado.dataInicio,
       dataFim: estado.dataFim,
       filtroTipo: estado.filtroTipo,
@@ -94,7 +95,7 @@ export const RelatoriosPage: React.FC = () => {
       estatisticas
     }));
 
-    console.log('✅ Filtros aplicados:', filtrados.length, 'formulários');
+    logger.log('✅ Filtros aplicados:', filtrados.length, 'formulários');
   };
 
   const definirDataInicio = (data: string) => {
@@ -110,7 +111,7 @@ export const RelatoriosPage: React.FC = () => {
   };
 
   const exportarPDF = async () => {
-    console.log('📄 [RelatoriosPage] Iniciando exportação PDF');
+    logger.log('📄 [RelatoriosPage] Iniciando exportação PDF');
 
     try {
       setExportando(prev => ({ ...prev, pdf: true }));
@@ -126,7 +127,7 @@ export const RelatoriosPage: React.FC = () => {
 
       toast.success('Relatório PDF gerado com sucesso!');
     } catch (error) {
-      console.error('❌ Erro ao exportar PDF:', error);
+      logger.error('❌ Erro ao exportar PDF:', error);
       toast.error('Erro ao gerar relatório PDF. Tente novamente.');
     } finally {
       setExportando(prev => ({ ...prev, pdf: false }));
@@ -134,7 +135,7 @@ export const RelatoriosPage: React.FC = () => {
   };
 
   const exportarExcel = async () => {
-    console.log('📊 [RelatoriosPage] Iniciando exportação Excel');
+    logger.log('📊 [RelatoriosPage] Iniciando exportação Excel');
 
     try {
       setExportando(prev => ({ ...prev, excel: true }));
@@ -150,7 +151,7 @@ export const RelatoriosPage: React.FC = () => {
 
       toast.success('Planilha Excel gerada com sucesso!');
     } catch (error) {
-      console.error('❌ Erro ao exportar Excel:', error);
+      logger.error('❌ Erro ao exportar Excel:', error);
       toast.error('Erro ao gerar planilha Excel. Tente novamente.');
     } finally {
       setExportando(prev => ({ ...prev, excel: false }));

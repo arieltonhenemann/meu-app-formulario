@@ -3,13 +3,13 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "firebase": "^12.2.1",
-    "firebase-admin": "^13.10.0",
-    "jspdf": "^3.0.2",
-    "jspdf-autotable": "^5.0.2",
+    "firebase": "^13.4.0",
+    "firebase-admin": "^14.5.1",
+    "jspdf": "^4.2.1",
+    "jspdf-autotable": "^5.0.9",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
-    "xlsx": "^0.18.5"
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.2/xlsx-0.20.2.tgz"
   },
   "scripts": {
     "start": "vite",
@@ -23,6 +23,9 @@
     "@vercel/node": "^5.8.9",
     "@vitejs/plugin-react": "^6.0.2",
     "typescript": "^4.9.5",
-    "vite": "^8.0.14"
+    "vite": "^8.4.0"
+  },
+  "overrides": {
+    "@grpc/grpc-js": "^1.14.7"
   }
 }

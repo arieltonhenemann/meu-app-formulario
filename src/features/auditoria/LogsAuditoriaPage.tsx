@@ -1,3 +1,4 @@
+import { logger } from '../../shared/utils/logger';
 import React, { useState, useEffect } from 'react';
 import {
   LogAuditoria,
@@ -60,7 +61,7 @@ export const LogsAuditoriaPage: React.FC = () => {
       setLogsOriginais(logsCarregados);
       setIsOnline(auditoriaService.estaOnline());
     } catch (error) {
-      console.error('Erro ao carregar logs:', error);
+      logger.error('Erro ao carregar logs:', error);
     } finally {
       setLoading(false);
     }
@@ -71,7 +72,7 @@ export const LogsAuditoriaPage: React.FC = () => {
       const stats = await auditoriaService.obterEstatisticasAcoes();
       setEstatisticas(stats);
     } catch (error) {
-      console.error('Erro ao carregar estatísticas:', error);
+      logger.error('Erro ao carregar estatísticas:', error);
     }
   };
 

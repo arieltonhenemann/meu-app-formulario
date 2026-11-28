@@ -12,7 +12,7 @@ import {
   orderBy,
   onSnapshot
 } from "firebase/firestore";
-import { db, isFirebaseConfigured } from "../config/firebase";
+import { db, auth, isFirebaseConfigured } from "../config/firebase";
 import {
   FormularioSalvo,
   FormularioSalvoBase,
@@ -27,8 +27,11 @@ import { OrdemServicoAdequacao } from "../types/adequacao";
 import { logger } from "../utils/logger";
 
 const COLLECTION_NAME = "formularios";
-const STORAGE_KEY = "meuapp_v1_formularios_salvos";
-const SYNC_KEY = "meuapp_v1_sync_pendente";
+// Chaves por usuário: evita que o cache de um admin (que vê todas as O.S.)
+// seja lido por outro usuário no mesmo navegador.
+const STORAGE_KEY_BASE = "meuapp_v1_formularios";
+const SYNC_KEY_BASE = "meuapp_v1_sync";
+const LEGACY_STORAGE_KEY = "meuapp_v1_formularios_salvos";
 
 /** União de todos os tipos de dados de formulário suportados. */
 type DadosFormulario = OrdemServico | OrdemServicoPON | OrdemServicoLINK | OrdemServicoAdequacao;
@@ -65,13 +68,57 @@ class FirebaseFormularioStorageService {
     }
   }
 
+  private uidAtual(): string {
+    return auth?.currentUser?.uid || "anonimo";
+  }
+
+  private chaveStorage(uid?: string | null): string {
+    return uid ? `${STORAGE_KEY_BASE}_${uid}` : `${STORAGE_KEY_BASE}_${this.uidAtual()}`;
+  }
+
+  private chaveSync(uid?: string | null): string {
+    return uid ? `${SYNC_KEY_BASE}_${uid}` : `${SYNC_KEY_BASE}_${this.uidAtual()}`;
+  }
+
+  /** Aceita apenas UIDs plausíveis do Firebase, evitando filtros arbitrários. */
+  private normalizarUidFilter(uidFilter?: string): string | undefined {
+    if (typeof uidFilter !== "string") return undefined;
+    const uid = uidFilter.trim();
+    if (!uid || uid.length > 128 || !/^[a-zA-Z0-9_-]+$/.test(uid)) return undefined;
+    return uid;
+  }
+
+  /** Cache local guarda só o UID do criador — e-mail/nome ficam só no Firestore. */
+  private prepararParaCache(formularios: FormularioSalvo[]): FormularioSalvo[] {
+    return formularios.map((formulario) => ({
+      ...formulario,
+      criadoPor: formulario.criadoPor
+        ? { uid: formulario.criadoPor.uid, email: "" }
+        : undefined,
+    })) as FormularioSalvo[];
+  }
+
+  /** Restaura o e-mail mínimo exigido pelas regras ao sincronizar um create offline. */
+  private reidratarCriadoPor(formulario: FormularioSalvo): FormularioSalvo {
+    if (!formulario.criadoPor?.uid) return formulario;
+    return {
+      ...formulario,
+      criadoPor: {
+        ...formulario.criadoPor,
+        email: formulario.criadoPor.email || auth?.currentUser?.email || "",
+      },
+    } as FormularioSalvo;
+  }
+
   // Obter todos os formulários
   async obterTodos(uidFilter?: string): Promise<FormularioSalvo[]> {
+    const uid = this.normalizarUidFilter(uidFilter);
+
     if (this.isOnline && this.isFirebaseConfigured()) {
       try {
         const constraints: any[] = [orderBy("dataModificacao", "desc")];
-        if (uidFilter) {
-          constraints.unshift(where("criadoPor.uid", "==", uidFilter));
+        if (uid) {
+          constraints.unshift(where("criadoPor.uid", "==", uid));
         }
         const q = query(collection(db, COLLECTION_NAME), ...constraints);
         const querySnapshot = await getDocs(q);
@@ -93,10 +140,10 @@ class FirebaseFormularioStorageService {
           "Erro ao buscar no Firebase, usando localStorage:",
           error
         );
-        return this.obterDoLocalStorage(uidFilter);
+        return this.obterDoLocalStorage(uid);
       }
     } else {
-      return this.obterDoLocalStorage(uidFilter);
+      return this.obterDoLocalStorage(uid);
     }
   }
 
@@ -294,7 +341,10 @@ class FirebaseFormularioStorageService {
       for (const operacao of dadosPendentes) {
         switch (operacao.tipo) {
           case "criar":
-            await addDoc(collection(db, COLLECTION_NAME), operacao.dados);
+            await addDoc(
+              collection(db, COLLECTION_NAME),
+              this.reidratarCriadoPor(operacao.dados)
+            );
             break;
           case "atualizar":
             await updateDoc(
@@ -309,7 +359,7 @@ class FirebaseFormularioStorageService {
       }
 
       // Limpar dados pendentes após sincronização
-      localStorage.removeItem(SYNC_KEY);
+      localStorage.removeItem(this.chaveSync());
 
       logger.log("Sincronização concluída com sucesso!");
     } catch (error) {
@@ -322,6 +372,7 @@ class FirebaseFormularioStorageService {
     callback: (formularios: FormularioSalvo[]) => void,
     uidFilter?: string
   ): () => void {
+    const uid = this.normalizarUidFilter(uidFilter);
     this.listeners.push(callback);
 
     const removerListener = () => {
@@ -330,19 +381,19 @@ class FirebaseFormularioStorageService {
     };
 
     if (!this.isOnline || !this.isFirebaseConfigured()) {
-      const formularios = this.obterDoLocalStorage(uidFilter);
+      const formularios = this.obterDoLocalStorage(uid);
       callback(formularios);
       return removerListener;
     }
 
     logger.log(
       "🔄 [Firestore] Escutando mudanças em tempo real:",
-      uidFilter ? `usuário ${uidFilter}` : "todos os usuários"
+      uid ? `usuário ${uid}` : "todos os usuários"
     );
 
     const constraints: any[] = [orderBy("dataModificacao", "desc")];
-    if (uidFilter) {
-      constraints.unshift(where("criadoPor.uid", "==", uidFilter));
+    if (uid) {
+      constraints.unshift(where("criadoPor.uid", "==", uid));
     }
     const q = query(collection(db, COLLECTION_NAME), ...constraints);
 
@@ -365,7 +416,7 @@ class FirebaseFormularioStorageService {
       },
       (error) => {
         logger.error("Erro ao escutar a lista no Firestore, usando cache local:", error);
-        const formularios = this.obterDoLocalStorage(uidFilter);
+        const formularios = this.obterDoLocalStorage(uid);
         callback(formularios);
 
         // Fallback: escuta cada O.S. do cache diretamente pelo ID, sem depender
@@ -374,7 +425,7 @@ class FirebaseFormularioStorageService {
           onSnapshot(doc(db, COLLECTION_NAME, formulario.id), (docSnap) => {
             if (!docSnap.exists()) return;
             const atualizado = { id: docSnap.id, ...docSnap.data() } as FormularioSalvo;
-            const listaAtual = this.obterDoLocalStorage(uidFilter).map(f =>
+            const listaAtual = this.obterDoLocalStorage(uid).map(f =>
               f.id === atualizado.id ? atualizado : f
             );
             this.salvarNoLocalStorage(listaAtual);
@@ -400,7 +451,17 @@ class FirebaseFormularioStorageService {
 
   private obterDoLocalStorage(uidFilter?: string): FormularioSalvo[] {
     try {
-      const data = localStorage.getItem(STORAGE_KEY);
+      let data = localStorage.getItem(this.chaveStorage(uidFilter));
+      if (!data && !uidFilter) {
+        // Migração única do formato antigo (sem separação por usuário).
+        data = localStorage.getItem(LEGACY_STORAGE_KEY);
+        if (data) {
+          const migrados = this.prepararParaCache(JSON.parse(decodeURIComponent(atob(data))) as FormularioSalvo[]);
+          this.salvarNoLocalStorage(migrados);
+          localStorage.removeItem(LEGACY_STORAGE_KEY);
+          data = localStorage.getItem(this.chaveStorage());
+        }
+      }
       if (!data) return [];
       
       let dataStr;
@@ -423,9 +484,9 @@ class FirebaseFormularioStorageService {
 
   private salvarNoLocalStorage(formularios: FormularioSalvo[]): void {
     try {
-      const dataStr = JSON.stringify(formularios);
+      const dataStr = JSON.stringify(this.prepararParaCache(formularios));
       const encoded = btoa(encodeURIComponent(dataStr));
-      localStorage.setItem(STORAGE_KEY, encoded);
+      localStorage.setItem(this.chaveStorage(), encoded);
     } catch (error) {
       logger.error("Erro ao salvar no localStorage:", error);
     }
@@ -502,10 +563,10 @@ class FirebaseFormularioStorageService {
     const pendentes = this.obterDadosPendentesParaSincronizar();
     pendentes.push({
       tipo: "criar",
-      dados: formulario,
+      dados: this.prepararParaCache([formulario])[0],
       timestamp: Date.now(),
     });
-    localStorage.setItem(SYNC_KEY, btoa(encodeURIComponent(JSON.stringify(pendentes))));
+    localStorage.setItem(this.chaveSync(), btoa(encodeURIComponent(JSON.stringify(pendentes))));
   }
 
   private salvarAtualizacaoParaSincronizar(id: string, dados: DadosFormulario): void {
@@ -521,7 +582,7 @@ class FirebaseFormularioStorageService {
       timestamp: Date.now(),
     };
     pendentes.push(operacao);
-    localStorage.setItem(SYNC_KEY, btoa(encodeURIComponent(JSON.stringify(pendentes))));
+    localStorage.setItem(this.chaveSync(), btoa(encodeURIComponent(JSON.stringify(pendentes))));
   }
 
   private salvarAtualizacaoStatusParaSincronizar(
@@ -540,7 +601,7 @@ class FirebaseFormularioStorageService {
       },
       timestamp: Date.now(),
     });
-    localStorage.setItem(SYNC_KEY, btoa(encodeURIComponent(JSON.stringify(pendentes))));
+    localStorage.setItem(this.chaveSync(), btoa(encodeURIComponent(JSON.stringify(pendentes))));
   }
 
   private salvarExclusaoParaSincronizar(id: string): void {
@@ -550,12 +611,12 @@ class FirebaseFormularioStorageService {
       id,
       timestamp: Date.now(),
     });
-    localStorage.setItem(SYNC_KEY, btoa(encodeURIComponent(JSON.stringify(pendentes))));
+    localStorage.setItem(this.chaveSync(), btoa(encodeURIComponent(JSON.stringify(pendentes))));
   }
 
   private obterDadosPendentesParaSincronizar(): OperacaoPendente[] {
     try {
-      const data = localStorage.getItem(SYNC_KEY);
+      const data = localStorage.getItem(this.chaveSync());
       if (!data) return [];
       
       let dataStr;
@@ -577,20 +638,29 @@ class FirebaseFormularioStorageService {
     return pendentes.length > 0;
   }
 
-  // Limpar todos os dados (usar com cuidado)
-  async limparTodos(): Promise<void> {
-    // Limpar localStorage
-    localStorage.removeItem(STORAGE_KEY);
-    localStorage.removeItem(SYNC_KEY);
+  /**
+   * Limpa o cache e, opcionalmente, as O.S. do Firestore.
+   * Exige confirmação explícita e, por padrão, limita a exclusão ao usuário atual.
+   * Para limpar tudo (somente admin), passe `{ confirmado: true, uid: null }`.
+   */
+  async limparTodos(
+    opcoes: { confirmado: boolean; uid?: string | null } = { confirmado: false }
+  ): Promise<void> {
+    if (!opcoes.confirmado) {
+      logger.warn("limparTodos ignorado: confirmação explícita necessária.");
+      return;
+    }
 
-    // Limpar Firebase se possível
+    const uid = "uid" in opcoes ? opcoes.uid : this.uidAtual();
+    localStorage.removeItem(this.chaveStorage(uid));
+    localStorage.removeItem(this.chaveSync(uid));
+
     if (this.isOnline && this.isFirebaseConfigured()) {
       try {
-        const querySnapshot = await getDocs(collection(db, COLLECTION_NAME));
-        const deletePromises = querySnapshot.docs.map((doc) =>
-          deleteDoc(doc.ref)
-        );
-        await Promise.all(deletePromises);
+        const base = collection(db, COLLECTION_NAME);
+        const q = uid ? query(base, where("criadoPor.uid", "==", uid)) : query(base);
+        const querySnapshot = await getDocs(q);
+        await Promise.all(querySnapshot.docs.map((documento) => deleteDoc(documento.ref)));
       } catch (error) {
         logger.error("Erro ao limpar Firebase:", error);
       }
