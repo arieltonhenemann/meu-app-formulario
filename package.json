@@ -14,7 +14,12 @@
   "scripts": {
     "start": "vite",
     "build": "tsc -b && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "check:admin-imports": "node scripts/check-admin-imports.cjs",
+    "check:seguranca": "npm run check:admin-imports"
+  },
+  "engines": {
+    "node": ">=20"
   },
   "devDependencies": {
     "@types/node": "^25.9.1",

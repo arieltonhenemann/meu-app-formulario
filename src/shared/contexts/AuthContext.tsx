@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react';
 import { authService, AuthUser } from '../services/authService';
 import { userService } from '../services/userService';
 
@@ -26,17 +26,24 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [checkingAdmin, setCheckingAdmin] = useState(false);
+  // Evita que a resposta de uma verificação antiga (ex.: logout/troca de conta)
+  // sobrescreva o estado da sessão atual.
+  const uidVerificacaoAtual = useRef<string | null>(null);
 
   const verificarAdmin = async (uid: string) => {
+    uidVerificacaoAtual.current = uid;
     setCheckingAdmin(true);
     try {
       const ehAdmin = await userService.verificarSeEhAdmin(uid);
+      if (uidVerificacaoAtual.current !== uid) return;
       setIsAdmin(ehAdmin);
     } catch {
-      setIsAdmin(false);
+      if (uidVerificacaoAtual.current === uid) setIsAdmin(false);
     } finally {
-      setCheckingAdmin(false);
-      setIsLoading(false);
+      if (uidVerificacaoAtual.current === uid) {
+        setCheckingAdmin(false);
+        setIsLoading(false);
+      }
     }
   };
 
@@ -63,6 +70,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if (authUser?.uid) {
         verificarAdmin(authUser.uid);
       } else {
+        uidVerificacaoAtual.current = null;
         setIsAdmin(false);
         setIsLoading(false);
       }
